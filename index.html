@@ -39,11 +39,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes scanline { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-        .animate-scanline { position: absolute; left: 0; width: 100%; height: 2px; background-color: #10B981; box-shadow: 0 0 10px #10B981; animation: scanline 2s linear infinite; }
-        @keyframes pulse-ring { 0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(124, 58, 237, 0); } 100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); } }
-        .animate-pulse-ring { animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1); }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -75,6 +71,58 @@
             return 'Доброй ночи';
         };
 
+        // ТОП-30 Иконок для ежедневных трат
+        const TOP_ICONS = [
+            'fa-basket-shopping', 'fa-utensils', 'fa-bus', 'fa-car', 'fa-gas-pump', 
+            'fa-cart-shopping', 'fa-shirt', 'fa-shoe-prints', 'fa-house', 'fa-bolt', 
+            'fa-wifi', 'fa-phone', 'fa-heart-pulse', 'fa-pills', 'fa-tooth', 
+            'fa-dumbbell', 'fa-plane', 'fa-train', 'fa-ticket', 'fa-gamepad', 
+            'fa-music', 'fa-film', 'fa-paw', 'fa-baby-carriage', 'fa-graduation-cap', 
+            'fa-book', 'fa-gift', 'fa-scissors', 'fa-mug-hot', 'fa-wallet'
+        ];
+
+        // Цветовые палитры для категорий и иконок
+        const COLOR_PALETTES = [
+            { c: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316' },
+            { c: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30', hex: '#3b82f6' },
+            { c: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30', hex: '#10b981' },
+            { c: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30', hex: '#8b5cf6' },
+            { c: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/30', hex: '#ec4899' },
+            { c: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/30', hex: '#f43f5e' },
+            { c: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30', hex: '#f59e0b' },
+            { c: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30', hex: '#06b6d4' }
+        ];
+
+        // ГЕНЕРАТОР ДЕМО-ДАННЫХ (За 3 месяца)
+        const generateDummyData = (userId) => {
+            const txs = [];
+            const now = new Date();
+            const categories = ['Продукты', 'Транспорт', 'Развлечения', 'Еда вне дома'];
+            const icons = ['fa-basket-shopping', 'fa-bus', 'fa-gamepad', 'fa-utensils'];
+            const colors = ['text-orange-500', 'text-blue-500', 'text-pink-500', 'text-amber-500'];
+            const bgs = ['bg-orange-100', 'bg-blue-100', 'bg-pink-100', 'bg-amber-100'];
+
+            for(let i = 0; i < 15; i++) {
+                const d = new Date(now.getTime() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
+                const isIncome = Math.random() > 0.8;
+                const catIdx = Math.floor(Math.random() * categories.length);
+                
+                txs.push({
+                    id: Date.now() - i * 100000,
+                    userId,
+                    title: isIncome ? 'Зарплата / Перевод' : `Покупка ${i+1}`,
+                    category: isIncome ? 'Доход' : categories[catIdx],
+                    amount: isIncome ? (Math.floor(Math.random() * 5) + 5) * 1000000 : -(Math.floor(Math.random() * 200) + 15) * 1000,
+                    icon: isIncome ? 'fa-wallet' : icons[catIdx],
+                    color: isIncome ? 'text-green-500' : colors[catIdx],
+                    bg: isIncome ? 'bg-green-100' : bgs[catIdx],
+                    date: `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+                    rawDate: d.toISOString()
+                });
+            }
+            return txs.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+        };
+
         const TopHeader = ({ title, showBack = false, onBack, rightIcon = null, onRightClick = null }) => (
             <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-gray-900 sticky top-0 z-10 transition-colors duration-300 shadow-sm dark:shadow-gray-900">
                 <div className="flex items-center gap-3">
@@ -89,17 +137,9 @@
             const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
             const greeting = getGreeting();
             
-            const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0) + 12150000;
+            const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0);
             const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
             const currentBalance = totalIncome - totalExpense;
-
-            const categories = {};
-            let totalCatExpenses = 0;
-            transactions.filter(t => t.amount < 0).forEach(t => {
-                categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount);
-                totalCatExpenses += Math.abs(t.amount);
-            });
-            const getPerc = (cat) => totalCatExpenses === 0 ? 0 : Math.round(((categories[cat] || 0) / totalCatExpenses) * 100);
 
             return (
                 <div className="pb-24 animate-fade-in">
@@ -117,16 +157,16 @@
                             <h2 className="text-3xl font-bold mb-4 relative z-10">{formatMoney(currentBalance)}</h2>
                             <div className="flex justify-between relative z-10">
                                 <div><p className="text-xs text-purple-200">Доходы</p><p className="font-semibold text-sm">{formatMoney(totalIncome)}</p></div>
-                                <div className="text-right"><p className="text-xs text-purple-200">Расходы</p><p className="font-semibold text-sm">{formatMoney(-totalExpense)}</p></div>
+                                <div className="text-right"><p className="text-xs text-purple-200">Расходы</p><p className="font-semibold text-sm">{formatMoney(totalExpense)}</p></div>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex justify-between px-6 py-4">
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('income')}><div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-xl"><i className="fa-solid fa-arrow-down"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Доход</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('expense')}><div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-xl"><i className="fa-solid fa-arrow-up"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Расход</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('calculator')}><div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-xl"><i className="fa-solid fa-calculator"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Вклад</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('goals')}><div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-xl"><i className="fa-solid fa-bullseye"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Цель</span></div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('income')}><div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-sm"><i className="fa-solid fa-arrow-down"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Доход</span></div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('expense')}><div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-xl shadow-sm"><i className="fa-solid fa-arrow-up"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Расход</span></div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('calculator')}><div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-xl shadow-sm"><i className="fa-solid fa-calculator"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Вклад</span></div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('goals')}><div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-xl shadow-sm"><i className="fa-solid fa-bullseye"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Цель</span></div>
                     </div>
 
                     <div className="px-4 py-4">
@@ -137,7 +177,7 @@
                         <div className="space-y-3">
                             {transactions.length === 0 ? (
                                 <p className="text-center text-sm text-gray-400 py-4">У вас пока нет транзакций.</p>
-                            ) : transactions.slice(0, 4).map(t => (
+                            ) : transactions.slice(0, 5).map(t => (
                                 <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm active:bg-gray-50 transition-colors cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}><i className={`fa-solid ${t.icon}`}></i></div>
@@ -148,10 +188,7 @@
                                     </div>
                                     <div className="text-right">
                                         <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white'}`}>{t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}</p>
-                                        {t.originalCurrency && t.originalCurrency !== 'UZS' && (
-                                            <p className="text-[10px] text-gray-400">{t.originalAmount} {t.originalCurrency}</p>
-                                        )}
-                                        {!t.originalCurrency && <p className="text-xs text-gray-500 dark:text-gray-400">{t.date}</p>}
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t.date.split(' ')[0]}</p>
                                     </div>
                                 </div>
                             ))}
@@ -161,7 +198,7 @@
             );
         };
 
-        const ScreenAnalytics = ({ transactions, onTransactionClick, categories, onOpenCategorySettings }) => {
+        const ScreenAnalytics = ({ transactions, onTransactionClick, categories }) => {
             const spent = transactions.filter(t => t.amount < 0).reduce((acc, t) => {
                 acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
                 return acc;
@@ -169,11 +206,10 @@
 
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
-                    <TopHeader title="Аналитика и Лимиты" rightIcon="fa-chart-bar" />
+                    <TopHeader title="Аналитика и Лимиты" rightIcon="fa-chart-pie" />
                     <div className="px-4 py-4 space-y-4">
                         <div className="flex justify-between items-center mb-1">
                             <h3 className="font-bold text-textDark dark:text-white">Бюджет на месяц</h3>
-                            <button onClick={onOpenCategorySettings} className="text-xs font-medium text-primary bg-primaryLight/10 dark:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors">Настроить</button>
                         </div>
                         <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm space-y-5">
                             {categories.map(cat => {
@@ -181,7 +217,7 @@
                                 const limit = cat.limit || 0;
                                 const perc = limit > 0 ? Math.min(Math.round((currentSpent / limit) * 100), 100) : (currentSpent > 0 ? 100 : 0);
                                 const isOver = limit > 0 && currentSpent > limit;
-                                const barColor = isOver ? 'bg-red-500' : cat.barBg;
+                                const barColor = isOver ? 'bg-red-500' : 'bg-primary';
 
                                 return (
                                     <div key={cat.name}>
@@ -221,10 +257,10 @@
 
             const profit = Math.round(amount * (rate / 100) * (months / 12));
             const total = amount + profit;
-            const perc = (profit / amount) * 100;
+            const perc = (profit / amount) * 100 || 0;
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors">
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
                     <TopHeader title="Калькулятор вклада" showBack={true} onBack={onBack} />
                     <div className="px-4 py-4 space-y-4">
                         <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 space-y-2">
@@ -256,11 +292,12 @@
             const [showAddForm, setShowAddForm] = useState(false);
             const [newTitle, setNewTitle] = useState('');
             const [newTarget, setNewTarget] = useState('');
+            const [selectedIcon, setSelectedIcon] = useState('fa-star');
 
             const handleAddGoal = () => {
                 if(!newTitle || !newTarget) return;
-                setGoals([...goals, { id: Date.now(), title: newTitle, current: 0, target: Number(newTarget), icon: '🎯', color: 'bg-primary' }]);
-                setShowAddForm(false); setNewTitle(''); setNewTarget('');
+                setGoals([...goals, { id: Date.now(), title: newTitle, current: 0, target: Number(newTarget), icon: selectedIcon, color: 'bg-primary', iconColor: 'text-primary' }]);
+                setShowAddForm(false); setNewTitle(''); setNewTarget(''); setSelectedIcon('fa-star');
             };
 
             const addFunds = (id) => {
@@ -274,17 +311,27 @@
             };
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors">
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
                     <TopHeader title="Цели" showBack={true} onBack={onBack} rightIcon="fa-plus" onRightClick={() => setShowAddForm(true)} />
                     <div className="px-4 pt-4 space-y-4">
                         {showAddForm && (
                             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-primary/20 mb-4 animate-fade-in">
                                 <h4 className="font-bold text-sm mb-3 text-textDark dark:text-white">Новая цель</h4>
-                                <input type="text" value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Название (напр. Машина)" className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-2 mb-2 text-sm focus:outline-none text-textDark dark:text-white" />
-                                <input type="number" value={newTarget} onChange={e=>setNewTarget(e.target.value)} placeholder="Сумма цели" className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-2 mb-3 text-sm focus:outline-none text-textDark dark:text-white" />
+                                <input type="text" value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Название (напр. Машина)" className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                <input type="number" value={newTarget} onChange={e=>setNewTarget(e.target.value)} placeholder="Сумма цели" className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                
+                                <p className="text-xs text-gray-500 mb-2">Выберите иконку:</p>
+                                <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
+                                    {TOP_ICONS.map(ic => (
+                                        <div key={ic} onClick={() => setSelectedIcon(ic)} className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all ${selectedIcon === ic ? 'bg-primary text-white shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                                            <i className={`fa-solid ${ic}`}></i>
+                                        </div>
+                                    ))}
+                                </div>
+
                                 <div className="flex gap-2">
-                                    <button onClick={handleAddGoal} className="flex-1 bg-primary text-white py-2 rounded-lg font-bold text-sm">Создать</button>
-                                    <button onClick={()=>setShowAddForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-500 py-2 rounded-lg font-bold text-sm">Отмена</button>
+                                    <button onClick={handleAddGoal} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-sm">Создать</button>
+                                    <button onClick={()=>setShowAddForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-500 py-3 rounded-xl font-bold text-sm">Отмена</button>
                                 </div>
                             </div>
                         )}
@@ -295,16 +342,16 @@
                             const perc = Math.min(Math.round((g.current / g.target) * 100), 100);
                             return (
                                 <div key={g.id} className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-50 dark:border-gray-800 relative group overflow-hidden">
-                                    <div className="flex justify-between items-start mb-2">
+                                    <div className="flex justify-between items-start mb-3">
                                         <div><h4 className="font-bold text-textDark dark:text-white">{g.title}</h4><p className="text-xs text-gray-500 mt-1">{formatMoney(g.current)} / {formatMoney(g.target)}</p></div>
-                                        <div className={`text-2xl w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center`}>{g.icon}</div>
+                                        <div className={`w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center ${g.iconColor || 'text-primary'} text-xl`}><i className={`fa-solid ${g.icon}`}></i></div>
                                     </div>
-                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-3"><div className={`${g.color} h-2.5 rounded-full`} style={{width: `${perc}%`}}></div></div>
+                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-3"><div className={`${g.color} h-2.5 rounded-full transition-all`} style={{width: `${perc}%`}}></div></div>
                                     <div className="flex justify-between items-center text-xs">
                                         <span className="font-bold text-textDark dark:text-gray-300">Прогресс: {perc}%</span>
                                         <div className="flex gap-2">
-                                            <button onClick={()=>addFunds(g.id)} className="bg-green-100 text-green-600 dark:bg-green-900/30 px-3 py-1 rounded-lg font-bold">Пополнить</button>
-                                            <button onClick={()=>deleteGoal(g.id)} className="bg-red-100 text-red-500 dark:bg-red-900/30 px-3 py-1 rounded-lg"><i className="fa-solid fa-trash"></i></button>
+                                            <button onClick={()=>addFunds(g.id)} className="bg-green-100 text-green-600 dark:bg-green-900/30 px-3 py-1.5 rounded-lg font-bold">Пополнить</button>
+                                            <button onClick={()=>deleteGoal(g.id)} className="bg-red-100 text-red-500 dark:bg-red-900/30 px-3 py-1.5 rounded-lg"><i className="fa-solid fa-trash"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -316,13 +363,13 @@
         };
 
         const ScreenTips = ({ openAIChat }) => (
-            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors relative">
+            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
                 <TopHeader title="Советы" rightIcon="fa-bell" />
                 <div className="px-4 py-4 space-y-4">
                     <h3 className="font-bold text-textDark dark:text-white">Анализ ваших финансов</h3>
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 border border-green-100 dark:border-green-900/30">
-                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-500 text-xl shrink-0">🎉</div>
-                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Отличная работа!</h4><p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Вы используете умный анализ финансов.</p></div>
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 border border-green-100 dark:border-green-900/30 items-start">
+                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-500 text-xl shrink-0"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">ИИ-аналитика включена</h4><p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Я постоянно слежу за вашими расходами. Нажмите на робота в углу, чтобы пообщаться со мной!</p></div>
                     </div>
                 </div>
                 <button onClick={openAIChat} className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-primary to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 transition-transform z-40">
@@ -331,20 +378,130 @@
             </div>
         );
 
+        const ScreenAIChat = ({ onBack, userId }) => {
+            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! Я ваш финансовый ИИ-помощник. Я вижу вашу базу данных расходов. Что бы вы хотели узнать?' }]);
+            const [inputText, setInputText] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+
+            const sendPrompt = async (text) => {
+                if (!text.trim()) return;
+                setMessages(prev => [...prev, { type: 'user', text }]);
+                setInputText(''); setIsTyping(true);
+                try {
+                    const res = await fetch(`${API_URL}/chat`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-tg-user-id': userId },
+                        body: JSON.stringify({ message: text })
+                    });
+                    const data = await res.json();
+                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Сбой ИИ." }]);
+                } catch (e) {
+                    setMessages(prev => [...prev, { type: 'bot', text: "Ошибка связи с сервером." }]);
+                } finally { setIsTyping(false); }
+            };
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen flex flex-col animate-fade-in z-50 relative transition-colors duration-300">
+                    <TopHeader title="Чат с ИИ" showBack={true} onBack={onBack} rightIcon="fa-broom" onRightClick={() => setMessages([messages[0]])} />
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+                        {messages.map((msg, i) => (
+                            <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.type === 'user' ? 'bg-gray-200 dark:bg-gray-800 text-textDark dark:text-white rounded-tr-sm' : 'bg-primary text-white rounded-tl-sm shadow-md'}`}>
+                                    {msg.text.split('\n').map((line, j) => <p key={j} className="mb-1 last:mb-0">{line}</p>)}
+                                </div>
+                            </div>
+                        ))}
+                        {isTyping && <div className="flex justify-start"><div className="bg-primary text-white rounded-2xl rounded-tl-sm p-3 shadow-md flex items-center gap-1"><span className="w-2 h-2 bg-white rounded-full animate-bounce"></span><span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span><span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span></div></div>}
+                    </div>
+                    <div className="fixed bottom-0 w-full max-w-md p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 z-50">
+                        {messages.length === 1 && (
+                            <div className="mb-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                                {['Проанализируй траты', 'Как накопить больше?', 'Где я много трачу?'].map(q => (
+                                    <button key={q} onClick={() => sendPrompt(q)} className="whitespace-nowrap px-4 py-2 text-xs font-medium text-primary bg-primary/10 rounded-full border border-primary/20">{q}</button>
+                                ))}
+                            </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <input type="text" value={inputText} onChange={e=>setInputText(e.target.value)} onKeyPress={e=>e.key==='Enter'&&sendPrompt(inputText)} placeholder="Спросите Gemini..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-4 py-3 text-sm focus:outline-none" />
+                            <button onClick={()=>sendPrompt(inputText)} className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-md"><i className="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, onOpenCategories, familyId, setFamilyId }) => {
+            const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
+            const username = (user && user.username) ? `@${user.username}` : '@ilkhom_finance';
+            const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
+            
+            const joinFamily = () => {
+                const code = prompt("Введите код семьи (Например: FAM-XXXX):");
+                if(code && code.startsWith('FAM-')) { setFamilyId(code); alert("Вы успешно подключены к кошельку семьи!"); window.location.reload(); }
+                else if (code) alert("Неверный формат кода!");
+            };
+
+            return (
+                <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
+                    <TopHeader title="Профиль" rightIcon="fa-gear" />
+                    
+                    <div className="bg-white dark:bg-gray-900 px-4 py-6 mb-2 flex items-center gap-4 transition-colors duration-300">
+                        <img src={userPhoto} alt="Аватар" className="w-16 h-16 rounded-full border-2 border-primaryLight shadow-sm object-cover" />
+                        <div>
+                            <h2 className="text-xl font-bold text-textDark dark:text-white transition-colors duration-300">{userName}</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">{username}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-3 mb-2">
+                        <div className="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-4 flex items-center justify-between shadow-md relative overflow-hidden">
+                            <i className="fa-brands fa-telegram absolute -right-4 -bottom-4 text-white opacity-10 text-6xl transform -rotate-12"></i>
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg"><i className="fa-solid fa-crown text-sm"></i></div>
+                                <div><h3 className="font-bold text-white text-sm">Cloud Sync Active</h3><p className="text-xs text-gray-300 mt-0.5">Данные в безопасности на сервере</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-4 mb-2">
+                        <h3 className="font-bold text-textDark dark:text-white mb-3">Семейный бюджет</h3>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl p-4">
+                            {familyId ? (
+                                <div>
+                                    <p className="text-sm text-textDark dark:text-white mb-2">Вы подключены к семье: <strong>{familyId}</strong></p>
+                                    <button onClick={()=>{setFamilyId(null); window.location.reload();}} className="bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-bold w-full">Отключиться</button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Ваш код: <strong className="text-primary text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded">{encodeFamilyId(user ? user.id : 'browser')}</strong></p>
+                                    <button onClick={joinFamily} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold w-full shadow-md">Подключиться к семье</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1">
+                        <div onClick={onOpenCategories} className="flex items-center justify-between py-3.5 border-b border-gray-50 dark:border-gray-800/50 cursor-pointer">
+                            <div className="flex items-center gap-4"><div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 text-amber-500"><i className="fa-solid fa-icons text-sm"></i></div><span className="text-textDark dark:text-white font-bold text-sm">Мои категории</span></div>
+                            <i className="fa-solid fa-chevron-right text-gray-300 dark:text-gray-600 text-xs"></i>
+                        </div>
+                        <div onClick={toggleDarkMode} className="flex items-center justify-between py-3.5 cursor-pointer">
+                            <div className="flex items-center gap-4"><div className="w-9 h-9 rounded-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500"><i className="fa-solid fa-moon text-sm"></i></div><span className="text-textDark dark:text-white font-bold text-sm">Темная тема</span></div>
+                            <div className="flex items-center gap-2"><span className="text-xs font-medium text-gray-400">{isDarkMode ? 'Вкл' : 'Выкл'}</span><i className="fa-solid fa-chevron-right text-gray-300 text-xs"></i></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const App = () => {
             const [currentScreen, setCurrentScreen] = useState('home');
             const [isAddingMode, setIsAddingMode] = useState(false);
-            const [txType, setTxType] = useState('expense'); // expense | income
+            const [txType, setTxType] = useState('expense');
             const [isLoading, setIsLoading] = useState(true);
             const [transactions, setTransactions] = useState([]);
             const [isSplashVisible, setIsSplashVisible] = useState(true);
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
             const [tgUser, setTgUser] = useState(null);
-            
-            const [addMethod, setAddMethod] = useState(null);
-            const [isProcessing, setIsProcessing] = useState(false);
-            const [scannedData, setScannedData] = useState({});
-            const [selectedTransaction, setSelectedTransaction] = useState(null);
             
             const [familyId, setFamilyId] = useState(() => {
                 const saved = localStorage.getItem('financeAppFamilyId');
@@ -352,44 +509,27 @@
                 return saved;
             });
 
-            const [exchangeRates, setExchangeRates] = useState({ USD: 12650, EUR: 13600 });
-            const [txCurrency, setTxCurrency] = useState('UZS');
-            const [txAmount, setTxAmount] = useState('');
-
+            // Категории пользователя
             const defaultCategories = [
-                { name: 'Продукты', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', barBg: 'bg-orange-500', limit: 2000000 },
-                { name: 'Транспорт', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', barBg: 'bg-blue-500', limit: 500000 },
-                { name: 'Еда вне дома', icon: 'fa-utensils', color: 'text-amber-600', bg: 'bg-amber-100', barBg: 'bg-amber-500', limit: 1000000 },
-                { name: 'Развлечения', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', barBg: 'bg-pink-500', limit: 1000000 }
+                { name: 'Продукты', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', limit: 2000000 },
+                { name: 'Транспорт', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', limit: 500000 },
+                { name: 'Еда вне дома', icon: 'fa-utensils', color: 'text-amber-600', bg: 'bg-amber-100', limit: 1000000 },
+                { name: 'Развлечения', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', limit: 1000000 }
             ];
-            const [categories, setCategories] = useState(() => {
-                const saved = localStorage.getItem('financeAppCategories');
-                return saved ? JSON.parse(saved) : defaultCategories;
-            });
+            const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('financeAppCategories')) || defaultCategories);
             const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-            const [newCatName, setNewCatName] = useState('');
-            const [newCatIcon, setNewCatIcon] = useState('fa-paw');
-            const [newCatColor, setNewCatColor] = useState(0);
 
+            // Цели пользователя
             const defaultGoals = [
-                { id: 1, title: 'Новая кухня', current: 600000, target: 2000000, icon: '🍳', color: 'bg-primary' },
-                { id: 2, title: 'Путешествие', current: 3200000, target: 8000000, icon: '✈️', color: 'bg-blue-500' }
+                { id: 1, title: 'Новая кухня', current: 600000, target: 2000000, icon: 'fa-house', color: 'bg-primary', iconColor: 'text-primary' }
             ];
             const [goals, setGoals] = useState(() => JSON.parse(localStorage.getItem('financeAppGoals')) || defaultGoals);
 
-            const availableIcons = ['fa-paw', 'fa-gamepad', 'fa-car', 'fa-house', 'fa-heart', 'fa-plane', 'fa-book', 'fa-dumbbell', 'fa-gift', 'fa-laptop'];
-            const availableColorPalettes = [
-                { c: 'text-blue-500', bg: 'bg-blue-100', bBg: 'bg-blue-500', hex: '#3B82F6' },
-                { c: 'text-emerald-500', bg: 'bg-emerald-100', bBg: 'bg-emerald-500', hex: '#10B981' },
-                { c: 'text-purple-500', bg: 'bg-purple-100', bBg: 'bg-purple-500', hex: '#8B5CF6' },
-                { c: 'text-rose-500', bg: 'bg-rose-100', bBg: 'bg-rose-500', hex: '#F43F5E' },
-                { c: 'text-orange-500', bg: 'bg-orange-100', bBg: 'bg-orange-500', hex: '#F97316' },
-            ];
-
-            const getEffectiveUserId = () => {
-                if (familyId) { const decoded = decodeFamilyId(familyId); if (decoded) return decoded; }
-                return tgUser ? tgUser.id.toString() : 'browser_test_user';
-            };
+            // Форма добавления расхода
+            const [newTxAmount, setNewTxAmount] = useState('');
+            const [newTxTitle, setNewTxTitle] = useState('');
+            const [newTxCat, setNewTxCat] = useState('');
+            const [newTxIcon, setNewTxIcon] = useState(TOP_ICONS[0]);
 
             useEffect(() => { localStorage.setItem('financeAppCategories', JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem('financeAppGoals', JSON.stringify(goals)); }, [goals]);
@@ -398,77 +538,62 @@
                 else { document.documentElement.classList.remove('dark'); localStorage.setItem('financeAppTheme', 'light'); }
             }, [isDarkMode]);
 
+            const getEffectiveUserId = () => {
+                if (familyId) { const decoded = decodeFamilyId(familyId); if (decoded) return decoded; }
+                return tgUser ? tgUser.id.toString() : 'browser_test_user';
+            };
+
             useEffect(() => {
-                let initialUserId = 'browser_test_user';
+                let currentUserId = 'browser_test_user';
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.expand();
                     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                         setTgUser(tg.initDataUnsafe.user);
-                        initialUserId = tg.initDataUnsafe.user.id.toString();
+                        currentUserId = tg.initDataUnsafe.user.id.toString();
                     }
-                    if (tg.colorScheme === 'dark' && !localStorage.getItem('financeAppTheme')) setIsDarkMode(true);
                 }
 
-                fetch(`${API_URL}/rates`).then(res => { if(res.ok) return res.json(); throw new Error(); }).then(data => setExchangeRates(data)).catch(() => {});
-                fetch(`${API_URL}/transactions`, { headers: { 'x-tg-user-id': familyId ? decodeFamilyId(familyId) || initialUserId : initialUserId } })
+                const effectiveId = familyId ? decodeFamilyId(familyId) || currentUserId : currentUserId;
+
+                fetch(`${API_URL}/transactions`, { headers: { 'x-tg-user-id': effectiveId } })
                     .then(res => { if(res.ok) return res.json(); throw new Error(); })
-                    .then(data => { if (Array.isArray(data)) setTransactions(data); setIsLoading(false); })
-                    .catch(() => setIsLoading(false));
+                    .then(data => {
+                        if (Array.isArray(data) && data.length > 0) {
+                            setTransactions(data);
+                        } else {
+                            // ЕСЛИ БАЗА ПУСТАЯ - ГЕНЕРИРУЕМ ДЕМО-ДАННЫЕ ЗА 3 МЕСЯЦА
+                            setTransactions(generateDummyData(effectiveId));
+                        }
+                        setIsLoading(false);
+                    })
+                    .catch(() => { setIsLoading(false); });
+                
                 setTimeout(() => setIsSplashVisible(false), 2000);
-            }, []);
+            }, [familyId]);
 
-            const handleAddClick = (type = 'expense') => {
+            const openAddModal = (type = 'expense') => {
                 setTxType(type);
+                setNewTxCat(categories[0].name);
+                setNewTxIcon(TOP_ICONS[0]);
                 setIsAddingMode(true);
-                setAddMethod(null);
             };
 
-            const handleVoiceSimulate = () => {
-                setAddMethod('voice'); setIsProcessing(true);
-                setTimeout(() => { setIsProcessing(false); setScannedData({ title: 'Проезд', category: 'Транспорт' }); setTxAmount(15000); setAddMethod('manual_prefilled'); }, 2000);
-            };
-
-            const handleReceiptScan = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                setAddMethod('scan'); setIsProcessing(true);
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    try {
-                        const res = await fetch(`${API_URL}/scan`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-tg-user-id': getEffectiveUserId() }, body: JSON.stringify({ imageBase64: reader.result.split(',')[1], mimeType: file.type }) });
-                        if(!res.ok) throw new Error();
-                        const data = await res.json();
-                        setScannedData({ amount: data.amount || '', title: data.title || '', category: data.category || categories[0].name });
-                        setTxAmount(data.amount || ''); setAddMethod('manual_prefilled');
-                    } catch (error) { alert("Не удалось прочитать чек."); } finally { setIsProcessing(false); }
-                };
-                reader.readAsDataURL(file);
-            };
-
-            const handleManualAdd = async (e) => {
+            const handleSaveTransaction = async (e) => {
                 e.preventDefault();
-                let finalAmount = parseFloat(txAmount);
-                const title = e.target.title.value;
-                const categoryName = e.target.category.value;
-                if(!finalAmount || !title) return;
+                let finalAmount = parseFloat(newTxAmount);
+                if(!finalAmount || !newTxTitle) return;
 
-                if (txCurrency === 'USD') finalAmount = finalAmount * exchangeRates.USD;
-                if (txCurrency === 'EUR') finalAmount = finalAmount * exchangeRates.EUR;
-
-                // Доход = плюс, Расход = минус
                 const signedAmount = txType === 'income' ? finalAmount : -finalAmount;
-
-                const selectedCat = categories.find(c => c.name === categoryName) || categories[0];
                 const d = new Date();
                 const dateString = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0') + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 
+                const selectedCatObj = categories.find(c => c.name === newTxCat) || categories[0];
                 const newTxPayload = {
-                    title, category: categoryName, amount: signedAmount, date: dateString, rawDate: new Date().toISOString(),
-                    icon: txType === 'income' ? 'fa-wallet' : selectedCat.icon, 
-                    color: txType === 'income' ? 'text-green-500' : selectedCat.color, 
-                    bg: txType === 'income' ? 'bg-green-100' : selectedCat.bg,
-                    originalCurrency: txCurrency, originalAmount: txCurrency !== 'UZS' ? txAmount : null
+                    title: newTxTitle, category: txType === 'income' ? 'Доход' : newTxCat, amount: signedAmount, date: dateString, rawDate: new Date().toISOString(),
+                    icon: txType === 'income' ? 'fa-wallet' : newTxIcon, 
+                    color: txType === 'income' ? 'text-green-500' : selectedCatObj.color, 
+                    bg: txType === 'income' ? 'bg-green-100' : selectedCatObj.bg
                 };
 
                 try {
@@ -476,231 +601,130 @@
                     if(!res.ok) throw new Error();
                     const savedTx = await res.json();
                     setTransactions([savedTx, ...transactions]);
-                    setIsAddingMode(false); setAddMethod(null); setTxAmount(''); setTxCurrency('UZS');
+                    setIsAddingMode(false); setNewTxAmount(''); setNewTxTitle('');
                 } catch (error) { alert("Ошибка сохранения."); }
             };
 
-            const handleDeleteTransaction = async (id) => {
-                try {
-                    await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE', headers: { 'x-tg-user-id': getEffectiveUserId() } });
-                    setTransactions(transactions.filter(t => t.id !== id));
-                    setSelectedTransaction(null);
-                } catch (error) { alert("Не удалось удалить."); }
-            };
-
-            const createCategory = () => {
-                if(!newCatName.trim()) return;
-                const palette = availableColorPalettes[newCatColor];
-                setCategories([...categories, { name: newCatName, icon: newCatIcon, color: palette.c, bg: palette.bg, barBg: palette.bBg, limit: 1000000 }]);
-                setNewCatName('');
-            };
+            const simulateScan = () => { alert("ИИ сканирует чек... (Демо)"); setNewTxTitle("Супермаркет"); setNewTxAmount("125000"); };
+            const simulateVoice = () => { alert("Внимательно слушаю... (Демо)"); setNewTxTitle("Такси"); setNewTxAmount("25000"); setNewTxIcon('fa-car'); };
 
             const renderScreen = () => {
                 if (isLoading) return <div className="h-screen flex items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary"></i></div>;
                 switch(currentScreen) {
-                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={t => t.category === 'Продукты' ? setCurrentScreen('product') : setSelectedTransaction(t)} onAddClick={handleAddClick} />;
-                    case 'analytics': return <ScreenAnalytics transactions={transactions} categories={categories} onOpenCategorySettings={() => setIsCategoryModalOpen(true)} />;
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={() => {}} onAddClick={openAddModal} />;
+                    case 'analytics': return <ScreenAnalytics transactions={transactions} categories={categories} onTransactionClick={() => {}} />;
                     case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
                     case 'goals': return <ScreenGoals onBack={() => setCurrentScreen('home')} goals={goals} setGoals={setGoals} />;
-                    case 'tips': return <ScreenTips openAIChat={() => {}} />;
-                    case 'profile': return (
-                        <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors">
-                            <TopHeader title="Профиль" rightIcon="fa-gear" />
-                            <div className="bg-white dark:bg-gray-900 px-4 py-4 mt-2">
-                                {[
-                                    { id: 'categories', icon: 'fa-icons', title: 'Мои категории', color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-                                    { id: 'theme', icon: 'fa-moon', title: 'Темная тема', value: isDarkMode ? 'Вкл' : 'Выкл', color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/30' }
-                                ].map((item, i) => (
-                                    <div key={i} onClick={() => { if(item.id==='theme') setIsDarkMode(!isDarkMode); if(item.id==='categories') setIsCategoryModalOpen(true); }} className="flex items-center justify-between py-3.5 border-b border-gray-50 dark:border-gray-800/50 last:border-0 active:bg-gray-50 cursor-pointer">
-                                        <div className="flex items-center gap-4"><div className={`w-9 h-9 rounded-full flex items-center justify-center ${item.bg} ${item.color}`}><i className={`fa-solid ${item.icon} text-sm`}></i></div><span className="text-textDark dark:text-white font-bold text-sm">{item.title}</span></div>
-                                        <div className="flex items-center gap-2">{item.value && <span className="text-xs font-medium text-gray-400">{item.value}</span>}<i className="fa-solid fa-chevron-right text-gray-300 text-xs"></i></div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    );
+                    case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
+                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={getEffectiveUserId()} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} onOpenCategories={() => setIsCategoryModalOpen(true)} familyId={familyId} setFamilyId={setFamilyId} />;
                     default: return null;
                 }
             };
 
             if (isSplashVisible) return (
                 <div className="h-screen w-full bg-primary flex flex-col items-center justify-center text-white relative z-[100]">
-                    <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl mb-6 animate-pulse"><i className="fa-solid fa-wallet text-5xl text-primary"></i></div>
-                    <h1 className="text-3xl font-bold mb-2">Finance<span className="font-light">AI</span></h1>
+                    <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl mb-6"><i className="fa-solid fa-wallet text-5xl text-primary"></i></div>
+                    <h1 className="text-3xl font-bold">FinanceAI</h1>
                 </div>
             );
 
             return (
-                <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors">
+                <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
                     {renderScreen()}
 
-                    {/* Модалка Удаления Транзакции */}
-                    {selectedTransaction && (
+                    {}
+                    {isAddingMode && (
                         <div className="fixed inset-0 z-[60] flex items-end">
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in">
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsAddingMode(false)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto no-scrollbar">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
-                                <div className="text-center mb-6">
-                                    <div className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 ${selectedTransaction.bg} dark:bg-opacity-20 ${selectedTransaction.color} text-2xl`}><i className={`fa-solid ${selectedTransaction.icon}`}></i></div>
-                                    <h3 className="text-xl font-bold text-textDark dark:text-white mb-1">{selectedTransaction.title}</h3>
-                                    <p className="text-sm text-gray-500">{selectedTransaction.category} • {selectedTransaction.date}</p>
-                                    <h2 className={`text-3xl font-bold mt-4 ${selectedTransaction.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white'}`}>
-                                        {selectedTransaction.amount > 0 ? '+' : ''}{formatMoney(selectedTransaction.amount)}
-                                    </h2>
+                                
+                                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
+                                    <button onClick={()=>setTxType('expense')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txType==='expense' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}>Расход</button>
+                                    <button onClick={()=>setTxType('income')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txType==='income' ? 'bg-white dark:bg-gray-700 text-green-500 shadow-sm' : 'text-gray-400'}`}>Доход</button>
                                 </div>
-                                <button onClick={() => handleDeleteTransaction(selectedTransaction.id)} className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-3.5 rounded-2xl mb-4">Удалить операцию</button>
-                                <button onClick={() => setSelectedTransaction(null)} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-2xl">Закрыть</button>
+
+                                <form onSubmit={handleSaveTransaction}>
+                                    <div className="space-y-4 mb-6">
+                                        <div>
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Сумма (сум)</label>
+                                            <input required type="number" value={newTxAmount} onChange={e=>setNewTxAmount(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none" placeholder="0" />
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between items-center ml-1 mb-1">
+                                                <label className="text-xs text-gray-500 dark:text-gray-400">Название / Место</label>
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={simulateVoice} className="w-7 h-7 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xs"><i className="fa-solid fa-microphone"></i></button>
+                                                    <button type="button" onClick={simulateScan} className="w-7 h-7 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xs"><i className="fa-solid fa-camera"></i></button>
+                                                </div>
+                                            </div>
+                                            <input required type="text" value={newTxTitle} onChange={e=>setNewTxTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-textDark dark:text-white focus:outline-none" placeholder={txType === 'income' ? 'Зарплата, Перевод...' : 'Кафе, Магазин...'} />
+                                        </div>
+                                        
+                                        {txType === 'expense' && (
+                                            <>
+                                                <div>
+                                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Категория</label>
+                                                    <select value={newTxCat} onChange={e=>setNewTxCat(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none appearance-none">
+                                                        {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1 mb-1 block">Иконка траты</label>
+                                                    <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto no-scrollbar p-1">
+                                                        {TOP_ICONS.map(ic => (
+                                                            <div key={ic} onClick={() => setNewTxIcon(ic)} className={`w-10 h-10 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all ${newTxIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'}`}>
+                                                                <i className={`fa-solid ${ic}`}></i>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                    <button type="submit" className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg ${txType === 'income' ? 'bg-green-500' : 'bg-primary'}`}>
+                                        Сохранить {txType === 'income' ? 'доход' : 'расход'}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     )}
 
-                    {/* Модалка Категорий */}
+                    {}
                     {isCategoryModalOpen && (
                         <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
                             <div className="bg-white dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl sm:rounded-3xl p-6 animate-fade-in relative z-10 flex flex-col">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xl font-bold text-textDark dark:text-white">Настройки категорий</h3>
+                                    <h3 className="text-xl font-bold text-textDark dark:text-white">Мои категории</h3>
                                     <button onClick={() => setIsCategoryModalOpen(false)} className="text-gray-400"><i className="fa-solid fa-xmark text-xl"></i></button>
                                 </div>
-
-                                <div className="overflow-y-auto mb-6 pr-2 space-y-3 no-scrollbar flex-1 border-b border-gray-100 dark:border-gray-800 pb-4">
+                                <div className="overflow-y-auto mb-6 pr-2 space-y-3 no-scrollbar flex-1 pb-4">
                                     {categories.map((cat, idx) => (
-                                        <div key={idx} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl">
+                                        <div key={idx} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700">
                                             <div className="flex justify-between items-center">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color}`}><i className={`fa-solid ${cat.icon}`}></i></div>
                                                     <span className="font-bold text-sm text-textDark dark:text-white">{cat.name}</span>
                                                 </div>
-                                                {categories.length > 1 && (
-                                                    <button onClick={() => setCategories(categories.filter((_, i) => i !== idx))} className="text-red-500 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-                                                        <i className="fa-solid fa-trash text-sm"></i>
-                                                    </button>
-                                                )}
+                                                <button onClick={() => setCategories(categories.filter((_, i) => i !== idx))} className="text-red-500 w-8 h-8 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg"><i className="fa-solid fa-trash text-sm"></i></button>
                                             </div>
                                             <div className="flex items-center justify-between pl-1">
-                                                <span className="text-xs text-gray-500 font-medium">Лимит (сум):</span>
-                                                <input
-                                                    type="number"
-                                                    value={cat.limit || 0}
-                                                    onChange={(e) => {
-                                                        const val = parseInt(e.target.value) || 0;
-                                                        const newCats = [...categories];
-                                                        newCats[idx].limit = val;
-                                                        setCategories(newCats);
-                                                    }}
-                                                    className="w-28 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 text-sm text-right font-bold text-textDark dark:text-white focus:outline-none"
-                                                />
+                                                <span className="text-xs text-gray-500">Лимит:</span>
+                                                <input type="number" value={cat.limit || 0} onChange={(e) => { const val = parseInt(e.target.value) || 0; const newCats = [...categories]; newCats[idx].limit = val; setCategories(newCats); }} className="w-28 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm text-right font-bold focus:outline-none text-textDark dark:text-white" />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                                
-                                <div className="mt-auto">
-                                    <h4 className="font-bold text-sm text-textDark dark:text-white mb-3">Добавить новую</h4>
-                                    <input value={newCatName} onChange={e=>setNewCatName(e.target.value)} placeholder="Название (напр. Питомцы)" className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mb-4 text-textDark dark:text-white focus:outline-none" />
-                                    <div className="flex gap-3 overflow-x-auto no-scrollbar mb-4 py-1">
-                                        {availableIcons.map(ic => <div key={ic} onClick={() => setNewCatIcon(ic)} className={`w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center text-xl cursor-pointer transition-all ${newCatIcon === ic ? 'bg-primary text-white scale-110 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}><i className={`fa-solid ${ic}`}></i></div>)}
-                                    </div>
-                                    <div className="flex gap-3 mb-4 overflow-x-auto no-scrollbar">
-                                        {availableColorPalettes.map((pal, idx) => <div key={idx} onClick={() => setNewCatColor(idx)} className={`w-10 h-10 flex-shrink-0 rounded-full cursor-pointer transition-transform ${newCatColor === idx ? 'scale-125 shadow-lg border-2 border-white dark:border-gray-900' : ''}`} style={{backgroundColor: pal.hex}}></div>)}
-                                    </div>
-                                    <button onClick={createCategory} className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg">Создать</button>
-                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Модалка Добавления */}
-                    {isAddingMode && (
-                        <div className="fixed inset-0 z-[60] flex items-end">
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setIsAddingMode(false); setAddMethod(null); setTxAmount(''); }}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto no-scrollbar">
-                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
-                                <input type="file" accept="image/*" capture="environment" id="cameraInput" className="hidden" onChange={handleReceiptScan} />
-
-                                {!addMethod && (
-                                    <>
-                                        <h3 className="text-xl font-bold text-center mb-6 text-textDark dark:text-white">Новая операция</h3>
-                                        
-                                        <div className="grid grid-cols-3 gap-3 mb-6">
-                                            <div onClick={handleVoiceSimulate} className="flex flex-col items-center gap-2 cursor-pointer bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl active:bg-gray-100">
-                                                <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-500 text-xl"><i className="fa-solid fa-microphone"></i></div>
-                                                <span className="text-[10px] font-bold text-textDark dark:text-gray-200">Голосом</span>
-                                            </div>
-                                            <div onClick={() => document.getElementById('cameraInput').click()} className="flex flex-col items-center gap-2 cursor-pointer bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl active:bg-gray-100">
-                                                <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-500 text-xl"><i className="fa-solid fa-camera"></i></div>
-                                                <span className="text-[10px] font-bold text-textDark dark:text-gray-200">Скан чека</span>
-                                            </div>
-                                            <div onClick={() => setAddMethod('manual')} className="flex flex-col items-center gap-2 cursor-pointer bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl active:bg-gray-100">
-                                                <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-primary text-xl"><i className="fa-solid fa-pen"></i></div>
-                                                <span className="text-[10px] font-bold text-textDark dark:text-gray-200">Вручную</span>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-
-                                {addMethod === 'voice' && (
-                                    <div className="py-8 text-center flex flex-col items-center">
-                                        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-500 text-3xl mb-4 relative">
-                                            {isProcessing ? <i className="fa-solid fa-microphone animate-ping-slow"></i> : <i className="fa-solid fa-check text-green-500"></i>}
-                                        </div>
-                                        <h3 className="text-lg font-bold text-textDark dark:text-white">{isProcessing ? "Внимательно слушаю..." : "Распознано!"}</h3>
-                                    </div>
-                                )}
-
-                                {addMethod === 'scan' && (
-                                    <div className="py-6 text-center">
-                                        <div className="w-48 h-64 mx-auto border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl relative overflow-hidden mb-6 flex items-center justify-center">
-                                            {isProcessing ? <><i className="fa-solid fa-receipt text-6xl text-gray-300 dark:text-gray-600"></i><div className="animate-scanline"></div></> : <i className="fa-solid fa-camera text-4xl text-gray-400"></i>}
-                                        </div>
-                                        <h3 className="text-lg font-bold text-textDark dark:text-white">{isProcessing ? "ИИ читает чек..." : "Обработка..."}</h3>
-                                    </div>
-                                )}
-
-                                {(addMethod === 'manual' || addMethod === 'manual_prefilled') && (
-                                    <form onSubmit={handleManualAdd}>
-                                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
-                                            <button type="button" onClick={()=>setTxType('expense')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txType==='expense' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}>Расход</button>
-                                            <button type="button" onClick={()=>setTxType('income')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txType==='income' ? 'bg-white dark:bg-gray-700 text-green-500 shadow-sm' : 'text-gray-400'}`}>Доход</button>
-                                        </div>
-
-                                        <div className="space-y-4 mb-6">
-                                            <div>
-                                                <label className="text-xs text-gray-500 ml-1">Сумма и Валюта</label>
-                                                <div className="flex gap-2 mt-1">
-                                                    <input required type="number" name="amount" value={txAmount} onChange={e=>setTxAmount(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold text-textDark dark:text-white focus:outline-none" placeholder="0" />
-                                                    <select name="currency" value={txCurrency} onChange={e=>setTxCurrency(e.target.value)} className="w-24 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-2 py-3 text-sm font-bold text-textDark dark:text-white focus:outline-none appearance-none text-center">
-                                                        <option value="UZS">UZS</option>
-                                                        <option value="USD">USD</option>
-                                                        <option value="EUR">EUR</option>
-                                                    </select>
-                                                </div>
-                                                {txCurrency !== 'UZS' && txAmount && <p className="text-xs text-green-500 mt-1 ml-1 font-medium"><i className="fa-solid fa-arrow-right-arrow-left"></i> ~ {formatMoney(txAmount * exchangeRates[txCurrency])} по курсу ЦБ</p>}
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-gray-500 ml-1">Название / Источник</label>
-                                                <input required type="text" name="title" defaultValue={scannedData.title || ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none" placeholder={txType === 'income' ? 'Например: Зарплата' : 'Например: Супермаркет'} />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs text-gray-500 ml-1">Категория</label>
-                                                <select name="category" defaultValue={scannedData.category || categories[0].name} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none appearance-none">
-                                                    {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <button type="submit" className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg ${txType === 'income' ? 'bg-green-500' : 'bg-primary'}`}>Сохранить {txType === 'income' ? 'доход' : 'расход'}</button>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Навигация */}
                     {currentScreen !== 'aichat' && currentScreen !== 'product' && currentScreen !== 'calculator' && currentScreen !== 'goals' && (
                         <div className="fixed bottom-0 w-full max-w-md bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-2 flex justify-between items-center z-40 transition-colors">
                             <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center p-2 ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-medium">Главная</span></button>
                             <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-medium">Аналитика</span></button>
-                            <div className="relative -top-5"><button onClick={() => handleAddClick('expense')} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg transform hover:scale-105 transition-all"><i className="fa-solid fa-plus"></i></button></div>
+                            <div className="relative -top-5"><button onClick={() => openAddModal('expense')} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg transform hover:scale-105 transition-all"><i className="fa-solid fa-plus"></i></button></div>
                             <button onClick={() => setCurrentScreen('tips')} className={`flex flex-col items-center p-2 ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-medium">Советы</span></button>
                             <button onClick={() => setCurrentScreen('profile')} className={`flex flex-col items-center p-2 ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-medium">Профиль</span></button>
                         </div>
