@@ -119,8 +119,8 @@ app.post('/api/chat', verifyUser, async (req, res) => {
         Вот список недавних транзакций пользователя (отрицательные суммы - это расходы): ${txContext}.
         Вопрос пользователя: ${message}`;
 
-        // Исправлено название модели на актуальное ("gemini-pro")
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Исправлено название модели на актуальное (""gemini-2.5-flash"")
+        const model = genAI.getGenerativeModel({ model:"gemini-2.5-flash" });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         
