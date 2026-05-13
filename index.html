@@ -1,1 +1,1252 @@
-1
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Финансы Telegram App</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        primaryLight: '#8B5CF6',
+                        primaryDark: '#5B21B6',
+                        bgLight: '#F3F4F6',
+                        bgDark: '#030712',
+                        textDark: '#111827',
+                        cardDark: '#1F2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Иконки FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Telegram Web App API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(124, 58, 237, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+
+        @keyframes scanline {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .animate-scanline {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #10B981;
+            box-shadow: 0 0 10px #10B981, 0 0 20px #10B981;
+            animation: scanline 2s linear infinite;
+        }
+
+        /* Прячем scrollbar для всей страницы */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const initialTransactions = [
+            { id: 1, title: 'Супермаркет Korzinka', category: 'Продукты', amount: -120000, date: 'Сегодня, 09:30', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', rawDate: new Date() },
+            { id: 2, title: 'Кофейня', category: 'Еда вне дома', amount: -38000, date: 'Сегодня, 11:20', icon: 'fa-mug-hot', color: 'text-amber-700', bg: 'bg-amber-100', rawDate: new Date(Date.now() - 3600000 * 2) },
+            { id: 3, title: 'Аптека', category: 'Здоровье', amount: -15000, date: 'Сегодня, 13:10', icon: 'fa-pills', color: 'text-emerald-500', bg: 'bg-emerald-100', rawDate: new Date(Date.now() - 3600000 * 4) },
+            { id: 4, title: 'Автобус', category: 'Транспорт', amount: -5000, date: 'Сегодня, 15:40', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', rawDate: new Date(Date.now() - 3600000 * 6) },
+            { id: 5, title: 'Парковка', category: 'Транспорт', amount: -10000, date: 'Сегодня, 18:30', icon: 'fa-square-parking', color: 'text-blue-600', bg: 'bg-blue-100', rawDate: new Date(Date.now() - 3600000 * 8) },
+            { id: 6, title: 'Онлайн подписка', category: 'Развлечения', amount: -60000, date: 'Сегодня, 20:15', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', rawDate: new Date(Date.now() - 3600000 * 10) },
+            { id: 7, title: 'Рынок', category: 'Продукты', amount: -80000, date: 'Вчера, 10:20', icon: 'fa-carrot', color: 'text-orange-500', bg: 'bg-orange-100', rawDate: new Date(Date.now() - 86400000) },
+            { id: 8, title: 'Такси', category: 'Транспорт', amount: -28000, date: 'Вчера, 14:20', icon: 'fa-taxi', color: 'text-yellow-500', bg: 'bg-yellow-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 4) },
+            { id: 9, title: 'Магазин техники', category: 'Покупки', amount: -18000, date: 'Вчера, 17:50', icon: 'fa-mobile-screen', color: 'text-purple-500', bg: 'bg-purple-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 7) },
+            { id: 10, title: 'Зарплата', category: 'Доход', amount: 6500000, date: 'Вчера, 18:00', icon: 'fa-money-bill-wave', color: 'text-green-500', bg: 'bg-green-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 8) }
+        ];
+
+        const formatMoney = (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
+        };
+
+        const getGreeting = () => {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) return 'Доброе утро';
+            if (hour >= 12 && hour < 18) return 'Добрый день';
+            if (hour >= 18 && hour < 23) return 'Добрый вечер';
+            return 'Доброй ночи';
+        };
+
+        const TopHeader = ({ title, showBack = false, onBack, rightIcon = null, onRightClick = null }) => (
+            <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-gray-900 sticky top-0 z-10 transition-colors duration-300">
+                <div className="flex items-center gap-3">
+                    {showBack && (
+                        <button onClick={onBack} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                            <i className="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                    )}
+                    <h1 className="text-xl font-bold text-textDark dark:text-white transition-colors">{title}</h1>
+                </div>
+                <div className="flex gap-4">
+                    {rightIcon && (
+                        <button onClick={onRightClick} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                            <i className={`fa-regular ${rightIcon} text-xl`}></i>
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+
+        const ScreenHome = ({ setScreen, transactions, user, onTransactionClick }) => {
+            const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
+            const greeting = getGreeting();
+
+            const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0) + 12150000;
+            const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
+            const currentBalance = totalIncome - totalExpense;
+
+            const categories = {};
+            let totalCatExpenses = 0;
+            transactions.filter(t => t.amount < 0).forEach(t => {
+                categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount);
+                totalCatExpenses += Math.abs(t.amount);
+            });
+
+            const getPerc = (cat) => {
+                if (totalCatExpenses === 0) return 0;
+                return Math.round(((categories[cat] || 0) / totalCatExpenses) * 100);
+            };
+
+            const prodPerc = getPerc('Продукты') || 35;
+            const transPerc = getPerc('Транспорт') || 20;
+            const homePerc = getPerc('Развлечения') || 15;
+            const restPerc = 100 - prodPerc - transPerc - homePerc;
+
+            return (
+                <div className="pb-24 animate-fade-in">
+                    <div className="px-4 pt-4 pb-2 flex justify-between items-center bg-bgLight dark:bg-bgDark transition-colors">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{greeting},</p>
+                            <h2 className="text-xl font-bold text-textDark dark:text-white">{userName}</h2>
+                        </div>
+                        <div className="flex gap-3">
+                            <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 transition-colors">
+                                <i className="fa-regular fa-calendar"></i>
+                            </div>
+                            <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 relative transition-colors">
+                                <i className="fa-regular fa-bell"></i>
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-4 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
+                        <div className="min-w-[90%] snap-center bg-gradient-to-r from-primary to-purple-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0">
+                            <i className="fa-solid fa-wallet absolute -right-4 -bottom-4 text-white opacity-10 text-6xl"></i>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-purple-200">Общий баланс</span>
+                                <i className="fa-regular fa-eye text-purple-200"></i>
+                            </div>
+                            <h2 className="text-3xl font-bold mb-4 relative z-10">{formatMoney(currentBalance)}</h2>
+                            <div className="flex justify-between relative z-10">
+                                <div>
+                                    <p className="text-xs text-purple-200">Доходы</p>
+                                    <p className="font-semibold text-sm">{formatMoney(totalIncome)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-purple-200">Расходы</p>
+                                    <p className="font-semibold text-sm">{formatMoney(-totalExpense)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="min-w-[90%] snap-center bg-gray-900 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0">
+                            <div className="absolute right-4 top-4 text-gray-400 text-2xl font-bold italic">UZCARD</div>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-gray-400">Зарплатная карта</span>
+                            </div>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatMoney(8400000)}</h2>
+                            <div className="flex justify-between items-end relative z-10">
+                                <p className="font-mono tracking-widest text-sm text-gray-300">**** 4512</p>
+                                <div className="w-8 h-8 rounded-full border border-gray-600 flex items-center justify-center bg-gray-800">
+                                    <i className="fa-solid fa-chevron-right text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div className="min-w-[90%] snap-center bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0">
+                            <i className="fa-solid fa-money-bill absolute -right-2 -bottom-2 text-white opacity-20 text-6xl"></i>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-green-100">Наличные</span>
+                            </div>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatMoney(1200000)}</h2>
+                            <div className="flex justify-between items-end relative z-10">
+                                <p className="text-sm text-green-100">В кошельке</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between px-6 py-4">
+                        <div className="flex flex-col items-center gap-1 cursor-pointer">
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-arrow-down"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Доход</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer">
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-arrow-up"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Расход</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('calculator')}>
+                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-xl shadow-sm transition-colors"><i className="fa-solid fa-calculator"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Вклад</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('goals')}>
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-bullseye"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Цель</span>
+                        </div>
+                    </div>
+
+                    <div className="px-4 py-2">
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm transition-colors duration-300">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-textDark dark:text-white transition-colors">Краткий обзор</h3>
+                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1 transition-colors">
+                                    Этот месяц <i className="fa-solid fa-chevron-down text-[10px]"></i>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-between mb-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">Расходы</p>
+                                    <p className="font-bold text-textDark dark:text-white transition-colors">{formatMoney(totalExpense)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs text-green-500 flex items-center justify-end gap-1"><i className="fa-solid fa-arrow-trend-down"></i> -12% к апрелю</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="w-24 h-24 rounded-full border-[12px] border-primary border-t-blue-400 border-l-pink-400 border-b-gray-200 dark:border-b-gray-700 relative">
+                                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                        <i className="fa-solid fa-wallet text-gray-400 text-xl"></i>
+                                    </div>
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary"></span><span className="text-gray-600 dark:text-gray-300 transition-colors">Продукты</span></div>
+                                        <span className="font-medium text-textDark dark:text-gray-200 transition-colors">{prodPerc}%</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-gray-600 dark:text-gray-300 transition-colors">Транспорт</span></div>
+                                        <span className="font-medium text-textDark dark:text-gray-200 transition-colors">{transPerc}%</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-pink-400"></span><span className="text-gray-600 dark:text-gray-300 transition-colors">Развлечения</span></div>
+                                        <span className="font-medium text-textDark dark:text-gray-200 transition-colors">{homePerc}%</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700"></span><span className="text-gray-600 dark:text-gray-300 transition-colors">Остальное</span></div>
+                                        <span className="font-medium text-textDark dark:text-gray-200 transition-colors">{restPerc}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-4 py-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-textDark dark:text-white transition-colors">Последние операции</h3>
+                            <button onClick={() => setScreen('analytics')} className="text-xs font-medium text-primary">Все</button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {transactions.slice(0, 4).map(t => (
+                                <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                            <i className={`fa-solid ${t.icon}`}></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                            {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenAnalytics = ({ transactions, onTransactionClick }) => {
+            const [filter, setFilter] = useState('Все');
+            const filters = ['Все', 'Продукты', 'Транспорт', 'Развлечения'];
+
+            const filteredTxs = filter === 'Все' ? transactions : transactions.filter(t => t.category === filter);
+            
+            const limits = {
+                'Продукты': { max: 2000000, icon: 'fa-basket-shopping', bg: 'bg-orange-500', lightBg: 'bg-orange-100', iconColor: 'text-orange-500' },
+                'Транспорт': { max: 500000, icon: 'fa-bus', bg: 'bg-blue-500', lightBg: 'bg-blue-100', iconColor: 'text-blue-500' },
+                'Развлечения': { max: 1000000, icon: 'fa-play', bg: 'bg-pink-500', lightBg: 'bg-pink-100', iconColor: 'text-pink-500' }
+            };
+
+            const spent = transactions.filter(t => t.amount < 0).reduce((acc, t) => {
+                if (limits[t.category]) {
+                    acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
+                }
+                return acc;
+            }, {});
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
+                    <TopHeader title="Расходы" rightIcon="fa-chart-bar" />
+                    
+                    <div className="px-4 mb-5 mt-2">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-textDark dark:text-white transition-colors">Бюджет на май</h3>
+                            <button className="text-xs font-medium text-primary bg-primaryLight/10 dark:bg-primary/20 px-2 py-1 rounded-lg transition-colors">Настроить</button>
+                        </div>
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm space-y-5 transition-colors duration-300">
+                            {Object.keys(limits).map(cat => {
+                                const currentSpent = spent[cat] || 0;
+                                const limit = limits[cat].max;
+                                const perc = Math.min(Math.round((currentSpent / limit) * 100), 100);
+                                const isOver = currentSpent > limit;
+                                const barColor = isOver ? 'bg-red-500' : limits[cat].bg;
+
+                                return (
+                                    <div key={cat}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${limits[cat].lightBg} dark:bg-opacity-20 ${limits[cat].iconColor} transition-colors`}>
+                                                    <i className={`fa-solid ${limits[cat].icon} text-sm`}></i>
+                                                </div>
+                                                <span className="text-sm font-bold text-textDark dark:text-white transition-colors">{cat}</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`text-sm font-bold ${isOver ? 'text-red-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                                    {formatMoney(currentSpent)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-1 overflow-hidden transition-colors">
+                                            <div className={`${barColor} h-2.5 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
+                                        </div>
+                                        <div className="flex justify-between mt-1">
+                                            <span className={`text-[10px] font-medium ${isOver ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                {isOver ? 'Лимит превышен!' : `Осталось: ${formatMoney(limit - currentSpent)}`}
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 dark:text-gray-500">из {formatMoney(limit)}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <h3 className="font-bold text-textDark dark:text-white px-4 mb-3 transition-colors">История операций</h3>
+                    <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar mb-2">
+                        {filters.map(f => (
+                            <button 
+                                key={f} 
+                                onClick={() => setFilter(f)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f ? 'bg-primary text-white shadow-md' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-800'}`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="px-4 py-2 space-y-4">
+                        <div>
+                            <div className="flex justify-between items-center mb-2 px-1">
+                                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">Сегодня</h4>
+                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 transition-colors">
+                                    {formatMoney(-filteredTxs.filter(t => t.date.includes('Сегодня') && t.amount < 0).reduce((a,c) => a+Math.abs(c.amount), 0))}
+                                </span>
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-sm space-y-1 transition-colors duration-300">
+                                {filteredTxs.filter(t => t.date.includes('Сегодня')).map(t => (
+                                    <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between p-2 rounded-xl active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                                <i className={`fa-solid ${t.icon}`}></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                                {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-2 px-1">
+                                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">Вчера</h4>
+                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 transition-colors">
+                                    {formatMoney(-filteredTxs.filter(t => t.date.includes('Вчера') && t.amount < 0).reduce((a,c) => a+Math.abs(c.amount), 0))}
+                                </span>
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-sm space-y-1 transition-colors duration-300">
+                                {filteredTxs.filter(t => t.date.includes('Вчера')).map(t => (
+                                    <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between p-2 rounded-xl active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                                <i className={`fa-solid ${t.icon}`}></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                                {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenProduct = ({ onBack }) => {
+            const chartRef = useRef(null);
+
+            useEffect(() => {
+                const ctx = document.getElementById('priceChart');
+                if (ctx) {
+                    if (chartRef.current) {
+                        chartRef.current.destroy();
+                    }
+                    chartRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Фев', 'Мар', 'Апр', 'Май'],
+                            datasets: [{
+                                label: 'Цена за кг',
+                                data: [3500, 4000, 4800, 6250],
+                                borderColor: '#7C3AED',
+                                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#7C3AED',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { display: false, min: 3000 },
+                                x: { grid: { display: false }, border: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }, []);
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                    <TopHeader title="Продукт" showBack={true} onBack={onBack} rightIcon="fa-star" />
+                    
+                    <div className="px-4 py-2">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl">🥔</div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-textDark dark:text-white transition-colors">Картошка</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">Все магазины <i className="fa-solid fa-chevron-down text-[10px]"></i></p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-6 border-b border-gray-200 dark:border-gray-800 mb-6 transition-colors">
+                            <button className="pb-2 border-b-2 border-primary text-primary font-medium text-sm">Обзор</button>
+                            <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm transition-colors">Покупки</button>
+                            <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm transition-colors">Аналитика</button>
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 transition-colors">Средняя цена</p>
+                            <div className="flex items-end gap-3">
+                                <h3 className="text-3xl font-bold text-textDark dark:text-white transition-colors">6 250 <span className="text-lg font-medium text-gray-500">сум/кг</span></h3>
+                            </div>
+                            <p className="text-xs text-red-500 font-medium mt-1 bg-red-50 dark:bg-red-900/20 inline-block px-2 py-0.5 rounded transition-colors"><i className="fa-solid fa-arrow-trend-up"></i> +24% за 3 месяца</p>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm mb-4 transition-colors">
+                            <div className="h-40 w-full">
+                                <canvas id="priceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Мин. цена</p>
+                                <p className="font-bold text-textDark dark:text-white transition-colors">3 500 сум</p>
+                                <p className="text-[10px] text-gray-400 mt-1">12 фев, Korzinka</p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Макс. цена</p>
+                                <p className="font-bold text-textDark dark:text-white transition-colors">6 800 сум</p>
+                                <p className="text-[10px] text-gray-400 mt-1">18 май, Базар</p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Всего покупок</p>
+                                <p className="font-bold text-textDark dark:text-white transition-colors">12 раз</p>
+                                <p className="text-[10px] text-gray-400 mt-1">Общее количество: 24.5 кг</p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Всего потрачено</p>
+                                <p className="font-bold text-textDark dark:text-white transition-colors">153 000 сум</p>
+                                <p className="text-[10px] text-gray-400 mt-1">Среднее за покупку: 12 750 сум</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl p-4 shadow-sm transition-colors">
+                            <div className="flex items-start gap-3">
+                                <div className="text-primary text-xl"><i className="fa-solid fa-robot"></i></div>
+                                <div>
+                                    <h4 className="font-bold text-textDark dark:text-white text-sm mb-1 transition-colors">Умный совет</h4>
+                                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed transition-colors">Вы покупали дешевле на 35% в феврале. Лучшее время для покупки оптом: <strong className="text-primary dark:text-primaryLight">февраль-март</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenCalculator = ({ onBack }) => (
+            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                <TopHeader title="Калькулятор вклада" showBack={true} onBack={onBack} />
+                
+                <div className="px-4 py-4 space-y-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-50 dark:border-gray-800 transition-colors">
+                        <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Сумма вклада</span>
+                            <span className="font-bold text-textDark dark:text-white">10 000 000 сум</span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Процентная ставка</span>
+                            <span className="font-bold text-textDark dark:text-white">18 % годовых</span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Срок вклада</span>
+                            <span className="font-bold text-textDark dark:text-white">12 месяцев</span>
+                        </div>
+                        <div className="flex justify-between items-center py-3">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Капитализация</span>
+                            <span className="font-bold text-textDark dark:text-white flex items-center gap-1">Ежемесячно <i className="fa-solid fa-chevron-down text-xs text-gray-400"></i></span>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-primary to-purple-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                        <i className="fa-solid fa-asterisk absolute -right-4 -top-4 text-white opacity-10 text-6xl"></i>
+                        <p className="text-sm text-purple-200 mb-1 relative z-10">Итоговая сумма</p>
+                        <h2 className="text-3xl font-bold mb-2 relative z-10">11 895 000 сум</h2>
+                        <div className="relative z-10">
+                            <p className="text-xs text-purple-200 mb-1">Прибыль</p>
+                            <p className="text-sm text-emerald-300 font-bold bg-white/10 inline-block px-2 py-1 rounded">
+                                +1 895 000 сум (18.95%)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl p-4 shadow-sm transition-colors duration-300">
+                        <div className="flex items-start gap-3">
+                            <div className="text-emerald-500 text-xl"><i className="fa-regular fa-lightbulb"></i></div>
+                            <div>
+                                <h4 className="font-bold text-textDark dark:text-white text-sm mb-1 transition-colors">Совет ИИ</h4>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed transition-colors">Если увеличить срок до 24 месяцев, прибыль составит <strong className="text-emerald-500">4 390 000 сум</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ScreenGoals = ({ onBack }) => (
+            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                <TopHeader title="Цели" showBack={true} onBack={onBack} rightIcon="fa-plus" />
+                <div className="px-4 py-2 flex gap-4 border-b border-gray-200 dark:border-gray-800 mb-4 transition-colors">
+                    <button className="pb-2 border-b-2 border-primary text-primary font-medium text-sm flex-1">Активные</button>
+                    <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm flex-1 transition-colors">Достигнутые</button>
+                </div>
+                
+                <div className="px-4 space-y-4">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm transition-colors duration-300">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 className="font-bold text-textDark dark:text-white transition-colors">Новая кухня</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">600 000 / 2 000 000 сум</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-xl transition-colors">🍳</div>
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 transition-colors">
+                            <div className="bg-primary h-2.5 rounded-full" style={{width: '30%'}}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 transition-colors">
+                            <span>Осталось 8 месяцев</span>
+                            <span className="font-bold text-textDark dark:text-gray-300">30%</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm transition-colors duration-300">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 className="font-bold text-textDark dark:text-white transition-colors">Путешествие в Турцию</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">3 200 000 / 8 000 000 сум</p>
+                            </div>
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-xl transition-colors">✈️</div>
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 transition-colors">
+                            <div className="bg-blue-500 h-2.5 rounded-full" style={{width: '40%'}}></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 transition-colors">
+                            <span>Осталось 12 месяцев</span>
+                            <span className="font-bold text-textDark dark:text-gray-300">40%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ScreenTips = ({ openAIChat }) => {
+            const tabs = ['Для вас', 'Экономия', 'Инвестиции'];
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
+                    <TopHeader title="Советы" rightIcon="fa-bell" />
+                    
+                    <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar mb-4">
+                        {tabs.map((t, i) => (
+                            <button key={i} className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${i === 0 ? 'bg-primary text-white shadow-md' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-800'}`}>
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="px-4 space-y-4">
+                        <h3 className="font-bold text-textDark dark:text-white transition-colors">Анализ ваших финансов</h3>
+                        
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300">
+                            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500 text-xl flex-shrink-0 transition-colors">🍔</div>
+                            <div>
+                                <p className="text-sm text-textDark dark:text-gray-200 leading-relaxed transition-colors">Вы тратите на еду вне дома на <strong className="text-red-500">37% больше</strong>, чем в прошлом месяце.<br/>Попробуйте готовить дома — это сэкономит до 500 000 сум в месяц.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 text-xl flex-shrink-0 transition-colors">🚌</div>
+                            <div>
+                                <p className="text-sm text-textDark dark:text-gray-200 leading-relaxed transition-colors">Ваши расходы на транспорт составляют 20% от всех трат.<br/>Можно оптимизировать маршруты и сэкономить до 200 000 сум.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300 border border-green-100 dark:border-green-900/30">
+                            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-500 text-xl flex-shrink-0 transition-colors">🎉</div>
+                            <div>
+                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">Отличная работа!</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 transition-colors">Вы увеличили доходы на 15% по сравнению с прошлым месяцем.</p>
+                            </div>
+                        </div>
+
+                        <h3 className="font-bold text-textDark dark:text-white mt-6 transition-colors">Полезные статьи</h3>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex justify-between items-center transition-colors duration-300">
+                            <div>
+                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">5 правил финансовой<br/>грамотности</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 transition-colors">5 мин чтения</p>
+                            </div>
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 transition-colors">
+                                <i className="fa-regular fa-image"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={openAIChat}
+                        className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-primary to-purple-600 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center text-white text-2xl z-40 hover:scale-105 transition-transform"
+                    >
+                        <i className="fa-solid fa-robot"></i>
+                        <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-[#F9FAFB] dark:border-gray-950 rounded-full"></span>
+                    </button>
+                </div>
+            );
+        };
+
+        const ScreenAIChat = ({ onBack }) => {
+            const [messages, setMessages] = useState([
+                { type: 'bot', text: 'Привет! 👋\nЯ помогу вам разобраться с финансами и подскажу, как можно улучшить ваше финансовое состояние.' }
+            ]);
+            const [isTyping, setIsTyping] = useState(false);
+
+            const sendPrompt = (text) => {
+                setMessages(prev => [...prev, { type: 'user', text }]);
+                setIsTyping(true);
+                
+                setTimeout(() => {
+                    setIsTyping(false);
+                    let reply = "Анализирую ваши данные... Вы тратите больше всего на 'Продукты' (35%). В этом месяце можно сэкономить, если закупаться на оптовых рынках.";
+                    if (text.includes("накопить")) reply = "Чтобы накопить 10 млн сум, откладывайте по 850 000 сум ежемесячно в течение года на вклад под 18%.";
+                    setMessages(prev => [...prev, { type: 'bot', text: reply }]);
+                }, 1500);
+            };
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen flex flex-col animate-fade-in z-50 relative transition-colors duration-300">
+                    <TopHeader title="Финансовый помощник" showBack={true} onBack={onBack} rightIcon="fa-broom" />
+                    
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        <p className="text-center text-xs text-gray-400">Ваш AI ассистент</p>
+                        
+                        {messages.map((msg, i) => (
+                            <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] rounded-2xl p-3 text-sm ${msg.type === 'user' ? 'bg-gray-200 dark:bg-gray-800 text-textDark dark:text-white rounded-tr-sm' : 'bg-primary text-white rounded-tl-sm shadow-md'}`}>
+                                    {msg.text.split('\n').map((line, j) => <p key={j} className="mb-1 last:mb-0">{line}</p>)}
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {isTyping && (
+                            <div className="flex justify-start">
+                                <div className="bg-primary text-white rounded-2xl rounded-tl-sm p-3 shadow-md flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 transition-colors">
+                        {messages.length === 1 && (
+                            <div className="mb-4 space-y-2">
+                                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">Примеры вопросов:</p>
+                                {['Где я больше всего трачу?', 'Как мне накопить 10 млн сум?', 'Стоит ли открывать вклад?'].map(q => (
+                                    <button key={q} onClick={() => sendPrompt(q)} className="block w-full text-left px-4 py-2 text-sm text-primary border border-primary/30 rounded-xl hover:bg-primary/5 transition-colors">
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <input type="text" placeholder="Напишите ваш вопрос..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-4 py-3 text-sm focus:outline-none transition-colors" />
+                            <button className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
+                                <i className="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <p className="text-center text-[10px] text-gray-400 mt-2">AI может ошибаться. Проверяйте важную информацию.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions }) => {
+            const userName = (user && user.first_name) ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Ильхом';
+            const username = (user && user.username) ? `@${user.username}` : '@ilkhom_finance';
+            const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
+
+            const handleExport = () => {
+                let csvContent = "Дата,Категория,Название,Сумма\n";
+                transactions.forEach(t => {
+                    const date = `"${t.date}"`;
+                    const category = `"${t.category}"`;
+                    const title = `"${t.title}"`;
+                    const amount = t.amount;
+                    csvContent += `${date},${category},${title},${amount}\n`;
+                });
+
+                const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `FinanceApp_Export_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            return (
+                <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
+                    <TopHeader title="Профиль" rightIcon="fa-gear" />
+                    
+                    <div className="bg-white dark:bg-gray-900 px-4 py-6 mb-2 flex items-center gap-4 transition-colors duration-300">
+                        <img src={userPhoto} alt="Аватар" className="w-16 h-16 rounded-full border-2 border-primaryLight shadow-sm object-cover" />
+                        <div>
+                            <h2 className="text-xl font-bold text-textDark dark:text-white transition-colors duration-300">{userName}</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">{username}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-3 mb-2 transition-colors duration-300">
+                        <div className="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-4 flex items-center justify-between shadow-md relative overflow-hidden">
+                            <i className="fa-brands fa-telegram absolute -right-4 -bottom-4 text-white opacity-10 text-6xl transform -rotate-12"></i>
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                    <i className="fa-solid fa-crown text-sm"></i>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-sm">Finance Premium</h3>
+                                    <p className="text-xs text-gray-300 mt-0.5">Все ИИ-функции активны</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-5 mb-2 transition-colors duration-300">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-textDark dark:text-white text-sm transition-colors">Мои достижения</h3>
+                            <span className="text-xs font-bold text-primary bg-primaryLight bg-opacity-10 px-2 py-1 rounded-lg">3/12 открыто</span>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                            <div className="min-w-[105px] bg-gradient-to-br from-yellow-50 to-orange-50 p-3 rounded-2xl border border-yellow-100 text-center flex-shrink-0">
+                                <div className="w-10 h-10 mx-auto bg-white rounded-full flex items-center justify-center text-yellow-500 shadow-sm mb-2 text-lg"><i className="fa-solid fa-fire"></i></div>
+                                <p className="text-xs font-bold text-textDark leading-tight">3 дня подряд</p>
+                                <p className="text-[9px] text-gray-500 mt-1">Учет трат</p>
+                            </div>
+                            <div className="min-w-[105px] bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-2xl border border-green-100 text-center flex-shrink-0">
+                                <div className="w-10 h-10 mx-auto bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-2 text-lg"><i className="fa-solid fa-piggy-bank"></i></div>
+                                <p className="text-xs font-bold text-textDark leading-tight">Копилка</p>
+                                <p className="text-[9px] text-gray-500 mt-1">Отложен 1 млн</p>
+                            </div>
+                            <div className="min-w-[105px] bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center flex-shrink-0 transition-colors">
+                                <div className="w-10 h-10 mx-auto bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-blue-500 shadow-sm mb-2 text-lg transition-colors"><i className="fa-solid fa-robot"></i></div>
+                                <p className="text-xs font-bold text-textDark dark:text-gray-200 leading-tight transition-colors">ИИ-бро</p>
+                                <p className="text-[9px] text-gray-500 mt-1">Спросил 10 раз</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1 transition-colors duration-300">
+                        {[
+                            { id: 'settings', icon: 'fa-user-gear', title: 'Настройки аккаунта', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800' },
+                            { id: 'currency', icon: 'fa-coins', title: 'Валюты', value: 'UZS - Сум', color: 'text-yellow-600 dark:text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+                            { id: 'family', icon: 'fa-users', title: 'Семейный доступ', value: 'Выкл', color: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+                            { id: 'theme', icon: 'fa-moon', title: 'Темная тема', value: isDarkMode ? 'Вкл' : 'Выкл', color: 'text-indigo-500 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
+                            { id: 'export', icon: 'fa-file-csv', title: 'Экспорт данных', color: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+                        ].map((item, i) => (
+                            <div 
+                                key={i} 
+                                onClick={() => {
+                                    if (item.id === 'theme') toggleDarkMode();
+                                    if (item.id === 'export') handleExport();
+                                }} 
+                                className="flex items-center justify-between py-3.5 border-b border-gray-50 dark:border-gray-800/50 last:border-0 active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${item.bg} ${item.color} transition-colors`}>
+                                        <i className={`fa-solid ${item.icon} text-sm`}></i>
+                                    </div>
+                                    <span className="text-textDark dark:text-white font-bold text-sm transition-colors">{item.title}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {item.value && <span className="text-xs font-medium text-gray-400">{item.value}</span>}
+                                    <i className="fa-solid fa-chevron-right text-gray-300 dark:text-gray-600 text-xs transition-colors"></i>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="px-4 mt-8 mb-8 text-center">
+                        <button className="text-red-500 text-sm font-bold hover:bg-red-50 px-6 py-2 rounded-xl transition-colors">
+                            Выйти из аккаунта
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [currentScreen, setCurrentScreen] = useState('home');
+            const [isAddingMode, setIsAddingMode] = useState(false);
+            
+            const [transactions, setTransactions] = useState(() => {
+                const saved = localStorage.getItem('financeAppTransactions');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        return parsed.map(t => ({...t, rawDate: new Date(t.rawDate)}));
+                    } catch (e) {
+                        return initialTransactions;
+                    }
+                }
+                return initialTransactions;
+            });
+
+            const [isSplashVisible, setIsSplashVisible] = useState(true);
+            
+            const [isDarkMode, setIsDarkMode] = useState(() => {
+                return localStorage.getItem('financeAppTheme') === 'dark';
+            });
+            
+            const [tgUser, setTgUser] = useState(null);
+            
+            const [addMethod, setAddMethod] = useState(null);
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+            useEffect(() => {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    tg.expand();
+                    
+                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                        setTgUser(tg.initDataUnsafe.user);
+                    }
+                    
+                    if (tg.colorScheme === 'dark' && !localStorage.getItem('financeAppTheme')) {
+                        setIsDarkMode(true);
+                    }
+                }
+
+                setTimeout(() => setIsSplashVisible(false), 2500);
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('financeAppTransactions', JSON.stringify(transactions));
+            }, [transactions]);
+
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('financeAppTheme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('financeAppTheme', 'light');
+                }
+            }, [isDarkMode]);
+
+            const handleAddClick = () => {
+                setIsAddingMode(true);
+                setAddMethod(null);
+            };
+
+            const closeAddModal = () => {
+                setIsAddingMode(false);
+                setAddMethod(null);
+                setIsProcessing(false);
+            };
+
+            const simulateAIProcessing = (method) => {
+                setAddMethod(method);
+                setIsProcessing(true);
+                setTimeout(() => {
+                    setIsProcessing(false);
+                    setAddMethod('manual_prefilled');
+                }, 3000);
+            };
+
+            const handleManualAdd = (e) => {
+                e.preventDefault();
+                const amount = parseInt(e.target.amount.value);
+                const title = e.target.title.value;
+                const category = e.target.category.value;
+                
+                if(!amount || !title) return;
+
+                let icon = 'fa-receipt';
+                let color = 'text-primary';
+                let bg = 'bg-purple-100';
+
+                if(category === 'Продукты') { icon = 'fa-basket-shopping'; color = 'text-orange-500'; bg = 'bg-orange-100'; }
+                if(category === 'Транспорт') { icon = 'fa-bus'; color = 'text-blue-500'; bg = 'bg-blue-100'; }
+                if(category === 'Еда вне дома') { icon = 'fa-utensils'; color = 'text-amber-600'; bg = 'bg-amber-100'; }
+                if(category === 'Развлечения') { icon = 'fa-play'; color = 'text-pink-500'; bg = 'bg-pink-100'; }
+
+                const newTx = {
+                    id: Date.now(),
+                    title,
+                    category,
+                    amount: -amount,
+                    date: 'Сегодня, ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    icon,
+                    color,
+                    bg,
+                    rawDate: new Date()
+                };
+
+                setTransactions([newTx, ...transactions]);
+                closeAddModal();
+            };
+
+            const handleDeleteTransaction = (id) => {
+                setTransactions(transactions.filter(t => t.id !== id));
+                setSelectedTransaction(null);
+            };
+
+            const handleTransactionClick = (t) => {
+                if (t.category === 'Продукты') {
+                    setCurrentScreen('product');
+                } else {
+                    setSelectedTransaction(t);
+                }
+            };
+
+            const renderScreen = () => {
+                switch(currentScreen) {
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={handleTransactionClick} />;
+                    case 'analytics': return <ScreenAnalytics transactions={transactions} onTransactionClick={handleTransactionClick} />;
+                    case 'product': return <ScreenProduct onBack={() => setCurrentScreen('home')} />;
+                    case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
+                    case 'goals': return <ScreenGoals onBack={() => setCurrentScreen('home')} />;
+                    case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
+                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} />;
+                    default: return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={handleTransactionClick} />;
+                }
+            };
+
+            if (isSplashVisible) {
+                return (
+                    <div className="h-screen w-full bg-primary flex flex-col items-center justify-center text-white relative overflow-hidden z-[100]">
+                        <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+                        <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl mb-6 relative z-10 animate-pulse">
+                            <i className="fa-solid fa-wallet text-5xl text-primary"></i>
+                        </div>
+                        <h1 className="text-3xl font-bold mb-2 relative z-10 tracking-wide">Finance<span className="font-light">AI</span></h1>
+                        <p className="text-purple-200 text-sm relative z-10">Ваш умный кошелек</p>
+                        
+                        <div className="absolute bottom-12 flex space-x-2">
+                            <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
+                    
+                    {renderScreen()}
+
+                    {selectedTransaction && (
+                        <div className="fixed inset-0 z-[60] flex items-end">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedTransaction(null)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in transition-colors">
+                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
+                                
+                                <div className="text-center mb-6">
+                                    <div className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 ${selectedTransaction.bg} dark:bg-opacity-20 ${selectedTransaction.color} text-2xl`}>
+                                        <i className={`fa-solid ${selectedTransaction.icon}`}></i>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-textDark dark:text-white mb-1 transition-colors">{selectedTransaction.title}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{selectedTransaction.category} • {selectedTransaction.date}</p>
+                                    <h2 className={`text-3xl font-bold mt-4 ${selectedTransaction.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                        {selectedTransaction.amount > 0 ? '+' : ''}{formatMoney(selectedTransaction.amount)}
+                                    </h2>
+                                </div>
+
+                                <button 
+                                    onClick={() => handleDeleteTransaction(selectedTransaction.id)}
+                                    className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-3.5 rounded-2xl mb-4 transition-colors"
+                                >
+                                    Удалить операцию
+                                </button>
+                                <button 
+                                    onClick={() => setSelectedTransaction(null)}
+                                    className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-2xl transition-colors"
+                                >
+                                    Закрыть
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {isAddingMode && (
+                        <div className="fixed inset-0 z-[60] flex items-end">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={closeAddModal}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in transition-colors">
+                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
+                                
+                                {!addMethod && (
+                                    <>
+                                        <h3 className="text-xl font-bold text-center mb-6 text-textDark dark:text-white">Умное добавление</h3>
+                                        <div className="grid grid-cols-3 gap-4 mb-6">
+                                            <div onClick={() => simulateAIProcessing('voice')} className="flex flex-col items-center gap-2 cursor-pointer group">
+                                                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-500 text-2xl group-hover:bg-blue-100 transition-colors"><i className="fa-solid fa-microphone"></i></div>
+                                                <span className="text-xs font-medium text-textDark dark:text-gray-300">Голосом</span>
+                                            </div>
+                                            <div onClick={() => simulateAIProcessing('scan')} className="flex flex-col items-center gap-2 cursor-pointer group">
+                                                <div className="w-16 h-16 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-500 text-2xl group-hover:bg-green-100 transition-colors"><i className="fa-solid fa-receipt"></i></div>
+                                                <span className="text-xs font-medium text-textDark dark:text-gray-300">Скан чека</span>
+                                            </div>
+                                            <div onClick={() => setAddMethod('manual')} className="flex flex-col items-center gap-2 cursor-pointer group">
+                                                <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-primary text-2xl group-hover:bg-purple-100 transition-colors"><i className="fa-solid fa-pen"></i></div>
+                                                <span className="text-xs font-medium text-textDark dark:text-gray-300">Вручную</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {addMethod === 'voice' && (
+                                    <div className="py-10 text-center flex flex-col items-center">
+                                        <div className="relative mb-6">
+                                            <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-500 text-3xl relative z-10">
+                                                {isProcessing ? <i className="fa-solid fa-robot animate-pulse"></i> : <i className="fa-solid fa-microphone"></i>}
+                                            </div>
+                                            {!isProcessing && <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse-ring z-0"></div>}
+                                        </div>
+                                        <h3 className="text-lg font-bold text-textDark dark:text-white mb-2">{isProcessing ? "Распознаю текст..." : "Внимательно слушаю..."}</h3>
+                                        <p className="text-sm text-gray-500">Скажите: "Купил кофе за 35 тысяч"</p>
+                                    </div>
+                                )}
+
+                                {addMethod === 'scan' && (
+                                    <div className="py-6 text-center flex flex-col items-center">
+                                        <div className="w-48 h-64 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl relative overflow-hidden mb-6 flex items-center justify-center">
+                                            {isProcessing ? (
+                                                <>
+                                                    <i className="fa-solid fa-receipt text-6xl text-gray-300 dark:text-gray-600"></i>
+                                                    <div className="animate-scanline"></div>
+                                                </>
+                                            ) : (
+                                                <i className="fa-solid fa-camera text-4xl text-gray-400"></i>
+                                            )}
+                                        </div>
+                                        <h3 className="text-lg font-bold text-textDark dark:text-white">{isProcessing ? "AI анализирует позиции..." : "Наведите камеру на чек"}</h3>
+                                    </div>
+                                )}
+
+                                {(addMethod === 'manual' || addMethod === 'manual_prefilled') && (
+                                    <form onSubmit={handleManualAdd}>
+                                        <h3 className="text-xl font-bold text-center mb-6 text-textDark dark:text-white">Новая операция</h3>
+                                        <div className="space-y-4 mb-6">
+                                            <div>
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Сумма (сум)</label>
+                                                <input required type="number" name="amount" defaultValue={addMethod === 'manual_prefilled' ? 35000 : ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors" placeholder="0" />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Название / Место</label>
+                                                <input required type="text" name="title" defaultValue={addMethod === 'manual_prefilled' ? 'Кофе с собой' : ''} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors" placeholder="Например: Супермаркет" />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Категория</label>
+                                                <select name="category" defaultValue={addMethod === 'manual_prefilled' ? 'Еда вне дома' : 'Продукты'} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors appearance-none">
+                                                    <option value="Продукты">Продукты</option>
+                                                    <option value="Транспорт">Транспорт</option>
+                                                    <option value="Еда вне дома">Еда вне дома</option>
+                                                    <option value="Развлечения">Развлечения</option>
+                                                    <option value="Покупки">Покупки</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button type="submit" className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-500/30 hover:bg-primaryDark transition-colors">
+                                            Добавить расход
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {currentScreen !== 'aichat' && currentScreen !== 'product' && currentScreen !== 'calculator' && currentScreen !== 'goals' && (
+                        <div className="fixed bottom-0 w-full max-w-md bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-2 flex justify-between items-center z-40 transition-colors duration-300">
+                            <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                                <i className="fa-solid fa-house text-xl mb-1"></i>
+                                <span className="text-[10px] font-medium">Главная</span>
+                            </button>
+                            <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                                <i className="fa-solid fa-chart-pie text-xl mb-1"></i>
+                                <span className="text-[10px] font-medium">Аналитика</span>
+                            </button>
+                            
+                            <div className="relative -top-5">
+                                <button onClick={handleAddClick} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/40 transform hover:scale-105 transition-all">
+                                    <i className="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+
+                            <button onClick={() => setCurrentScreen('tips')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                                <i className="fa-regular fa-lightbulb text-xl mb-1"></i>
+                                <span className="text-[10px] font-medium">Советы</span>
+                            </button>
+                            <button onClick={() => setCurrentScreen('profile')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                                <i className="fa-regular fa-user text-xl mb-1"></i>
+                                <span className="text-[10px] font-medium">Профиль</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
