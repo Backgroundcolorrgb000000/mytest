@@ -20,7 +20,9 @@
                         textDark: '#111827',
                         cardDark: '#1F2937'
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
                 }
             }
         }
@@ -35,11 +37,41 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(124, 58, 237, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+        }
+        .animate-pulse-ring { animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1); }
+
+        @keyframes scanline {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .animate-scanline {
+            position: absolute; left: 0; width: 100%; height: 2px;
+            background-color: #10B981;
+            box-shadow: 0 0 10px #10B981, 0 0 20px #10B981;
+            animation: scanline 2s linear infinite;
+        }
+
         ::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -49,19 +81,21 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // ВАШ СЕРВЕР НА RAILWAY
         const API_URL = 'https://mytest-production-6436.up.railway.app/api';
 
-        const formatMoney = (num) => Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
-
-        const encodeFamilyId = (id) => id && id !== 'browser_test_user' ? 'FAM-' + Number(id).toString(36).toUpperCase() : 'FAM-TEST';
-        const decodeFamilyId = (code) => {
-            if (code === 'FAM-TEST') return 'browser_test_user';
-            if (code && code.startsWith('FAM-')) {
-                const num = parseInt(code.replace('FAM-', '').toLowerCase(), 36);
-                if (!isNaN(num)) return num.toString();
-            }
-            return null;
+        // Умное форматирование чисел с пробелами (1 000 000)
+        const formatMoney = (num) => {
+            if (num === null || num === undefined) return '0 сум';
+            return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
         };
+
+        const formatInputNumber = (val) => {
+            const raw = val.toString().replace(/\D/g, '');
+            return raw ? Number(raw).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : '';
+        };
+
+        const parseFormattedNumber = (val) => parseInt(val.replace(/\s/g, ''), 10) || 0;
 
         const getGreeting = () => {
             const hour = new Date().getHours();
@@ -71,7 +105,7 @@
             return 'Доброй ночи';
         };
 
-        // ТОП-30 Иконок для ежедневных трат
+        // ТОП-30 Иконок
         const TOP_ICONS = [
             'fa-basket-shopping', 'fa-utensils', 'fa-bus', 'fa-car', 'fa-gas-pump', 
             'fa-cart-shopping', 'fa-shirt', 'fa-shoe-prints', 'fa-house', 'fa-bolt', 
@@ -81,38 +115,38 @@
             'fa-book', 'fa-gift', 'fa-scissors', 'fa-mug-hot', 'fa-wallet'
         ];
 
-        // Цветовые палитры для категорий и иконок
-        const COLOR_PALETTES = [
-            { c: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316' },
-            { c: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30', hex: '#3b82f6' },
-            { c: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30', hex: '#10b981' },
-            { c: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30', hex: '#8b5cf6' },
-            { c: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/30', hex: '#ec4899' },
-            { c: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-900/30', hex: '#f43f5e' },
-            { c: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30', hex: '#f59e0b' },
-            { c: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30', hex: '#06b6d4' }
-        ];
-
-        // ГЕНЕРАТОР ДЕМО-ДАННЫХ (За 3 месяца)
+        // Генератор демо-данных
         const generateDummyData = (userId) => {
             const txs = [];
             const now = new Date();
-            const categories = ['Продукты', 'Транспорт', 'Развлечения', 'Еда вне дома'];
+            const cats = ['Продукты', 'Транспорт', 'Развлечения', 'Еда вне дома'];
             const icons = ['fa-basket-shopping', 'fa-bus', 'fa-gamepad', 'fa-utensils'];
             const colors = ['text-orange-500', 'text-blue-500', 'text-pink-500', 'text-amber-500'];
             const bgs = ['bg-orange-100', 'bg-blue-100', 'bg-pink-100', 'bg-amber-100'];
 
-            for(let i = 0; i < 15; i++) {
-                const d = new Date(now.getTime() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
-                const isIncome = Math.random() > 0.8;
-                const catIdx = Math.floor(Math.random() * categories.length);
+            for(let i = 0; i < 20; i++) {
+                const d = new Date(now.getTime() - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000);
+                const isIncome = Math.random() > 0.85;
+                const catIdx = Math.floor(Math.random() * cats.length);
+                const isTaxi = cats[catIdx] === 'Транспорт' && Math.random() > 0.5;
                 
+                let amount, title;
+                if (isIncome) {
+                    amount = (Math.floor(Math.random() * 5) + 5) * 1000000;
+                    title = 'Зарплата / Перевод';
+                } else if (isTaxi) {
+                    amount = -(Math.floor(Math.random() * 30) + 15) * 1000;
+                    title = 'Яндекс Такси';
+                } else {
+                    amount = -(Math.floor(Math.random() * 200) + 15) * 1000;
+                    title = `Покупка ${i+1}`;
+                }
+
                 txs.push({
                     id: Date.now() - i * 100000,
-                    userId,
-                    title: isIncome ? 'Зарплата / Перевод' : `Покупка ${i+1}`,
-                    category: isIncome ? 'Доход' : categories[catIdx],
-                    amount: isIncome ? (Math.floor(Math.random() * 5) + 5) * 1000000 : -(Math.floor(Math.random() * 200) + 15) * 1000,
+                    userId, title,
+                    category: isIncome ? 'Доход' : cats[catIdx],
+                    amount,
                     icon: isIncome ? 'fa-wallet' : icons[catIdx],
                     color: isIncome ? 'text-green-500' : colors[catIdx],
                     bg: isIncome ? 'bg-green-100' : bgs[catIdx],
@@ -124,19 +158,43 @@
         };
 
         const TopHeader = ({ title, showBack = false, onBack, rightIcon = null, onRightClick = null }) => (
-            <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-gray-900 sticky top-0 z-10 transition-colors duration-300 shadow-sm dark:shadow-gray-900">
+            <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-gray-900 sticky top-0 z-10 transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                    {showBack && <button onClick={onBack} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"><i className="fa-solid fa-arrow-left text-lg"></i></button>}
+                    {showBack && (
+                        <button onClick={onBack} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                            <i className="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                    )}
                     <h1 className="text-xl font-bold text-textDark dark:text-white transition-colors">{title}</h1>
                 </div>
-                {rightIcon && <button onClick={onRightClick} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"><i className={`fa-solid ${rightIcon} text-xl`}></i></button>}
+                {rightIcon && (
+                    <button onClick={onRightClick} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                        <i className={`fa-solid ${rightIcon} text-xl`}></i>
+                    </button>
+                )}
             </div>
         );
 
-        const ScreenHome = ({ setScreen, transactions, user, onTransactionClick, onAddClick }) => {
+        const CustomModal = ({ isOpen, title, text, onConfirm, onCancel, confirmText = "Да", cancelText = "Отмена", isDanger = false }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-10/12 max-w-sm shadow-2xl transition-colors">
+                        <h3 className="text-lg font-bold mb-2 text-center text-textDark dark:text-white">{title}</h3>
+                        {text && <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">{text}</p>}
+                        <div className="flex gap-3">
+                            <button onClick={onCancel} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl font-bold text-gray-600 dark:text-gray-300 transition-colors">{cancelText}</button>
+                            <button onClick={onConfirm} className={`flex-1 py-3 text-white rounded-xl font-bold shadow-md transition-colors ${isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-primary hover:bg-primaryDark'}`}>{confirmText}</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenHome = ({ setScreen, setGoalsTab, openAddModal, transactions, user, onTransactionClick }) => {
             const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
             const greeting = getGreeting();
-            
+
             const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0);
             const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
             const currentBalance = totalIncome - totalExpense;
@@ -148,47 +206,85 @@
                             <p className="text-sm text-gray-500 dark:text-gray-400">{greeting},</p>
                             <h2 className="text-xl font-bold text-textDark dark:text-white">{userName}</h2>
                         </div>
-                    </div>
-
-                    <div className="px-4 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
-                        <div className="min-w-[90%] snap-center bg-gradient-to-r from-primary to-purple-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0">
-                            <i className="fa-solid fa-wallet absolute -right-4 -bottom-4 text-white opacity-10 text-6xl"></i>
-                            <div className="flex justify-between items-center mb-1 relative z-10"><span className="text-sm text-purple-200">Общий баланс</span></div>
-                            <h2 className="text-3xl font-bold mb-4 relative z-10">{formatMoney(currentBalance)}</h2>
-                            <div className="flex justify-between relative z-10">
-                                <div><p className="text-xs text-purple-200">Доходы</p><p className="font-semibold text-sm">{formatMoney(totalIncome)}</p></div>
-                                <div className="text-right"><p className="text-xs text-purple-200">Расходы</p><p className="font-semibold text-sm">{formatMoney(totalExpense)}</p></div>
+                        <div className="flex gap-3">
+                            <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 transition-colors">
+                                <i className="fa-regular fa-bell"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between px-6 py-4">
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('income')}><div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-sm"><i className="fa-solid fa-arrow-down"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Доход</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => onAddClick('expense')}><div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-xl shadow-sm"><i className="fa-solid fa-arrow-up"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Расход</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('calculator')}><div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-xl shadow-sm"><i className="fa-solid fa-calculator"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Вклад</span></div>
-                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setScreen('goals')}><div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-xl shadow-sm"><i className="fa-solid fa-bullseye"></i></div><span className="text-xs font-medium text-gray-600 dark:text-gray-400">Цель</span></div>
+                    {/* Выровненные свайпаемые карточки */}
+                    <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar pt-2 pb-4">
+                        <div className="w-screen flex-shrink-0 snap-center px-4">
+                            <div className="w-full bg-gradient-to-r from-primary to-purple-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
+                                <i className="fa-solid fa-wallet absolute -right-4 -bottom-4 text-white opacity-10 text-6xl"></i>
+                                <span className="text-sm text-purple-200 block mb-1">Общий баланс</span>
+                                <h2 className="text-3xl font-bold mb-4">{formatMoney(currentBalance)}</h2>
+                                <div className="flex justify-between">
+                                    <div><p className="text-xs text-purple-200">Доходы</p><p className="font-semibold text-sm">{formatMoney(totalIncome)}</p></div>
+                                    <div className="text-right"><p className="text-xs text-purple-200">Расходы</p><p className="font-semibold text-sm">{formatMoney(totalExpense)}</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-screen flex-shrink-0 snap-center px-4">
+                            <div className="w-full bg-gray-900 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
+                                <div className="absolute right-4 top-4 text-gray-400 text-2xl font-bold italic">UZCARD</div>
+                                <span className="text-sm text-gray-400 block mb-1">Зарплатная карта</span>
+                                <h2 className="text-3xl font-bold mb-6">{formatMoney(8400000)}</h2>
+                                <p className="font-mono tracking-widest text-sm text-gray-300">**** 4512</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="px-4 py-4">
+                    {/* 5 кнопок */}
+                    <div className="grid grid-cols-5 gap-2 px-4 py-2">
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => openAddModal('income')}>
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-down"></i></div>
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Доход</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => openAddModal('expense')}>
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-up"></i></div>
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Расход</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setScreen('calculator')}>
+                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-calculator"></i></div>
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Вклад</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => { setScreen('goals'); setGoalsTab('limits'); }}>
+                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 rounded-2xl flex items-center justify-center text-amber-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-icons"></i></div>
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Категории</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => { setScreen('goals'); setGoalsTab('goals'); }}>
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-bullseye"></i></div>
+                            <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Цель</span>
+                        </div>
+                    </div>
+
+                    <div className="px-4 py-4 mt-2">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="font-bold text-textDark dark:text-white transition-colors">Последние операции</h3>
-                            <button onClick={() => setScreen('analytics')} className="text-xs font-medium text-primary">Все</button>
+                            <button onClick={() => setScreen('analytics')} className="text-xs font-medium text-primary">Отчет <i className="fa-solid fa-chevron-right ml-1"></i></button>
                         </div>
+                        
                         <div className="space-y-3">
                             {transactions.length === 0 ? (
-                                <p className="text-center text-sm text-gray-400 py-4">У вас пока нет транзакций.</p>
+                                <p className="text-center text-sm text-gray-400 py-6 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">У вас пока нет транзакций.</p>
                             ) : transactions.slice(0, 5).map(t => (
-                                <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm active:bg-gray-50 transition-colors cursor-pointer">
+                                <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3.5 rounded-2xl shadow-sm active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}><i className={`fa-solid ${t.icon}`}></i></div>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                            <i className={`fa-solid ${t.icon}`}></i>
+                                        </div>
                                         <div>
-                                            <h4 className="font-bold text-sm text-textDark dark:text-white">{t.title}</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t.category}</p>
+                                            <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white'}`}>{t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{t.date.split(' ')[0]}</p>
+                                        <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                            {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                        </p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 transition-colors">{t.date}</p>
                                     </div>
                                 </div>
                             ))}
@@ -198,48 +294,95 @@
             );
         };
 
-        const ScreenAnalytics = ({ transactions, onTransactionClick, categories }) => {
-            const spent = transactions.filter(t => t.amount < 0).reduce((acc, t) => {
-                acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
+        const ScreenAnalytics = ({ transactions }) => {
+            const [expandedCat, setExpandedCat] = useState(null);
+
+            // Группируем траты по категориям
+            const expensesByCategory = transactions.filter(t => t.amount < 0).reduce((acc, t) => {
+                if (!acc[t.category]) {
+                    acc[t.category] = { total: 0, txs: [], icon: t.icon, color: t.color, bg: t.bg };
+                }
+                acc[t.category].total += Math.abs(t.amount);
+                acc[t.category].txs.push(t);
                 return acc;
             }, {});
 
+            const totalSpent = Object.values(expensesByCategory).reduce((sum, cat) => sum + cat.total, 0);
+            const sortedCats = Object.entries(expensesByCategory).sort((a, b) => b[1].total - a[1].total);
+
+            const toggleCat = (catName) => {
+                if (expandedCat === catName) setExpandedCat(null);
+                else setExpandedCat(catName);
+            };
+
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
-                    <TopHeader title="Аналитика и Лимиты" rightIcon="fa-chart-pie" />
-                    <div className="px-4 py-4 space-y-4">
-                        <div className="flex justify-between items-center mb-1">
-                            <h3 className="font-bold text-textDark dark:text-white">Бюджет на месяц</h3>
+                    <TopHeader title="Умный отчет" rightIcon="fa-chart-pie" />
+                    
+                    <div className="px-4 py-4">
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm text-center mb-6 border border-gray-100 dark:border-gray-800">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Всего расходов</p>
+                            <h2 className="text-3xl font-bold text-textDark dark:text-white">{formatMoney(totalSpent)}</h2>
                         </div>
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm space-y-5">
-                            {categories.map(cat => {
-                                const currentSpent = spent[cat.name] || 0;
-                                const limit = cat.limit || 0;
-                                const perc = limit > 0 ? Math.min(Math.round((currentSpent / limit) * 100), 100) : (currentSpent > 0 ? 100 : 0);
-                                const isOver = limit > 0 && currentSpent > limit;
-                                const barColor = isOver ? 'bg-red-500' : 'bg-primary';
 
+                        <h3 className="font-bold text-textDark dark:text-white mb-4">Детализация по категориям</h3>
+
+                        <div className="space-y-3">
+                            {sortedCats.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400">Нет данных для анализа.</p>
+                            ) : sortedCats.map(([catName, data]) => {
+                                const perc = totalSpent > 0 ? Math.round((data.total / totalSpent) * 100) : 0;
+                                const isExpanded = expandedCat === catName;
+                                
                                 return (
-                                    <div key={cat.name}>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color}`}><i className={`fa-solid ${cat.icon} text-sm`}></i></div>
-                                                <span className="text-sm font-bold text-textDark dark:text-white">{cat.name}</span>
+                                    <div key={catName} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 overflow-hidden transition-all">
+                                        <div onClick={() => toggleCat(catName)} className="p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-gray-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${data.bg} dark:bg-opacity-20 ${data.color}`}>
+                                                    <i className={`fa-solid ${data.icon}`}></i>
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-textDark dark:text-white">{catName} <span className="text-gray-400 text-xs font-normal ml-1">{perc}%</span></h4>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{data.txs.length} операций</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right"><span className={`text-sm font-bold ${isOver ? 'text-red-500' : 'text-textDark dark:text-white'}`}>{formatMoney(currentSpent)}</span></div>
+                                            <div className="text-right flex items-center gap-3">
+                                                <span className="font-bold text-sm text-textDark dark:text-white">{formatMoney(data.total)}</span>
+                                                <i className={`fa-solid fa-chevron-down text-gray-300 text-xs transition-transform ${isExpanded ? 'rotate-180' : ''}`}></i>
+                                            </div>
                                         </div>
-                                        {limit > 0 ? (
-                                            <>
-                                                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-1 overflow-hidden">
-                                                    <div className={`${barColor} h-2.5 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
-                                                </div>
-                                                <div className="flex justify-between mt-1">
-                                                    <span className={`text-[10px] font-medium ${isOver ? 'text-red-500' : 'text-gray-500'}`}>{isOver ? 'Лимит превышен!' : `Осталось: ${formatMoney(limit - currentSpent)}`}</span>
-                                                    <span className="text-[10px] text-gray-400">из {formatMoney(limit)}</span>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <p className="text-[10px] text-gray-400 mt-1">Без лимита (настройте в профиле)</p>
+
+                                        {isExpanded && (
+                                            <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-2 border-t border-gray-100 dark:border-gray-800">
+                                                {data.txs.map((tx, idx) => {
+                                                    // УМНАЯ АНАЛИТИКА: Ищем предыдущую трату с ТАКИМ ЖЕ названием
+                                                    const prevTx = data.txs.slice(idx + 1).find(t => t.title.toLowerCase() === tx.title.toLowerCase());
+                                                    let varianceHtml = null;
+                                                    
+                                                    if (prevTx) {
+                                                        const currentAmt = Math.abs(tx.amount);
+                                                        const prevAmt = Math.abs(prevTx.amount);
+                                                        if (currentAmt !== prevAmt && prevAmt !== 0) {
+                                                            const diff = ((currentAmt / prevAmt) - 1) * 100;
+                                                            if (diff > 0) {
+                                                                varianceHtml = <span className="text-[10px] text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded ml-2"><i className="fa-solid fa-arrow-up"></i> {diff.toFixed(0)}%</span>;
+                                                            } else if (diff < 0) {
+                                                                varianceHtml = <span className="text-[10px] text-green-500 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded ml-2"><i className="fa-solid fa-arrow-down"></i> {Math.abs(diff).toFixed(0)}%</span>;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    return (
+                                                        <div key={tx.id} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                                                            <div>
+                                                                <p className="text-sm font-medium text-textDark dark:text-gray-200">{tx.title} {varianceHtml}</p>
+                                                                <p className="text-[10px] text-gray-500">{tx.date}</p>
+                                                            </div>
+                                                            <span className="font-bold text-sm text-textDark dark:text-white">{formatMoney(Math.abs(tx.amount))}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         )}
                                     </div>
                                 );
@@ -251,137 +394,309 @@
         };
 
         const ScreenCalculator = ({ onBack }) => {
-            const [amount, setAmount] = useState(10000000);
-            const [rate, setRate] = useState(18);
-            const [months, setMonths] = useState(12);
+            const [amountStr, setAmountStr] = useState('10 000 000');
+            const [rateStr, setRateStr] = useState('18');
+            const [monthsStr, setMonthsStr] = useState('12');
+
+            const amount = parseFormattedNumber(amountStr);
+            const rate = parseFloat(rateStr) || 0;
+            const months = parseInt(monthsStr) || 0;
 
             const profit = Math.round(amount * (rate / 100) * (months / 12));
             const total = amount + profit;
-            const perc = (profit / amount) * 100 || 0;
+            const perc = amount > 0 ? ((profit / amount) * 100) : 0;
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
-                    <TopHeader title="Калькулятор вклада" showBack={true} onBack={onBack} />
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 relative transition-colors duration-300">
+                    <TopHeader title="Умный вклад" showBack={true} onBack={onBack} />
+                    
                     <div className="px-4 py-4 space-y-4">
-                        <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 space-y-2">
-                            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                                <span className="text-sm text-gray-500">Сумма вклада (сум)</span>
-                                <input type="number" value={amount} onChange={e=>setAmount(Number(e.target.value))} className="w-32 bg-gray-50 dark:bg-gray-800 text-right font-bold rounded p-1 text-textDark dark:text-white focus:outline-none" />
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                            <div className="mb-4">
+                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Сумма вклада (сум)</label>
+                                <input 
+                                    type="text" inputMode="numeric" 
+                                    value={amountStr} 
+                                    onChange={(e) => setAmountStr(formatInputNumber(e.target.value))}
+                                    className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors" 
+                                />
                             </div>
-                            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-                                <span className="text-sm text-gray-500">Ставка (% годовых)</span>
-                                <input type="number" value={rate} onChange={e=>setRate(Number(e.target.value))} className="w-16 bg-gray-50 dark:bg-gray-800 text-right font-bold rounded p-1 text-textDark dark:text-white focus:outline-none" />
-                            </div>
-                            <div className="flex justify-between items-center py-2">
-                                <span className="text-sm text-gray-500">Срок (месяцев)</span>
-                                <input type="number" value={months} onChange={e=>setMonths(Number(e.target.value))} className="w-16 bg-gray-50 dark:bg-gray-800 text-right font-bold rounded p-1 text-textDark dark:text-white focus:outline-none" />
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Ставка (% годовых)</label>
+                                    <input 
+                                        type="number" value={rateStr} onChange={(e) => setRateStr(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors text-center" 
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Срок (месяцев)</label>
+                                    <input 
+                                        type="number" value={monthsStr} onChange={(e) => setMonthsStr(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors text-center" 
+                                    />
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-gradient-to-r from-primary to-purple-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
-                            <i className="fa-solid fa-calculator absolute -right-4 -top-4 text-white opacity-10 text-6xl"></i>
-                            <p className="text-sm text-purple-200 relative z-10 mb-1">Итоговая сумма</p>
-                            <h2 className="text-3xl font-bold mb-2 relative z-10">{formatMoney(total)}</h2>
-                            <div className="relative z-10"><p className="text-xs text-purple-200 mb-1">Чистая прибыль</p><p className="text-sm text-emerald-300 font-bold bg-white/10 inline-block px-2 py-1 rounded">+{formatMoney(profit)} ({perc.toFixed(2)}%)</p></div>
+
+                        <div className="bg-gradient-to-br from-primary to-purple-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                            <i className="fa-solid fa-piggy-bank absolute -right-4 -top-4 text-white opacity-10 text-8xl"></i>
+                            <p className="text-sm text-purple-200 mb-1 relative z-10">Вы получите через {months} мес.</p>
+                            <h2 className="text-4xl font-bold mb-4 relative z-10">{formatMoney(total)}</h2>
+                            
+                            <div className="bg-white/10 rounded-2xl p-4 relative z-10 backdrop-blur-sm">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm text-purple-100">Сумма вклада</span>
+                                    <span className="font-semibold">{formatMoney(amount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-purple-100">Чистая прибыль</span>
+                                    <span className="font-bold text-emerald-300">+{formatMoney(profit)}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const ScreenGoals = ({ onBack, goals, setGoals }) => {
-            const [showAddForm, setShowAddForm] = useState(false);
-            const [newTitle, setNewTitle] = useState('');
-            const [newTarget, setNewTarget] = useState('');
-            const [selectedIcon, setSelectedIcon] = useState('fa-star');
+        const ScreenGoalsAndLimits = ({ onBack, initialTab, goals, setGoals, categories, setCategories, transactions, showModal }) => {
+            const [activeTab, setActiveTab] = useState(initialTab || 'goals'); // 'goals' or 'limits'
+            
+            // New Goal State
+            const [showGoalForm, setShowGoalForm] = useState(false);
+            const [goalTitle, setGoalTitle] = useState('');
+            const [goalTargetStr, setGoalTargetStr] = useState('');
+            const [goalIcon, setGoalIcon] = useState(TOP_ICONS[8]); // fa-house
+
+            // New Category State
+            const [showCatForm, setShowCatForm] = useState(false);
+            const [catName, setCatName] = useState('');
+            const [catLimitStr, setCatLimitStr] = useState('');
+            const [catIcon, setCatIcon] = useState(TOP_ICONS[0]);
 
             const handleAddGoal = () => {
-                if(!newTitle || !newTarget) return;
-                setGoals([...goals, { id: Date.now(), title: newTitle, current: 0, target: Number(newTarget), icon: selectedIcon, color: 'bg-primary', iconColor: 'text-primary' }]);
-                setShowAddForm(false); setNewTitle(''); setNewTarget(''); setSelectedIcon('fa-star');
+                const target = parseFormattedNumber(goalTargetStr);
+                if (!goalTitle || target <= 0) return;
+                setGoals([{ id: Date.now(), title: goalTitle, current: 0, target, icon: goalIcon, color: 'bg-primary', iconColor: 'text-primary' }, ...goals]);
+                setShowGoalForm(false); setGoalTitle(''); setGoalTargetStr('');
             };
 
-            const addFunds = (id) => {
-                const amount = Number(prompt("Введите сумму пополнения:"));
-                if(!amount) return;
-                setGoals(goals.map(g => g.id === id ? { ...g, current: Math.min(g.current + amount, g.target) } : g));
+            const handleDeleteGoal = (id) => {
+                showModal("Удалить цель?", "Восстановить прогресс будет невозможно.", () => {
+                    setGoals(goals.filter(g => g.id !== id));
+                }, null, "Удалить", "Отмена", true);
             };
 
-            const deleteGoal = (id) => {
-                if(confirm("Удалить эту цель?")) setGoals(goals.filter(g => g.id !== id));
+            const handleAddCategory = () => {
+                const limit = parseFormattedNumber(catLimitStr);
+                if (!catName || limit <= 0) return;
+                const colors = ['text-blue-500', 'text-pink-500', 'text-emerald-500', 'text-amber-500', 'text-purple-500'];
+                const bgs = ['bg-blue-100', 'bg-pink-100', 'bg-emerald-100', 'bg-amber-100', 'bg-purple-100'];
+                const rand = Math.floor(Math.random() * colors.length);
+                
+                setCategories([...categories, { name: catName, limit, icon: catIcon, color: colors[rand], bg: bgs[rand] }]);
+                setShowCatForm(false); setCatName(''); setCatLimitStr('');
+            };
+
+            const handleDeleteCategory = (name) => {
+                showModal("Удалить категорию?", `Категория "${name}" будет удалена из списка лимитов.`, () => {
+                    setCategories(categories.filter(c => c.name !== name));
+                }, null, "Удалить", "Отмена", true);
             };
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
-                    <TopHeader title="Цели" showBack={true} onBack={onBack} rightIcon="fa-plus" onRightClick={() => setShowAddForm(true)} />
-                    <div className="px-4 pt-4 space-y-4">
-                        {showAddForm && (
-                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-primary/20 mb-4 animate-fade-in">
-                                <h4 className="font-bold text-sm mb-3 text-textDark dark:text-white">Новая цель</h4>
-                                <input type="text" value={newTitle} onChange={e=>setNewTitle(e.target.value)} placeholder="Название (напр. Машина)" className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
-                                <input type="number" value={newTarget} onChange={e=>setNewTarget(e.target.value)} placeholder="Сумма цели" className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
-                                
-                                <p className="text-xs text-gray-500 mb-2">Выберите иконку:</p>
-                                <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
-                                    {TOP_ICONS.map(ic => (
-                                        <div key={ic} onClick={() => setSelectedIcon(ic)} className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all ${selectedIcon === ic ? 'bg-primary text-white shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
-                                            <i className={`fa-solid ${ic}`}></i>
-                                        </div>
-                                    ))}
-                                </div>
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 relative transition-colors duration-300">
+                    <TopHeader title={activeTab === 'goals' ? 'Мои Цели' : 'Категории и Лимиты'} showBack={true} onBack={onBack} 
+                        rightIcon={activeTab === 'goals' && !showGoalForm ? 'fa-plus' : (activeTab === 'limits' && !showCatForm ? 'fa-plus' : null)} 
+                        onRightClick={() => activeTab === 'goals' ? setShowGoalForm(true) : setShowCatForm(true)} 
+                    />
+                    
+                    {/* Переключатель вкладок */}
+                    <div className="px-4 pt-2 mb-4">
+                        <div className="flex bg-gray-200 dark:bg-gray-800 p-1 rounded-xl">
+                            <button onClick={()=>setActiveTab('goals')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab==='goals' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>Копилки</button>
+                            <button onClick={()=>setActiveTab('limits')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab==='limits' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>Бюджеты</button>
+                        </div>
+                    </div>
 
-                                <div className="flex gap-2">
-                                    <button onClick={handleAddGoal} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-sm">Создать</button>
-                                    <button onClick={()=>setShowAddForm(false)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-500 py-3 rounded-xl font-bold text-sm">Отмена</button>
-                                </div>
-                            </div>
+                    <div className="px-4 space-y-4">
+                        {/* ВКЛАДКА ЦЕЛИ */}
+                        {activeTab === 'goals' && (
+                            <>
+                                {showGoalForm && (
+                                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
+                                        <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Создать новую цель</h3>
+                                        <input type="text" placeholder="Название (напр. Отпуск)" value={goalTitle} onChange={e=>setGoalTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                        <input type="text" inputMode="numeric" placeholder="Сумма цели (сум)" value={goalTargetStr} onChange={e=>setGoalTargetStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white font-bold" />
+                                        
+                                        <p className="text-xs text-gray-500 mb-2 ml-1">Иконка цели:</p>
+                                        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-2">
+                                            {TOP_ICONS.map(ic => (
+                                                <div key={ic} onClick={() => setGoalIcon(ic)} className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${goalIcon === ic ? 'bg-primary text-white shadow-lg shadow-purple-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                                                    <i className={`fa-solid ${ic}`}></i>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button onClick={()=>setShowGoalForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
+                                            <button onClick={handleAddGoal} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Создать</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {goals.map(g => {
+                                    const perc = Math.min(Math.round((g.current / g.target) * 100), 100);
+                                    return (
+                                        <div key={g.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-50 dark:border-gray-800 relative group overflow-hidden transition-colors">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h4 className="font-bold text-lg text-textDark dark:text-white">{g.title}</h4>
+                                                    <p className="text-sm text-gray-500 mt-1">{formatMoney(g.current)} / <span className="font-medium text-gray-400">{formatMoney(g.target)}</span></p>
+                                                </div>
+                                                <div className={`w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center ${g.iconColor || 'text-primary'} text-xl shadow-sm`}><i className={`fa-solid ${g.icon}`}></i></div>
+                                            </div>
+                                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 mb-4 overflow-hidden">
+                                                <div className={`${g.color} h-3 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-bold text-sm text-textDark dark:text-gray-300">{perc}% собрано</span>
+                                                <div className="flex gap-2">
+                                                    <button onClick={()=>handleDeleteGoal(g.id)} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </>
                         )}
 
-                        {goals.length === 0 && !showAddForm && <p className="text-center text-sm text-gray-400 py-10">У вас пока нет целей. Нажмите + чтобы добавить.</p>}
-
-                        {goals.map(g => {
-                            const perc = Math.min(Math.round((g.current / g.target) * 100), 100);
-                            return (
-                                <div key={g.id} className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-50 dark:border-gray-800 relative group overflow-hidden">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div><h4 className="font-bold text-textDark dark:text-white">{g.title}</h4><p className="text-xs text-gray-500 mt-1">{formatMoney(g.current)} / {formatMoney(g.target)}</p></div>
-                                        <div className={`w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center ${g.iconColor || 'text-primary'} text-xl`}><i className={`fa-solid ${g.icon}`}></i></div>
-                                    </div>
-                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-3"><div className={`${g.color} h-2.5 rounded-full transition-all`} style={{width: `${perc}%`}}></div></div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-textDark dark:text-gray-300">Прогресс: {perc}%</span>
-                                        <div className="flex gap-2">
-                                            <button onClick={()=>addFunds(g.id)} className="bg-green-100 text-green-600 dark:bg-green-900/30 px-3 py-1.5 rounded-lg font-bold">Пополнить</button>
-                                            <button onClick={()=>deleteGoal(g.id)} className="bg-red-100 text-red-500 dark:bg-red-900/30 px-3 py-1.5 rounded-lg"><i className="fa-solid fa-trash"></i></button>
+                        {/* ВКЛАДКА ЛИМИТЫ / КАТЕГОРИИ */}
+                        {activeTab === 'limits' && (
+                            <>
+                                {showCatForm && (
+                                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
+                                        <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Новая категория</h3>
+                                        <input type="text" placeholder="Название (напр. Питомцы)" value={catName} onChange={e=>setCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                        <input type="text" inputMode="numeric" placeholder="Лимит в месяц (сум)" value={catLimitStr} onChange={e=>setCatLimitStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white font-bold" />
+                                        
+                                        <p className="text-xs text-gray-500 mb-2 ml-1">Выберите иконку:</p>
+                                        <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto no-scrollbar p-1 mb-6">
+                                            {TOP_ICONS.map(ic => (
+                                                <div key={ic} onClick={() => setCatIcon(ic)} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${catIcon === ic ? 'bg-primary text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                                                    <i className={`fa-solid ${ic}`}></i>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button onClick={()=>setShowCatForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
+                                            <button onClick={handleAddCategory} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Добавить</button>
                                         </div>
                                     </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    {categories.map(cat => {
+                                        // Считаем траты по категории
+                                        const currentSpent = transactions.filter(t => t.amount < 0 && t.category === cat.name).reduce((acc, t) => acc + Math.abs(t.amount), 0);
+                                        const limit = cat.limit || 0;
+                                        const perc = limit > 0 ? Math.min(Math.round((currentSpent / limit) * 100), 100) : (currentSpent > 0 ? 100 : 0);
+                                        const isOver = limit > 0 && currentSpent > limit;
+                                        const barColor = isOver ? 'bg-red-500' : 'bg-primary';
+
+                                        return (
+                                            <div key={cat.name} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-50 dark:border-gray-800 transition-colors">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color} text-xl shadow-sm`}>
+                                                            <i className={`fa-solid ${cat.icon}`}></i>
+                                                        </div>
+                                                        <div>
+                                                            <span className="font-bold text-textDark dark:text-white block">{cat.name}</span>
+                                                            <span className={`text-xs font-bold ${isOver ? 'text-red-500' : 'text-gray-500'}`}>{formatMoney(currentSpent)} потрачено</span>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={()=>handleDeleteCategory(cat.name)} className="w-8 h-8 text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                                </div>
+                                                
+                                                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 overflow-hidden">
+                                                    <div className={`${barColor} h-2.5 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
+                                                </div>
+                                                <div className="flex justify-between text-xs">
+                                                    <span className={`${isOver ? 'text-red-500 font-bold' : 'text-gray-500'}`}>{isOver ? 'Превышение!' : `Остаток: ${formatMoney(limit - currentSpent)}`}</span>
+                                                    <span className="text-gray-400">Лимит: {formatMoney(limit)}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            );
-                        })}
+                            </>
+                        )}
                     </div>
                 </div>
             );
         };
 
-        const ScreenTips = ({ openAIChat }) => (
-            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
-                <TopHeader title="Советы" rightIcon="fa-bell" />
-                <div className="px-4 py-4 space-y-4">
-                    <h3 className="font-bold text-textDark dark:text-white">Анализ ваших финансов</h3>
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 border border-green-100 dark:border-green-900/30 items-start">
-                        <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-500 text-xl shrink-0"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
-                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">ИИ-аналитика включена</h4><p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Я постоянно слежу за вашими расходами. Нажмите на робота в углу, чтобы пообщаться со мной!</p></div>
+        const ScreenTips = ({ openAIChat }) => {
+            const [openArticle, setOpenArticle] = useState(null);
+
+            const articles = [
+                { id: 1, title: 'Что такое сложный процент?', icon: 'fa-arrow-trend-up', text: 'Сложный процент — это финансовая магия. Это когда банк начисляет проценты не только на вашу изначальную сумму вклада, но и на те проценты, которые уже набежали за прошлые месяцы. Чем дольше лежат деньги, тем быстрее они растут, как снежный ком!' },
+                { id: 2, title: 'Инфляция простыми словами', icon: 'fa-money-bill-wave', text: 'Инфляция — это процесс, когда деньги со временем обесцениваются. Если инфляция 10% в год, то вещь, которая стоила 100 тысяч, через год будет стоить 110 тысяч. Поэтому хранить деньги "под матрасом" невыгодно — их нужно инвестировать, чтобы обгонять инфляцию.' },
+                { id: 3, title: 'Подушка безопасности', icon: 'fa-shield-heart', text: 'Это ваш личный резервный фонд на случай непредвиденных обстоятельств (поломка машины, потеря работы). Идеальная подушка должна покрывать ваши обязательные расходы на 3-6 месяцев жизни.' }
+            ];
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300 relative">
+                    <TopHeader title="Советы и Знания" rightIcon="fa-bell" />
+                    
+                    <div className="px-4 py-4 space-y-6">
+                        {/* Блок ИИ */}
+                        <div>
+                            <h3 className="font-bold text-textDark dark:text-white mb-3">Умный ассистент</h3>
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-5 shadow-lg text-white relative overflow-hidden">
+                                <i className="fa-solid fa-robot absolute right-2 top-2 text-white/20 text-8xl transform rotate-12"></i>
+                                <h4 className="font-bold text-lg mb-2 relative z-10">Поговорите с Gemini</h4>
+                                <p className="text-sm text-indigo-100 mb-4 relative z-10 w-4/5">ИИ уже проанализировал вашу базу расходов и готов дать персональный совет.</p>
+                                <button onClick={openAIChat} className="bg-white text-primary font-bold py-2.5 px-5 rounded-xl text-sm shadow-md hover:scale-105 transition-transform relative z-10">Начать чат <i className="fa-solid fa-arrow-right ml-1"></i></button>
+                            </div>
+                        </div>
+
+                        {/* Финансовая грамотность */}
+                        <div>
+                            <h3 className="font-bold text-textDark dark:text-white mb-3">Финансовая грамотность</h3>
+                            <div className="space-y-3">
+                                {articles.map(art => (
+                                    <div key={art.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
+                                        <div onClick={() => setOpenArticle(openArticle === art.id ? null : art.id)} className="px-4 py-4 flex items-center justify-between cursor-pointer active:bg-gray-50 dark:active:bg-gray-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center text-lg">
+                                                    <i className={`fa-solid ${art.icon}`}></i>
+                                                </div>
+                                                <span className="font-bold text-sm text-textDark dark:text-white">{art.title}</span>
+                                            </div>
+                                            <i className={`fa-solid fa-chevron-down text-gray-400 transition-transform ${openArticle === art.id ? 'rotate-180' : ''}`}></i>
+                                        </div>
+                                        {openArticle === art.id && (
+                                            <div className="px-4 pb-4 pt-1 border-t border-gray-50 dark:border-gray-800/50 bg-gray-50 dark:bg-gray-800/20">
+                                                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mt-3">{art.text}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <button onClick={openAIChat} className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-primary to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white text-2xl hover:scale-105 transition-transform z-40">
-                    <i className="fa-solid fa-robot"></i><span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-[#F9FAFB] dark:border-gray-950 rounded-full"></span>
-                </button>
-            </div>
-        );
+            );
+        };
 
         const ScreenAIChat = ({ onBack, userId }) => {
-            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! Я ваш финансовый ИИ-помощник. Я вижу вашу базу данных расходов. Что бы вы хотели узнать?' }]);
-            const [inputText, setInputText] = useState('');
+            const [messages, setMessages] = useState([
+                { type: 'bot', text: 'Привет! Я подключен к Gemini 2.5 Flash и вижу ваши расходы в базе данных. Чем могу помочь?' }
+            ]);
             const [isTyping, setIsTyping] = useState(false);
+            const [inputText, setInputText] = useState('');
 
             const sendPrompt = async (text) => {
                 if (!text.trim()) return;
@@ -415,7 +730,7 @@
                     <div className="fixed bottom-0 w-full max-w-md p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 z-50">
                         {messages.length === 1 && (
                             <div className="mb-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                {['Проанализируй траты', 'Как накопить больше?', 'Где я много трачу?'].map(q => (
+                                {['Где я много трачу?', 'Как накопить?', 'Проанализируй траты'].map(q => (
                                     <button key={q} onClick={() => sendPrompt(q)} className="whitespace-nowrap px-4 py-2 text-xs font-medium text-primary bg-primary/10 rounded-full border border-primary/20">{q}</button>
                                 ))}
                             </div>
@@ -429,36 +744,33 @@
             );
         };
 
-        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, onOpenCategories, familyId, setFamilyId }) => {
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, familyId, setFamilyId, showModal }) => {
             const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
             const username = (user && user.username) ? `@${user.username}` : '@ilkhom_finance';
             const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
             
+            const [inputFamilyId, setInputFamilyId] = useState('');
+
+            const encodeFamilyId = (id) => id && id !== 'browser_test_user' ? 'FAM-' + Number(id).toString(36).toUpperCase() : 'FAM-TEST';
+
             const joinFamily = () => {
-                const code = prompt("Введите код семьи (Например: FAM-XXXX):");
-                if(code && code.startsWith('FAM-')) { setFamilyId(code); alert("Вы успешно подключены к кошельку семьи!"); window.location.reload(); }
-                else if (code) alert("Неверный формат кода!");
+                if(!inputFamilyId || !inputFamilyId.startsWith('FAM-')) {
+                    showModal("Ошибка кода", "Код должен начинаться с FAM- и содержать символы.", null, () => {}, "ОК", "", false);
+                    return;
+                }
+                setFamilyId(inputFamilyId);
+                showModal("Успешно!", "Вы подключены к кошельку семьи. База данных обновлена.", () => window.location.reload(), () => window.location.reload(), "ОК", "", false);
             };
 
             return (
-                <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
+                <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300">
                     <TopHeader title="Профиль" rightIcon="fa-gear" />
                     
                     <div className="bg-white dark:bg-gray-900 px-4 py-6 mb-2 flex items-center gap-4 transition-colors duration-300">
-                        <img src={userPhoto} alt="Аватар" className="w-16 h-16 rounded-full border-2 border-primaryLight shadow-sm object-cover" />
+                        <img src={userPhoto} alt="Аватар" className="w-16 h-16 rounded-full border-2 border-primary shadow-sm object-cover" />
                         <div>
-                            <h2 className="text-xl font-bold text-textDark dark:text-white transition-colors duration-300">{userName}</h2>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">{username}</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-900 px-4 py-3 mb-2">
-                        <div className="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-4 flex items-center justify-between shadow-md relative overflow-hidden">
-                            <i className="fa-brands fa-telegram absolute -right-4 -bottom-4 text-white opacity-10 text-6xl transform -rotate-12"></i>
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg"><i className="fa-solid fa-crown text-sm"></i></div>
-                                <div><h3 className="font-bold text-white text-sm">Cloud Sync Active</h3><p className="text-xs text-gray-300 mt-0.5">Данные в безопасности на сервере</p></div>
-                            </div>
+                            <h2 className="text-xl font-bold text-textDark dark:text-white transition-colors">{userName}</h2>
+                            <p className="text-gray-500 text-sm font-medium">{username}</p>
                         </div>
                     </div>
 
@@ -467,26 +779,30 @@
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl p-4">
                             {familyId ? (
                                 <div>
-                                    <p className="text-sm text-textDark dark:text-white mb-2">Вы подключены к семье: <strong>{familyId}</strong></p>
-                                    <button onClick={()=>{setFamilyId(null); window.location.reload();}} className="bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm font-bold w-full">Отключиться</button>
+                                    <p className="text-sm text-textDark dark:text-white mb-3">Вы подключены к семье: <strong className="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">{familyId}</strong></p>
+                                    <button onClick={()=>{setFamilyId(null); window.location.reload();}} className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-bold w-full">Отключиться и выйти</button>
                                 </div>
                             ) : (
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Ваш код: <strong className="text-primary text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded">{encodeFamilyId(user ? user.id : 'browser')}</strong></p>
-                                    <button onClick={joinFamily} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold w-full shadow-md">Подключиться к семье</button>
+                                    <p className="text-xs text-gray-500 mb-3">Ваш код: <strong className="text-primary text-sm bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm ml-1 select-all">{encodeFamilyId(user ? user.id : 'browser')}</strong></p>
+                                    <div className="flex gap-2">
+                                        <input type="text" maxLength="15" value={inputFamilyId} onChange={e=>setInputFamilyId(e.target.value)} placeholder="Код (FAM-...)" className="flex-1 bg-white dark:bg-gray-800 border border-transparent focus:border-blue-300 rounded-xl px-3 text-sm text-textDark dark:text-white outline-none" />
+                                        <button onClick={joinFamily} className="bg-primary hover:bg-primaryDark text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors">Вступить</button>
+                                    </div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1">
-                        <div onClick={onOpenCategories} className="flex items-center justify-between py-3.5 border-b border-gray-50 dark:border-gray-800/50 cursor-pointer">
-                            <div className="flex items-center gap-4"><div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 text-amber-500"><i className="fa-solid fa-icons text-sm"></i></div><span className="text-textDark dark:text-white font-bold text-sm">Мои категории</span></div>
-                            <i className="fa-solid fa-chevron-right text-gray-300 dark:text-gray-600 text-xs"></i>
-                        </div>
-                        <div onClick={toggleDarkMode} className="flex items-center justify-between py-3.5 cursor-pointer">
-                            <div className="flex items-center gap-4"><div className="w-9 h-9 rounded-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500"><i className="fa-solid fa-moon text-sm"></i></div><span className="text-textDark dark:text-white font-bold text-sm">Темная тема</span></div>
-                            <div className="flex items-center gap-2"><span className="text-xs font-medium text-gray-400">{isDarkMode ? 'Вкл' : 'Выкл'}</span><i className="fa-solid fa-chevron-right text-gray-300 text-xs"></i></div>
+                    <div className="bg-white dark:bg-gray-900 px-4 py-2 mt-2">
+                        <div onClick={toggleDarkMode} className="flex items-center justify-between py-4 cursor-pointer">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500"><i className="fa-solid fa-moon text-lg"></i></div>
+                                <span className="text-textDark dark:text-white font-bold">Темная тема</span>
+                            </div>
+                            <div className="w-12 h-6 bg-gray-200 dark:bg-primary rounded-full relative transition-colors duration-300">
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${isDarkMode ? 'right-1' : 'left-1'}`}></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -496,20 +812,28 @@
         const App = () => {
             const [currentScreen, setCurrentScreen] = useState('home');
             const [isAddingMode, setIsAddingMode] = useState(false);
-            const [txType, setTxType] = useState('expense');
+            const [txType, setTxType] = useState('expense'); // 'expense' or 'income'
+            const [goalsTab, setGoalsTab] = useState('goals');
+
             const [isLoading, setIsLoading] = useState(true);
             const [transactions, setTransactions] = useState([]);
             const [isSplashVisible, setIsSplashVisible] = useState(true);
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
             const [tgUser, setTgUser] = useState(null);
             
+            // Custom Modal State
+            const [modalConfig, setModalConfig] = useState(null);
+
+            const showModal = (title, text, onConfirm, onCancel, confirmText, cancelText, isDanger) => {
+                setModalConfig({ title, text, onConfirm: () => { if(onConfirm) onConfirm(); setModalConfig(null); }, onCancel: () => { if(onCancel) onCancel(); setModalConfig(null); }, confirmText, cancelText, isDanger });
+            };
+
             const [familyId, setFamilyId] = useState(() => {
                 const saved = localStorage.getItem('financeAppFamilyId');
                 if (saved && !saved.startsWith('FAM-')) { localStorage.removeItem('financeAppFamilyId'); return null; }
                 return saved;
             });
 
-            // Категории пользователя
             const defaultCategories = [
                 { name: 'Продукты', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', limit: 2000000 },
                 { name: 'Транспорт', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', limit: 500000 },
@@ -517,32 +841,34 @@
                 { name: 'Развлечения', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', limit: 1000000 }
             ];
             const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('financeAppCategories')) || defaultCategories);
-            const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+            
+            const [goals, setGoals] = useState(() => JSON.parse(localStorage.getItem('financeAppGoals')) || [
+                { id: 1, title: 'Новая машина', current: 15000000, target: 100000000, icon: 'fa-car', color: 'bg-primary', iconColor: 'text-primary' }
+            ]);
 
-            // Цели пользователя
-            const defaultGoals = [
-                { id: 1, title: 'Новая кухня', current: 600000, target: 2000000, icon: 'fa-house', color: 'bg-primary', iconColor: 'text-primary' }
-            ];
-            const [goals, setGoals] = useState(() => JSON.parse(localStorage.getItem('financeAppGoals')) || defaultGoals);
-
-            // Форма добавления расхода
-            const [newTxAmount, setNewTxAmount] = useState('');
+            // Add Form State
+            const [newTxAmountStr, setNewTxAmountStr] = useState('');
             const [newTxTitle, setNewTxTitle] = useState('');
-            const [newTxCat, setNewTxCat] = useState('');
+            const [newTxCat, setNewTxCat] = useState(defaultCategories[0].name);
             const [newTxIcon, setNewTxIcon] = useState(TOP_ICONS[0]);
 
             useEffect(() => { localStorage.setItem('financeAppCategories', JSON.stringify(categories)); }, [categories]);
             useEffect(() => { localStorage.setItem('financeAppGoals', JSON.stringify(goals)); }, [goals]);
-            useEffect(() => {
-                if (isDarkMode) { document.documentElement.classList.add('dark'); localStorage.setItem('financeAppTheme', 'dark'); } 
-                else { document.documentElement.classList.remove('dark'); localStorage.setItem('financeAppTheme', 'light'); }
-            }, [isDarkMode]);
+            useEffect(() => { localStorage.setItem('financeAppFamilyId', familyId || ''); }, [familyId]);
 
             const getEffectiveUserId = () => {
-                if (familyId) { const decoded = decodeFamilyId(familyId); if (decoded) return decoded; }
+                if (familyId) {
+                    const code = familyId;
+                    if (code === 'FAM-TEST') return 'browser_test_user';
+                    if (code && code.startsWith('FAM-')) {
+                        const num = parseInt(code.replace('FAM-', '').toLowerCase(), 36);
+                        if (!isNaN(num)) return num.toString();
+                    }
+                }
                 return tgUser ? tgUser.id.toString() : 'browser_test_user';
             };
 
+            // LOAD DATA
             useEffect(() => {
                 let currentUserId = 'browser_test_user';
                 if (window.Telegram && window.Telegram.WebApp) {
@@ -554,20 +880,19 @@
                     }
                 }
 
-                const effectiveId = familyId ? decodeFamilyId(familyId) || currentUserId : currentUserId;
+                const effectiveId = getEffectiveUserId();
 
                 fetch(`${API_URL}/transactions`, { headers: { 'x-tg-user-id': effectiveId } })
-                    .then(res => { if(res.ok) return res.json(); throw new Error(); })
+                    .then(res => res.ok ? res.json() : [])
                     .then(data => {
-                        if (Array.isArray(data) && data.length > 0) {
-                            setTransactions(data);
-                        } else {
-                            // ЕСЛИ БАЗА ПУСТАЯ - ГЕНЕРИРУЕМ ДЕМО-ДАННЫЕ ЗА 3 МЕСЯЦА
-                            setTransactions(generateDummyData(effectiveId));
-                        }
+                        if (Array.isArray(data) && data.length > 0) setTransactions(data);
+                        else setTransactions(generateDummyData(effectiveId));
                         setIsLoading(false);
                     })
-                    .catch(() => { setIsLoading(false); });
+                    .catch(() => {
+                        setTransactions(generateDummyData(effectiveId));
+                        setIsLoading(false);
+                    });
                 
                 setTimeout(() => setIsSplashVisible(false), 2000);
             }, [familyId]);
@@ -576,13 +901,15 @@
                 setTxType(type);
                 setNewTxCat(categories[0].name);
                 setNewTxIcon(TOP_ICONS[0]);
+                setNewTxAmountStr('');
+                setNewTxTitle('');
                 setIsAddingMode(true);
             };
 
             const handleSaveTransaction = async (e) => {
                 e.preventDefault();
-                let finalAmount = parseFloat(newTxAmount);
-                if(!finalAmount || !newTxTitle) return;
+                let finalAmount = parseFormattedNumber(newTxAmountStr);
+                if(finalAmount <= 0 || !newTxTitle) return;
 
                 const signedAmount = txType === 'income' ? finalAmount : -finalAmount;
                 const d = new Date();
@@ -590,7 +917,10 @@
 
                 const selectedCatObj = categories.find(c => c.name === newTxCat) || categories[0];
                 const newTxPayload = {
-                    title: newTxTitle, category: txType === 'income' ? 'Доход' : newTxCat, amount: signedAmount, date: dateString, rawDate: new Date().toISOString(),
+                    title: newTxTitle, 
+                    category: txType === 'income' ? 'Доход' : newTxCat, 
+                    amount: signedAmount, 
+                    date: dateString, rawDate: new Date().toISOString(),
                     icon: txType === 'income' ? 'fa-wallet' : newTxIcon, 
                     color: txType === 'income' ? 'text-green-500' : selectedCatObj.color, 
                     bg: txType === 'income' ? 'bg-green-100' : selectedCatObj.bg
@@ -598,26 +928,47 @@
 
                 try {
                     const res = await fetch(`${API_URL}/transactions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-tg-user-id': getEffectiveUserId() }, body: JSON.stringify(newTxPayload) });
-                    if(!res.ok) throw new Error();
-                    const savedTx = await res.json();
-                    setTransactions([savedTx, ...transactions]);
-                    setIsAddingMode(false); setNewTxAmount(''); setNewTxTitle('');
-                } catch (error) { alert("Ошибка сохранения."); }
+                    if(res.ok) {
+                        const savedTx = await res.json();
+                        setTransactions([savedTx, ...transactions]);
+                        setIsAddingMode(false);
+                    }
+                } catch (error) { 
+                    showModal("Ошибка сети", "Расход сохранен локально.", null, null, "ОК", "", false);
+                    setTransactions([{...newTxPayload, id: Date.now()}, ...transactions]);
+                    setIsAddingMode(false);
+                }
             };
 
-            const simulateScan = () => { alert("ИИ сканирует чек... (Демо)"); setNewTxTitle("Супермаркет"); setNewTxAmount("125000"); };
-            const simulateVoice = () => { alert("Внимательно слушаю... (Демо)"); setNewTxTitle("Такси"); setNewTxAmount("25000"); setNewTxIcon('fa-car'); };
+            const handleDeleteTransaction = async (id) => {
+                try {
+                    await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE', headers: { 'x-tg-user-id': getEffectiveUserId() } });
+                    setTransactions(transactions.filter(t => t.id !== id));
+                } catch (error) {
+                    showModal("Ошибка", "Не удалось удалить операцию.", null, null, "ОК", "", false);
+                }
+            };
+
+            // Сканер чека симуляция для стабильности
+            const simulateScan = () => { 
+                setNewTxTitle("Супермаркет Korzinka"); 
+                setNewTxAmountStr(formatInputNumber('125000')); 
+                setNewTxCat("Продукты");
+                setNewTxIcon('fa-basket-shopping');
+            };
 
             const renderScreen = () => {
                 if (isLoading) return <div className="h-screen flex items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary"></i></div>;
                 switch(currentScreen) {
-                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={() => {}} onAddClick={openAddModal} />;
-                    case 'analytics': return <ScreenAnalytics transactions={transactions} categories={categories} onTransactionClick={() => {}} />;
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} setGoalsTab={setGoalsTab} openAddModal={openAddModal} transactions={transactions} user={tgUser} onTransactionClick={(t) => {
+                        showModal(t.title, `${t.category} • ${t.date}\nСумма: ${formatMoney(t.amount)}`, () => handleDeleteTransaction(t.id), null, "Удалить операцию", "Закрыть", true);
+                    }} />;
+                    case 'analytics': return <ScreenAnalytics transactions={transactions} />;
                     case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
-                    case 'goals': return <ScreenGoals onBack={() => setCurrentScreen('home')} goals={goals} setGoals={setGoals} />;
+                    case 'goals': return <ScreenGoalsAndLimits onBack={() => setCurrentScreen('home')} initialTab={goalsTab} goals={goals} setGoals={setGoals} categories={categories} setCategories={setCategories} transactions={transactions} showModal={showModal} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
                     case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={getEffectiveUserId()} />;
-                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} onOpenCategories={() => setIsCategoryModalOpen(true)} familyId={familyId} setFamilyId={setFamilyId} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} familyId={familyId} setFamilyId={setFamilyId} showModal={showModal} />;
                     default: return null;
                 }
             };
@@ -633,11 +984,14 @@
                 <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
                     {renderScreen()}
 
-                    {}
+                    {/* Глобальное модальное окно */}
+                    <CustomModal {...(modalConfig || {})} isOpen={!!modalConfig} />
+
+                    {/* Модальное окно добавления */}
                     {isAddingMode && (
                         <div className="fixed inset-0 z-[60] flex items-end">
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsAddingMode(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto no-scrollbar">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAddingMode(false)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
                                 
                                 <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
@@ -648,33 +1002,33 @@
                                 <form onSubmit={handleSaveTransaction}>
                                     <div className="space-y-4 mb-6">
                                         <div>
-                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Сумма (сум)</label>
-                                            <input required type="number" value={newTxAmount} onChange={e=>setNewTxAmount(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-bold mt-1 text-textDark dark:text-white focus:outline-none" placeholder="0" />
+                                            <label className="text-xs text-gray-500 ml-1">Сумма (сум)</label>
+                                            <input required type="text" inputMode="numeric" value={newTxAmountStr} onChange={e=>setNewTxAmountStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-2xl font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary text-center tracking-wider" placeholder="0" />
                                         </div>
                                         <div>
                                             <div className="flex justify-between items-center ml-1 mb-1">
-                                                <label className="text-xs text-gray-500 dark:text-gray-400">Название / Место</label>
+                                                <label className="text-xs text-gray-500">Название / Место</label>
                                                 <div className="flex gap-2">
-                                                    <button type="button" onClick={simulateVoice} className="w-7 h-7 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center text-xs"><i className="fa-solid fa-microphone"></i></button>
-                                                    <button type="button" onClick={simulateScan} className="w-7 h-7 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-xs"><i className="fa-solid fa-camera"></i></button>
+                                                    <button type="button" onClick={() => { setNewTxTitle("Голосовой ввод..."); setTimeout(()=>setNewTxTitle("Такси"), 1500) }} className="w-8 h-8 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-xs hover:bg-blue-100 transition-colors"><i className="fa-solid fa-microphone"></i></button>
+                                                    <button type="button" onClick={simulateScan} className="w-8 h-8 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xs hover:bg-green-100 transition-colors"><i className="fa-solid fa-camera"></i></button>
                                                 </div>
                                             </div>
-                                            <input required type="text" value={newTxTitle} onChange={e=>setNewTxTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-textDark dark:text-white focus:outline-none" placeholder={txType === 'income' ? 'Зарплата, Перевод...' : 'Кафе, Магазин...'} />
+                                            <input required type="text" value={newTxTitle} onChange={e=>setNewTxTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-textDark dark:text-white focus:outline-none focus:border-primary" placeholder={txType === 'income' ? 'Зарплата...' : 'Кафе, Продукты...'} />
                                         </div>
                                         
                                         {txType === 'expense' && (
                                             <>
                                                 <div>
-                                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Категория</label>
-                                                    <select value={newTxCat} onChange={e=>setNewTxCat(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none appearance-none">
+                                                    <label className="text-xs text-gray-500 ml-1">Категория лимита</label>
+                                                    <select value={newTxCat} onChange={e=>setNewTxCat(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary appearance-none font-bold">
                                                         {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs text-gray-500 dark:text-gray-400 ml-1 mb-1 block">Иконка траты</label>
-                                                    <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto no-scrollbar p-1">
+                                                    <label className="text-xs text-gray-500 ml-1 mb-2 block">Иконка операции</label>
+                                                    <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto no-scrollbar p-1">
                                                         {TOP_ICONS.map(ic => (
-                                                            <div key={ic} onClick={() => setNewTxIcon(ic)} className={`w-10 h-10 rounded-full flex items-center justify-center text-lg cursor-pointer transition-all ${newTxIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'}`}>
+                                                            <div key={ic} onClick={() => setNewTxIcon(ic)} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${newTxIcon === ic ? 'bg-primary text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'}`}>
                                                                 <i className={`fa-solid ${ic}`}></i>
                                                             </div>
                                                         ))}
@@ -683,7 +1037,7 @@
                                             </>
                                         )}
                                     </div>
-                                    <button type="submit" className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg ${txType === 'income' ? 'bg-green-500' : 'bg-primary'}`}>
+                                    <button type="submit" className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-colors ${txType === 'income' ? 'bg-green-500 hover:bg-green-600' : 'bg-primary hover:bg-primaryDark'}`}>
                                         Сохранить {txType === 'income' ? 'доход' : 'расход'}
                                     </button>
                                 </form>
@@ -691,40 +1045,11 @@
                         </div>
                     )}
 
-                    {}
-                    {isCategoryModalOpen && (
-                        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
-                            <div className="bg-white dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl sm:rounded-3xl p-6 animate-fade-in relative z-10 flex flex-col">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xl font-bold text-textDark dark:text-white">Мои категории</h3>
-                                    <button onClick={() => setIsCategoryModalOpen(false)} className="text-gray-400"><i className="fa-solid fa-xmark text-xl"></i></button>
-                                </div>
-                                <div className="overflow-y-auto mb-6 pr-2 space-y-3 no-scrollbar flex-1 pb-4">
-                                    {categories.map((cat, idx) => (
-                                        <div key={idx} className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700">
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color}`}><i className={`fa-solid ${cat.icon}`}></i></div>
-                                                    <span className="font-bold text-sm text-textDark dark:text-white">{cat.name}</span>
-                                                </div>
-                                                <button onClick={() => setCategories(categories.filter((_, i) => i !== idx))} className="text-red-500 w-8 h-8 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg"><i className="fa-solid fa-trash text-sm"></i></button>
-                                            </div>
-                                            <div className="flex items-center justify-between pl-1">
-                                                <span className="text-xs text-gray-500">Лимит:</span>
-                                                <input type="number" value={cat.limit || 0} onChange={(e) => { const val = parseInt(e.target.value) || 0; const newCats = [...categories]; newCats[idx].limit = val; setCategories(newCats); }} className="w-28 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm text-right font-bold focus:outline-none text-textDark dark:text-white" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {currentScreen !== 'aichat' && currentScreen !== 'product' && currentScreen !== 'calculator' && currentScreen !== 'goals' && (
+                    {currentScreen !== 'aichat' && currentScreen !== 'calculator' && currentScreen !== 'goals' && (
                         <div className="fixed bottom-0 w-full max-w-md bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-2 flex justify-between items-center z-40 transition-colors">
                             <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center p-2 ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-medium">Главная</span></button>
-                            <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-medium">Аналитика</span></button>
-                            <div className="relative -top-5"><button onClick={() => openAddModal('expense')} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg transform hover:scale-105 transition-all"><i className="fa-solid fa-plus"></i></button></div>
+                            <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-medium">Отчеты</span></button>
+                            <div className="relative -top-5"><button onClick={()=>openAddModal('expense')} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/30 transform hover:scale-105 transition-all"><i className="fa-solid fa-plus"></i></button></div>
                             <button onClick={() => setCurrentScreen('tips')} className={`flex flex-col items-center p-2 ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-medium">Советы</span></button>
                             <button onClick={() => setCurrentScreen('profile')} className={`flex flex-col items-center p-2 ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-medium">Профиль</span></button>
                         </div>
