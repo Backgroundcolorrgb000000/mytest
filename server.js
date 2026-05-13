@@ -29,6 +29,26 @@ const db = admin.apps.length ? admin.firestore() : null;
 // 2. Инициализация Google Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
+// НОВАЯ ФУНКЦИЯ: Отправка сообщений в Telegram
+const sendTelegramMessage = async (chatId, text) => {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) {
+        console.warn("Токен Telegram не настроен. Уведомление не отправлено.");
+        return;
+    }
+    try {
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
+        });
+        console.log(`Уведомление отправлено пользователю ${chatId}`);
+    } catch (error) {
+        console.error("Ошибка отправки в Telegram:", error);
+    }
+};
+
 // Middleware для проверки пользователя Telegram
 const verifyUser = (req, res, next) => {
     const tgUserId = req.headers['x-tg-user-id'];
@@ -48,35 +68,36 @@ app.get('/', (req, res) => {
 
 app.get('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
-    try {
-        const snapshot = await db.collection('transactions')
-            .where('userId', '==', req.userId)
-            .orderBy('id', 'desc')
-            .get();
-        const txs = snapshot.docs.map(doc => doc.data());
-        res.json(txs);
-    } catch (error) {
-        console.error("Ошибка получения транзакций:", error);
-        res.status(500).json({ error: 'Ошибка БД' });
-    }
-});
-
+// Добавить транзакцию
 app.post('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
+
     try {
         const { title, category, amount, icon, color, bg, date, rawDate } = req.body;
         const newTx = {
-            id: Date.now(),
+            id: Date.now(), // Уникальный числовой ID
             userId: req.userId,
             title, category, amount, icon, color, bg, date, rawDate
         };
+        
+        // Сохраняем в коллекцию 'transactions'
         await db.collection('transactions').doc(newTx.id.toString()).set(newTx);
+        
+        // НОВАЯ ЛОГИКА: Проверка на крупную трату (например, больше 500 000 сум)
+        const absoluteAmount = Math.abs(amount);
+        if (absoluteAmount >= 500000 && req.userId !== 'browser_test_user') {
+            const message = `⚠️ <b>Крупная трата!</b>\n\nВы только что добавили расход: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Постарайтесь не выходить за рамки бюджета в этом месяце!</i> 🤖`;
+            // Отправляем уведомление асинхронно, не задерживая ответ клиенту
+            sendTelegramMessage(req.userId, message);
+        }
+
         res.status(201).json(newTx);
     } catch (error) {
         console.error("Ошибка добавления транзакции:", error);
         res.status(500).json({ error: 'Ошибка БД' });
     }
 });
+
 // Удалить транзакцию
 app.delete('/api/transactions/:id', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
