@@ -29,13 +29,10 @@ const db = admin.apps.length ? admin.firestore() : null;
 // 2. Инициализация Google Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
-// НОВАЯ ФУНКЦИЯ: Отправка сообщений в Telegram
+// Отправка сообщений в Telegram
 const sendTelegramMessage = async (chatId, text) => {
     const token = process.env.TELEGRAM_BOT_TOKEN;
-    if (!token) {
-        console.warn("Токен Telegram не настроен. Уведомление не отправлено.");
-        return;
-    }
+    if (!token) return;
     try {
         const url = `https://api.telegram.org/bot${token}/sendMessage`;
         await fetch(url, {
@@ -43,7 +40,6 @@ const sendTelegramMessage = async (chatId, text) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
         });
-        console.log(`Уведомление отправлено пользователю ${chatId}`);
     } catch (error) {
         console.error("Ошибка отправки в Telegram:", error);
     }
@@ -66,7 +62,24 @@ app.get('/', (req, res) => {
     res.send('🚀 FinanceApp Server is running!');
 });
 
-// Получить все транзакции (ЭТОТ БЛОК БЫЛ ПОВРЕЖДЕН, ТЕПЕРЬ ИСПРАВЛЕН)
+// НОВОЕ: Получить актуальные курсы валют (ЦБ РУз)
+app.get('/api/rates', async (req, res) => {
+    try {
+        const response = await fetch('https://cbu.uz/ru/arkhiv-kursov-valyut/json/');
+        const data = await response.json();
+        
+        const usd = data.find(c => c.Ccy === 'USD').Rate;
+        const eur = data.find(c => c.Ccy === 'EUR').Rate;
+        
+        res.json({ USD: parseFloat(usd), EUR: parseFloat(eur) });
+    } catch (error) {
+        console.error('Ошибка получения курсов ЦБ:', error);
+        // Резервный курс на случай падения серверов ЦБ
+        res.json({ USD: 12650, EUR: 13600 }); 
+    }
+});
+
+// Получить все транзакции
 app.get('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
     try {
@@ -87,21 +100,19 @@ app.post('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
 
     try {
-        const { title, category, amount, icon, color, bg, date, rawDate } = req.body;
+        const { title, category, amount, icon, color, bg, date, rawDate, originalCurrency, originalAmount } = req.body;
         const newTx = {
-            id: Date.now(), // Уникальный числовой ID
+            id: Date.now(), 
             userId: req.userId,
-            title, category, amount, icon, color, bg, date, rawDate
+            title, category, amount, icon, color, bg, date, rawDate, originalCurrency, originalAmount
         };
         
-        // Сохраняем в коллекцию 'transactions'
         await db.collection('transactions').doc(newTx.id.toString()).set(newTx);
         
-        // ЛОГИКА: Проверка на крупную трату (больше 500 000 сум)
+        // Уведомление о крупной трате
         const absoluteAmount = Math.abs(amount);
         if (absoluteAmount >= 500000 && req.userId !== 'browser_test_user') {
-            const message = `⚠️ <b>Крупная трата!</b>\n\nВы только что добавили расход: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Постарайтесь не выходить за рамки бюджета в этом месяце!</i> 🤖`;
-            // Отправляем уведомление асинхронно
+            const message = `⚠️ <b>Крупная трата!</b>\n\nВы добавили расход: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Постарайтесь не выходить за рамки бюджета!</i> 🤖`;
             sendTelegramMessage(req.userId, message);
         }
 
@@ -135,15 +146,12 @@ app.post('/api/scan', verifyUser, async (req, res) => {
         const prompt = `Проанализируй этот чек. Верни ТОЛЬКО валидный JSON объект (без markdown разметки) со следующими полями:
         - amount: общая сумма чека (только цифры, целое число, без пробелов)
         - title: название магазина или заведения (строка, кратко)
-        - category: выбери одну наиболее подходящую категорию из списка: "Продукты", "Транспорт", "Еда вне дома", "Развлечения", "Покупки".`;
+        - category: выбери наиболее подходящую категорию.`;
 
         const imageParts = [{ inlineData: { data: imageBase64, mimeType: mimeType } }];
-        
         const result = await model.generateContent([prompt, ...imageParts]);
         const response = await result.response;
-        let text = response.text();
-
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(text);
 
         res.json(data);
@@ -169,14 +177,13 @@ app.post('/api/chat', verifyUser, async (req, res) => {
                 txContext = JSON.stringify(txs);
             }
         }
-        const prompt = `Ты финансовый эксперт и помощник. Отвечай кратко, дружелюбно, на русском языке (максимум 3-4 предложения). 
+        const prompt = `Ты финансовый эксперт и помощник. Отвечай кратко, дружелюбно, на русском языке. 
         Вот список недавних транзакций пользователя (отрицательные суммы - это расходы): ${txContext}.
         Вопрос пользователя: ${message}`;
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        
         res.json({ reply: response.text() });
     } catch (error) {
         console.error('Ошибка ИИ:', error);
