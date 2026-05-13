@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -92,6 +92,22 @@
         const API_URL = 'https://mytest-production-6436.up.railway.app/api';
 
         const formatMoney = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
+
+        // --- НОВЫЕ ФУНКЦИИ ДЛЯ ШИФРОВАНИЯ ID СЕМЬИ ---
+        const encodeFamilyId = (id) => {
+            if (!id || id === 'browser_test_user') return 'FAM-TEST';
+            return 'FAM-' + Number(id).toString(36).toUpperCase();
+        };
+
+        const decodeFamilyId = (code) => {
+            if (code === 'FAM-TEST') return 'browser_test_user';
+            if (code && code.startsWith('FAM-')) {
+                const base36 = code.replace('FAM-', '').toLowerCase();
+                const num = parseInt(base36, 36);
+                if (!isNaN(num)) return num.toString();
+            }
+            return null;
+        };
 
         const getGreeting = () => {
             const hour = new Date().getHours();
@@ -666,6 +682,9 @@
             const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
             const myUserId = user ? user.id.toString() : 'browser_test_user';
 
+            // Зашифрованный код семьи
+            const myFamilyCode = encodeFamilyId(myUserId);
+
             const handleExport = () => {
                 let csvContent = "Дата,Категория,Название,Сумма\n";
                 transactions.forEach(t => {
@@ -715,22 +734,24 @@
                                 <p className="text-xs text-gray-500 dark:text-gray-400">Поделитесь вашим кодом с близкими или введите их код для объединения расходов.</p>
                                 <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center">
                                     <div>
-                                        <p className="text-xs text-gray-500">Ваш код семьи (ID):</p>
-                                        <p className="font-mono text-sm font-bold text-textDark dark:text-white">{myUserId}</p>
+                                        <p className="text-xs text-gray-500">Ваш код семьи:</p>
+                                        <p className="font-mono text-lg tracking-widest font-bold text-textDark dark:text-white">{myFamilyCode}</p>
                                     </div>
-                                    <button onClick={() => { document.execCommand('copy'); alert('Код скопирован: ' + myUserId); }} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg shadow-sm text-primary">
+                                    <button onClick={() => { document.execCommand('copy'); alert('Код скопирован: ' + myFamilyCode); }} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg shadow-sm text-primary">
                                         <i className="fa-regular fa-copy"></i>
                                     </button>
                                 </div>
                                 <div className="flex gap-2">
-                                    <input id="joinFamilyInput" type="text" placeholder="Введите код..." className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-textDark dark:text-white focus:outline-none focus:border-primary" />
+                                    <input id="joinFamilyInput" type="text" maxLength="15" placeholder="Например: FAM-..." className="flex-1 uppercase bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-textDark dark:text-white focus:outline-none focus:border-primary" />
                                     <button onClick={() => {
-                                        const code = document.getElementById('joinFamilyInput').value;
-                                        if (code && code.trim() !== '') {
-                                            setFamilyId(code.trim());
-                                            localStorage.setItem('financeAppFamilyId', code.trim());
-                                            window.location.reload();
+                                        const code = document.getElementById('joinFamilyInput').value.trim().toUpperCase();
+                                        if (!code.startsWith('FAM-')) {
+                                            alert('Неверный формат! Код должен начинаться с FAM-');
+                                            return;
                                         }
+                                        setFamilyId(code);
+                                        localStorage.setItem('financeAppFamilyId', code);
+                                        window.location.reload();
                                     }} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">
                                         Вступить
                                     </button>
@@ -779,11 +800,22 @@
             const [scannedData, setScannedData] = useState({ amount: '', title: '', category: 'Продукты' });
 
             // Семейный бюджет: ID пользователя, к базе которого мы подключаемся
-            const [familyId, setFamilyId] = useState(() => localStorage.getItem('financeAppFamilyId') || null);
+            const [familyId, setFamilyId] = useState(() => {
+                const saved = localStorage.getItem('financeAppFamilyId');
+                // Очищаем старые ошибки, если туда попал мусор вроде кода сервера
+                if (saved && !saved.startsWith('FAM-')) {
+                    localStorage.removeItem('financeAppFamilyId');
+                    return null;
+                }
+                return saved;
+            });
 
             // Функция, определяющая, в какую базу отправлять запросы (свою или семейную)
             const getEffectiveUserId = () => {
-                if (familyId) return familyId;
+                if (familyId) {
+                    const decoded = decodeFamilyId(familyId);
+                    if (decoded) return decoded;
+                }
                 return tgUser ? tgUser.id.toString() : 'browser_test_user';
             };
 
