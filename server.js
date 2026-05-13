@@ -29,10 +29,18 @@ const db = admin.apps.length ? admin.firestore() : null;
 // 2. Инициализация Google Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
-// Middleware для имитации авторизации (в будущем здесь будет проверка подписи Telegram)
+// Middleware для авторизации пользователя по Telegram ID
 const verifyUser = (req, res, next) => {
-    // Временно жестко задаем ID пользователя. В релизе он будет браться из данных Telegram
-    req.userId = 'tg_user_1'; 
+    // Читаем ID пользователя из заголовков запроса
+    const tgUserId = req.headers['x-tg-user-id'];
+
+    if (!tgUserId) {
+        // Если открыли просто в браузере на ПК (вне телеграма)
+        req.userId = 'browser_test_user'; 
+    } else {
+        // Если открыли внутри Telegram
+        req.userId = tgUserId.toString(); 
+    }
     next();
 };
 
@@ -119,8 +127,8 @@ app.post('/api/chat', verifyUser, async (req, res) => {
         Вот список недавних транзакций пользователя (отрицательные суммы - это расходы): ${txContext}.
         Вопрос пользователя: ${message}`;
 
-        // Исправлено название модели на актуальное (""gemini-2.5-flash"")
-        const model = genAI.getGenerativeModel({ model:"gemini-2.5-flash" });
+        // Используем самую современную стабильную модель
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         

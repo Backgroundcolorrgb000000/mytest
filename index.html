@@ -618,7 +618,7 @@
             );
         };
 
-        const ScreenAIChat = ({ onBack }) => {
+        const ScreenAIChat = ({ onBack, userId }) => {
             const [messages, setMessages] = useState([
                 { type: 'bot', text: 'Привет! 👋\nЯ подключен к Gemini 1.5 и вижу ваши расходы в базе данных. Чем могу помочь?' }
             ]);
@@ -634,7 +634,10 @@
                 try {
                     const res = await fetch(`${API_URL}/chat`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-tg-user-id': userId
+                        },
                         body: JSON.stringify({ message: text })
                     });
                     const data = await res.json();
@@ -807,11 +810,14 @@
 
             // Инициализация Telegram и загрузка данных с СЕРВЕРА
             useEffect(() => {
+                let currentUserId = 'browser_test_user';
+
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.expand();
                     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                         setTgUser(tg.initDataUnsafe.user);
+                        currentUserId = tg.initDataUnsafe.user.id.toString();
                     }
                     if (tg.colorScheme === 'dark' && !localStorage.getItem('financeAppTheme')) {
                         setIsDarkMode(true);
@@ -819,7 +825,9 @@
                 }
 
                 // Запрос к нашему серверу Railway для получения транзакций
-                fetch(`${API_URL}/transactions`)
+                fetch(`${API_URL}/transactions`, {
+                    headers: { 'x-tg-user-id': currentUserId }
+                })
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data)) {
@@ -898,11 +906,16 @@
                     rawDate: new Date().toISOString()
                 };
 
+                const currentUserId = tgUser ? tgUser.id.toString() : 'browser_test_user';
+
                 try {
                     // Отправляем POST запрос на Railway
                     const res = await fetch(`${API_URL}/transactions`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-tg-user-id': currentUserId
+                        },
                         body: JSON.stringify(newTxPayload)
                     });
                     const savedTx = await res.json();
@@ -918,9 +931,13 @@
 
             // Удаление транзакции С СЕРВЕРА
             const handleDeleteTransaction = async (id) => {
+                const currentUserId = tgUser ? tgUser.id.toString() : 'browser_test_user';
                 try {
                     // Отправляем DELETE запрос на Railway
-                    await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
+                    await fetch(`${API_URL}/transactions/${id}`, { 
+                        method: 'DELETE',
+                        headers: { 'x-tg-user-id': currentUserId }
+                    });
                     // Удаляем локально
                     setTransactions(transactions.filter(t => t.id !== id));
                     setSelectedTransaction(null);
@@ -949,7 +966,7 @@
                     case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
                     case 'goals': return <ScreenGoals onBack={() => setCurrentScreen('home')} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
-                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} />;
+                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={tgUser ? tgUser.id.toString() : 'browser_test_user'} />;
                     case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} />;
                     default: return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={handleTransactionClick} />;
                 }
