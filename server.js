@@ -6,10 +6,9 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // Инициализация Express
 const app = express();
 app.use(cors());
-// УВЕЛИЧИВАЕМ ЛИМИТ ДЛЯ КАРТИНОК (ДО 10 МБ)
+// УВЕЛИЧИВАЕМ ЛИМИТ ДЛЯ КАРТИНОК ИЗ СКАНЕРА ЧЕКОВ
 app.use(express.json({ limit: '10mb' }));
 
-// 1. Подключение к базе данных Firebase (Firestore)
 try {
     if (!process.env.FIREBASE_CREDENTIALS) {
         console.warn("ВНИМАНИЕ: Переменная FIREBASE_CREDENTIALS не найдена.");
@@ -26,10 +25,9 @@ try {
 
 const db = admin.apps.length ? admin.firestore() : null;
 
-// 2. Инициализация Google Gemini API
+// Инициализация Google Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'dummy_key');
 
-// Отправка сообщений в Telegram
 const sendTelegramMessage = async (chatId, text) => {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) return;
@@ -45,7 +43,6 @@ const sendTelegramMessage = async (chatId, text) => {
     }
 };
 
-// Middleware для проверки пользователя Telegram
 const verifyUser = (req, res, next) => {
     const tgUserId = req.headers['x-tg-user-id'];
     if (!tgUserId) {
@@ -56,30 +53,38 @@ const verifyUser = (req, res, next) => {
     next();
 };
 
-// --- ЭНДПОИНТЫ (API) ---
+async function callGeminiWithRetry(promptArray, retries = 2) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            // Используем самую актуальную модель
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const result = await model.generateContent(promptArray);
+            return await result.response;
+        } catch (error) {
+            if (i === retries - 1) throw error; // Если все попытки исчерпаны - пробрасываем ошибку
+            console.log(`[Google API] Сервер перегружен. Попытка ${i + 2} из ${retries}...`);
+            await new Promise(res => setTimeout(res, 1500)); // Ждем 1.5 секунды перед повтором
+        }
+    }
+}
+
 
 app.get('/', (req, res) => {
     res.send('🚀 FinanceApp Server is running!');
 });
 
-// НОВОЕ: Получить актуальные курсы валют (ЦБ РУз)
 app.get('/api/rates', async (req, res) => {
     try {
         const response = await fetch('https://cbu.uz/ru/arkhiv-kursov-valyut/json/');
         const data = await response.json();
-        
         const usd = data.find(c => c.Ccy === 'USD').Rate;
         const eur = data.find(c => c.Ccy === 'EUR').Rate;
-        
         res.json({ USD: parseFloat(usd), EUR: parseFloat(eur) });
     } catch (error) {
-        console.error('Ошибка получения курсов ЦБ:', error);
-        // Резервный курс на случай падения серверов ЦБ
         res.json({ USD: 12650, EUR: 13600 }); 
     }
 });
 
-// Получить все транзакции
 app.get('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
     try {
@@ -95,7 +100,6 @@ app.get('/api/transactions', verifyUser, async (req, res) => {
     }
 });
 
-// Добавить транзакцию
 app.post('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
 
@@ -109,10 +113,10 @@ app.post('/api/transactions', verifyUser, async (req, res) => {
         
         await db.collection('transactions').doc(newTx.id.toString()).set(newTx);
         
-        // Уведомление о крупной трате
+        // Уведомление о крупной трате в Telegram
         const absoluteAmount = Math.abs(amount);
         if (absoluteAmount >= 500000 && req.userId !== 'browser_test_user') {
-            const message = `⚠️ <b>Крупная трата!</b>\n\nВы добавили расход: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Постарайтесь не выходить за рамки бюджета!</i> 🤖`;
+            const message = `⚠️ <b>Крупная операция!</b>\n\nВы зафиксировали: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Старайтесь придерживаться ваших лимитов!</i> 📊`;
             sendTelegramMessage(req.userId, message);
         }
 
@@ -123,7 +127,6 @@ app.post('/api/transactions', verifyUser, async (req, res) => {
     }
 });
 
-// Удалить транзакцию
 app.delete('/api/transactions/:id', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
     try {
@@ -136,36 +139,35 @@ app.delete('/api/transactions/:id', verifyUser, async (req, res) => {
     }
 });
 
-// Распознавание чека (OCR)
 app.post('/api/scan', verifyUser, async (req, res) => {
     try {
         const { imageBase64, mimeType } = req.body;
         if (!imageBase64) return res.status(400).json({ error: 'Нет изображения' });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `Проанализируй этот чек. Верни ТОЛЬКО валидный JSON объект (без markdown разметки) со следующими полями:
         - amount: общая сумма чека (только цифры, целое число, без пробелов)
         - title: название магазина или заведения (строка, кратко)
         - category: выбери наиболее подходящую категорию.`;
 
         const imageParts = [{ inlineData: { data: imageBase64, mimeType: mimeType } }];
-        const result = await model.generateContent([prompt, ...imageParts]);
-        const response = await result.response;
+        
+        // Используем нашу защищенную функцию с автоповтором
+        const response = await callGeminiWithRetry([prompt, ...imageParts]);
         let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(text);
 
         res.json(data);
     } catch (error) {
-        console.error('Ошибка распознавания:', error);
+        console.error('Ошибка распознавания:', error.message);
         res.status(500).json({ error: 'Не удалось прочитать чек' });
     }
 });
 
-// Чат с ИИ (Gemini)
 app.post('/api/chat', verifyUser, async (req, res) => {
     try {
         const { message } = req.body;
         let txContext = "У пользователя пока нет расходов.";
+        
         if (db) {
             const snapshot = await db.collection('transactions').where('userId', '==', req.userId).get();
             const txs = snapshot.docs.map(doc => ({
@@ -177,17 +179,19 @@ app.post('/api/chat', verifyUser, async (req, res) => {
                 txContext = JSON.stringify(txs);
             }
         }
-        const prompt = `Ты финансовый эксперт и помощник. Отвечай кратко, дружелюбно, на русском языке. 
+
+        const prompt = `Ты финансовый эксперт и помощник. Отвечай кратко, дружелюбно, на русском языке (2-3 предложения). 
         Вот список недавних транзакций пользователя (отрицательные суммы - это расходы): ${txContext}.
         Вопрос пользователя: ${message}`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
+        // Используем нашу защищенную функцию
+        const response = await callGeminiWithRetry([prompt]);
         res.json({ reply: response.text() });
+
     } catch (error) {
-        console.error('Ошибка ИИ:', error);
-        res.status(500).json({ error: 'Извините, я сейчас немного перегружен. Попробуйте спросить чуть позже!' });
+        console.error('Ошибка ИИ:', error.message);
+        // Вместо падения сервера, возвращаем пользователю вежливый ответ
+        res.json({ reply: 'Извините, серверы Google сейчас перегружены 😔. Дайте мне пару минут на отдых, и спросите снова!' });
     }
 });
 

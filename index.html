@@ -81,10 +81,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // ВАШ СЕРВЕР НА RAILWAY
         const API_URL = 'https://mytest-production-6436.up.railway.app/api';
 
-        // Умное форматирование чисел с пробелами (1 000 000)
         const formatMoney = (num) => {
             if (num === null || num === undefined) return '0 сум';
             return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
@@ -105,7 +103,6 @@
             return 'Доброй ночи';
         };
 
-        // ТОП-30 Иконок
         const TOP_ICONS = [
             'fa-basket-shopping', 'fa-utensils', 'fa-bus', 'fa-car', 'fa-gas-pump', 
             'fa-cart-shopping', 'fa-shirt', 'fa-shoe-prints', 'fa-house', 'fa-bolt', 
@@ -115,7 +112,6 @@
             'fa-book', 'fa-gift', 'fa-scissors', 'fa-mug-hot', 'fa-wallet'
         ];
 
-        // Генератор демо-данных
         const generateDummyData = (userId) => {
             const txs = [];
             const now = new Date();
@@ -124,28 +120,34 @@
             const colors = ['text-orange-500', 'text-blue-500', 'text-pink-500', 'text-amber-500'];
             const bgs = ['bg-orange-100', 'bg-blue-100', 'bg-pink-100', 'bg-amber-100'];
 
-            for(let i = 0; i < 20; i++) {
-                const d = new Date(now.getTime() - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000);
+            const recurringTitles = {
+                'Продукты': ['Супермаркет Korzinka', 'Рынок Чорсу', 'Makro', 'Havas'],
+                'Транспорт': ['Яндекс Такси', 'Метро', 'Автобус'],
+                'Развлечения': ['Кинотеатр', 'Подписка Netflix', 'Игры Steam'],
+                'Еда вне дома': ['Кофейня', 'Ресторан EVOS', 'KFC']
+            };
+
+            for(let i = 0; i < 30; i++) {
+                const d = new Date(now.getTime() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000);
                 const isIncome = Math.random() > 0.85;
                 const catIdx = Math.floor(Math.random() * cats.length);
-                const isTaxi = cats[catIdx] === 'Транспорт' && Math.random() > 0.5;
+                const category = cats[catIdx];
                 
                 let amount, title;
                 if (isIncome) {
                     amount = (Math.floor(Math.random() * 5) + 5) * 1000000;
                     title = 'Зарплата / Перевод';
-                } else if (isTaxi) {
-                    amount = -(Math.floor(Math.random() * 30) + 15) * 1000;
-                    title = 'Яндекс Такси';
                 } else {
-                    amount = -(Math.floor(Math.random() * 200) + 15) * 1000;
-                    title = `Покупка ${i+1}`;
+                    const catTitles = recurringTitles[category];
+                    title = catTitles[Math.floor(Math.random() * catTitles.length)];
+                    const baseAmount = (Math.floor(Math.random() * 50) + 15) * 1000;
+                    amount = -(baseAmount + (Math.floor(Math.random() * 20) * 1000));
                 }
 
                 txs.push({
                     id: Date.now() - i * 100000,
                     userId, title,
-                    category: isIncome ? 'Доход' : cats[catIdx],
+                    category: isIncome ? 'Доход' : category,
                     amount,
                     icon: isIncome ? 'fa-wallet' : icons[catIdx],
                     color: isIncome ? 'text-green-500' : colors[catIdx],
@@ -191,7 +193,7 @@
             );
         };
 
-        const ScreenHome = ({ setScreen, setGoalsTab, openAddModal, transactions, user, onTransactionClick }) => {
+        const ScreenHome = ({ setScreen, openAddModal, transactions, user, onTransactionClick }) => {
             const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
             const greeting = getGreeting();
 
@@ -213,7 +215,6 @@
                         </div>
                     </div>
 
-                    {/* Выровненные свайпаемые карточки */}
                     <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar pt-2 pb-4">
                         <div className="w-screen flex-shrink-0 snap-center px-4">
                             <div className="w-full bg-gradient-to-r from-primary to-purple-600 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
@@ -236,7 +237,6 @@
                         </div>
                     </div>
 
-                    {/* 5 кнопок */}
                     <div className="grid grid-cols-5 gap-2 px-4 py-2">
                         <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => openAddModal('income')}>
                             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-down"></i></div>
@@ -250,11 +250,11 @@
                             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-calculator"></i></div>
                             <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Вклад</span>
                         </div>
-                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => { setScreen('goals'); setGoalsTab('limits'); }}>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setScreen('categories')}>
                             <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 rounded-2xl flex items-center justify-center text-amber-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-icons"></i></div>
                             <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Категории</span>
                         </div>
-                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => { setScreen('goals'); setGoalsTab('goals'); }}>
+                        <div className="flex flex-col items-center gap-1.5 cursor-pointer group" onClick={() => setScreen('goals')}>
                             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-lg shadow-sm group-hover:scale-105 transition-transform"><i className="fa-solid fa-bullseye"></i></div>
                             <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Цель</span>
                         </div>
@@ -297,7 +297,6 @@
         const ScreenAnalytics = ({ transactions }) => {
             const [expandedCat, setExpandedCat] = useState(null);
 
-            // Группируем траты по категориям
             const expensesByCategory = transactions.filter(t => t.amount < 0).reduce((acc, t) => {
                 if (!acc[t.category]) {
                     acc[t.category] = { total: 0, txs: [], icon: t.icon, color: t.color, bg: t.bg };
@@ -355,8 +354,7 @@
                                         {isExpanded && (
                                             <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-2 border-t border-gray-100 dark:border-gray-800">
                                                 {data.txs.map((tx, idx) => {
-                                                    // УМНАЯ АНАЛИТИКА: Ищем предыдущую трату с ТАКИМ ЖЕ названием
-                                                    const prevTx = data.txs.slice(idx + 1).find(t => t.title.toLowerCase() === tx.title.toLowerCase());
+                                                    const prevTx = data.txs.slice(idx + 1).find(t => t.title.toLowerCase().trim() === tx.title.toLowerCase().trim());
                                                     let varianceHtml = null;
                                                     
                                                     if (prevTx) {
@@ -387,6 +385,68 @@
                                     </div>
                                 );
                             })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenCategories = ({ onBack, categories, setCategories, showModal }) => {
+            const [showCatForm, setShowCatForm] = useState(false);
+            const [catName, setCatName] = useState('');
+            const [catIcon, setCatIcon] = useState(TOP_ICONS[0]);
+
+            const handleAddCategory = () => {
+                if (!catName.trim()) return;
+                const colors = ['text-blue-500', 'text-pink-500', 'text-emerald-500', 'text-amber-500', 'text-purple-500'];
+                const bgs = ['bg-blue-100', 'bg-pink-100', 'bg-emerald-100', 'bg-amber-100', 'bg-purple-100'];
+                const rand = Math.floor(Math.random() * colors.length);
+                
+                setCategories([...categories, { name: catName, icon: catIcon, color: colors[rand], bg: bgs[rand] }]);
+                setShowCatForm(false); setCatName('');
+            };
+
+            const handleDeleteCategory = (name) => {
+                showModal("Удалить категорию?", `Вы уверены, что хотите удалить категорию "${name}"?`, () => {
+                    setCategories(categories.filter(c => c.name !== name));
+                }, null, "Удалить", "Отмена", true);
+            };
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 relative transition-colors duration-300">
+                    <TopHeader title="Категории" showBack={true} onBack={onBack} rightIcon={!showCatForm ? 'fa-plus' : null} onRightClick={() => setShowCatForm(true)} />
+                    <div className="px-4 space-y-4 pt-4">
+                        {showCatForm && (
+                            <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
+                                <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Новая категория</h3>
+                                <input type="text" placeholder="Название (напр. Питомцы)" value={catName} onChange={e=>setCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                <p className="text-xs text-gray-500 mb-2 ml-1">Выберите иконку:</p>
+                                <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto no-scrollbar p-1 mb-6">
+                                    {TOP_ICONS.map(ic => (
+                                        <div key={ic} onClick={() => setCatIcon(ic)} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${catIcon === ic ? 'bg-primary text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                                            <i className={`fa-solid ${ic}`}></i>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-3">
+                                    <button onClick={()=>setShowCatForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
+                                    <button onClick={handleAddCategory} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Добавить</button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="space-y-3">
+                            {categories.map(cat => (
+                                <div key={cat.name} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3.5 rounded-2xl shadow-sm transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color} text-xl`}>
+                                            <i className={`fa-solid ${cat.icon}`}></i>
+                                        </div>
+                                        <span className="font-bold text-textDark dark:text-white">{cat.name}</span>
+                                    </div>
+                                    <button onClick={()=>handleDeleteCategory(cat.name)} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -460,20 +520,11 @@
             );
         };
 
-        const ScreenGoalsAndLimits = ({ onBack, initialTab, goals, setGoals, categories, setCategories, transactions, showModal }) => {
-            const [activeTab, setActiveTab] = useState(initialTab || 'goals'); // 'goals' or 'limits'
-            
-            // New Goal State
+        const ScreenGoals = ({ onBack, goals, setGoals, showModal }) => {
             const [showGoalForm, setShowGoalForm] = useState(false);
             const [goalTitle, setGoalTitle] = useState('');
             const [goalTargetStr, setGoalTargetStr] = useState('');
-            const [goalIcon, setGoalIcon] = useState(TOP_ICONS[8]); // fa-house
-
-            // New Category State
-            const [showCatForm, setShowCatForm] = useState(false);
-            const [catName, setCatName] = useState('');
-            const [catLimitStr, setCatLimitStr] = useState('');
-            const [catIcon, setCatIcon] = useState(TOP_ICONS[0]);
+            const [goalIcon, setGoalIcon] = useState(TOP_ICONS[8]);
 
             const handleAddGoal = () => {
                 const target = parseFormattedNumber(goalTargetStr);
@@ -488,150 +539,54 @@
                 }, null, "Удалить", "Отмена", true);
             };
 
-            const handleAddCategory = () => {
-                const limit = parseFormattedNumber(catLimitStr);
-                if (!catName || limit <= 0) return;
-                const colors = ['text-blue-500', 'text-pink-500', 'text-emerald-500', 'text-amber-500', 'text-purple-500'];
-                const bgs = ['bg-blue-100', 'bg-pink-100', 'bg-emerald-100', 'bg-amber-100', 'bg-purple-100'];
-                const rand = Math.floor(Math.random() * colors.length);
-                
-                setCategories([...categories, { name: catName, limit, icon: catIcon, color: colors[rand], bg: bgs[rand] }]);
-                setShowCatForm(false); setCatName(''); setCatLimitStr('');
-            };
-
-            const handleDeleteCategory = (name) => {
-                showModal("Удалить категорию?", `Категория "${name}" будет удалена из списка лимитов.`, () => {
-                    setCategories(categories.filter(c => c.name !== name));
-                }, null, "Удалить", "Отмена", true);
-            };
-
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 relative transition-colors duration-300">
-                    <TopHeader title={activeTab === 'goals' ? 'Мои Цели' : 'Категории и Лимиты'} showBack={true} onBack={onBack} 
-                        rightIcon={activeTab === 'goals' && !showGoalForm ? 'fa-plus' : (activeTab === 'limits' && !showCatForm ? 'fa-plus' : null)} 
-                        onRightClick={() => activeTab === 'goals' ? setShowGoalForm(true) : setShowCatForm(true)} 
-                    />
-                    
-                    {/* Переключатель вкладок */}
-                    <div className="px-4 pt-2 mb-4">
-                        <div className="flex bg-gray-200 dark:bg-gray-800 p-1 rounded-xl">
-                            <button onClick={()=>setActiveTab('goals')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab==='goals' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>Копилки</button>
-                            <button onClick={()=>setActiveTab('limits')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab==='limits' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>Бюджеты</button>
-                        </div>
-                    </div>
-
-                    <div className="px-4 space-y-4">
-                        {/* ВКЛАДКА ЦЕЛИ */}
-                        {activeTab === 'goals' && (
-                            <>
-                                {showGoalForm && (
-                                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
-                                        <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Создать новую цель</h3>
-                                        <input type="text" placeholder="Название (напр. Отпуск)" value={goalTitle} onChange={e=>setGoalTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
-                                        <input type="text" inputMode="numeric" placeholder="Сумма цели (сум)" value={goalTargetStr} onChange={e=>setGoalTargetStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white font-bold" />
-                                        
-                                        <p className="text-xs text-gray-500 mb-2 ml-1">Иконка цели:</p>
-                                        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-2">
-                                            {TOP_ICONS.map(ic => (
-                                                <div key={ic} onClick={() => setGoalIcon(ic)} className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${goalIcon === ic ? 'bg-primary text-white shadow-lg shadow-purple-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
-                                                    <i className={`fa-solid ${ic}`}></i>
-                                                </div>
-                                            ))}
+                    <TopHeader title="Мои Цели" showBack={true} onBack={onBack} rightIcon={!showGoalForm ? 'fa-plus' : null} onRightClick={() => setShowGoalForm(true)} />
+                    <div className="px-4 space-y-4 pt-4">
+                        {showGoalForm && (
+                            <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
+                                <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Создать новую цель</h3>
+                                <input type="text" placeholder="Название (напр. Отпуск)" value={goalTitle} onChange={e=>setGoalTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
+                                <input type="text" inputMode="numeric" placeholder="Сумма цели (сум)" value={goalTargetStr} onChange={e=>setGoalTargetStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white font-bold" />
+                                
+                                <p className="text-xs text-gray-500 mb-2 ml-1">Иконка цели:</p>
+                                <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-2">
+                                    {TOP_ICONS.map(ic => (
+                                        <div key={ic} onClick={() => setGoalIcon(ic)} className={`w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${goalIcon === ic ? 'bg-primary text-white shadow-lg shadow-purple-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
+                                            <i className={`fa-solid ${ic}`}></i>
                                         </div>
-                                        <div className="flex gap-3">
-                                            <button onClick={()=>setShowGoalForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
-                                            <button onClick={handleAddGoal} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Создать</button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {goals.map(g => {
-                                    const perc = Math.min(Math.round((g.current / g.target) * 100), 100);
-                                    return (
-                                        <div key={g.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-50 dark:border-gray-800 relative group overflow-hidden transition-colors">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h4 className="font-bold text-lg text-textDark dark:text-white">{g.title}</h4>
-                                                    <p className="text-sm text-gray-500 mt-1">{formatMoney(g.current)} / <span className="font-medium text-gray-400">{formatMoney(g.target)}</span></p>
-                                                </div>
-                                                <div className={`w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center ${g.iconColor || 'text-primary'} text-xl shadow-sm`}><i className={`fa-solid ${g.icon}`}></i></div>
-                                            </div>
-                                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 mb-4 overflow-hidden">
-                                                <div className={`${g.color} h-3 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-sm text-textDark dark:text-gray-300">{perc}% собрано</span>
-                                                <div className="flex gap-2">
-                                                    <button onClick={()=>handleDeleteGoal(g.id)} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"><i className="fa-solid fa-trash"></i></button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </>
-                        )}
-
-                        {/* ВКЛАДКА ЛИМИТЫ / КАТЕГОРИИ */}
-                        {activeTab === 'limits' && (
-                            <>
-                                {showCatForm && (
-                                    <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-primary/20 animate-fade-in">
-                                        <h3 className="font-bold text-textDark dark:text-white mb-4 text-center">Новая категория</h3>
-                                        <input type="text" placeholder="Название (напр. Питомцы)" value={catName} onChange={e=>setCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-3 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white" />
-                                        <input type="text" inputMode="numeric" placeholder="Лимит в месяц (сум)" value={catLimitStr} onChange={e=>setCatLimitStr(formatInputNumber(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 mb-4 text-sm focus:outline-none focus:border-primary border border-transparent text-textDark dark:text-white font-bold" />
-                                        
-                                        <p className="text-xs text-gray-500 mb-2 ml-1">Выберите иконку:</p>
-                                        <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto no-scrollbar p-1 mb-6">
-                                            {TOP_ICONS.map(ic => (
-                                                <div key={ic} onClick={() => setCatIcon(ic)} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${catIcon === ic ? 'bg-primary text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
-                                                    <i className={`fa-solid ${ic}`}></i>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button onClick={()=>setShowCatForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
-                                            <button onClick={handleAddCategory} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Добавить</button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="space-y-4">
-                                    {categories.map(cat => {
-                                        // Считаем траты по категории
-                                        const currentSpent = transactions.filter(t => t.amount < 0 && t.category === cat.name).reduce((acc, t) => acc + Math.abs(t.amount), 0);
-                                        const limit = cat.limit || 0;
-                                        const perc = limit > 0 ? Math.min(Math.round((currentSpent / limit) * 100), 100) : (currentSpent > 0 ? 100 : 0);
-                                        const isOver = limit > 0 && currentSpent > limit;
-                                        const barColor = isOver ? 'bg-red-500' : 'bg-primary';
-
-                                        return (
-                                            <div key={cat.name} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-50 dark:border-gray-800 transition-colors">
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${cat.bg} dark:bg-opacity-20 ${cat.color} text-xl shadow-sm`}>
-                                                            <i className={`fa-solid ${cat.icon}`}></i>
-                                                        </div>
-                                                        <div>
-                                                            <span className="font-bold text-textDark dark:text-white block">{cat.name}</span>
-                                                            <span className={`text-xs font-bold ${isOver ? 'text-red-500' : 'text-gray-500'}`}>{formatMoney(currentSpent)} потрачено</span>
-                                                        </div>
-                                                    </div>
-                                                    <button onClick={()=>handleDeleteCategory(cat.name)} className="w-8 h-8 text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash"></i></button>
-                                                </div>
-                                                
-                                                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 overflow-hidden">
-                                                    <div className={`${barColor} h-2.5 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
-                                                </div>
-                                                <div className="flex justify-between text-xs">
-                                                    <span className={`${isOver ? 'text-red-500 font-bold' : 'text-gray-500'}`}>{isOver ? 'Превышение!' : `Остаток: ${formatMoney(limit - currentSpent)}`}</span>
-                                                    <span className="text-gray-400">Лимит: {formatMoney(limit)}</span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                    ))}
                                 </div>
-                            </>
+                                <div className="flex gap-3">
+                                    <button onClick={()=>setShowGoalForm(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl font-bold">Отмена</button>
+                                    <button onClick={handleAddGoal} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-md hover:bg-primaryDark">Создать</button>
+                                </div>
+                            </div>
                         )}
+
+                        {goals.map(g => {
+                            const perc = Math.min(Math.round((g.current / g.target) * 100), 100);
+                            return (
+                                <div key={g.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-50 dark:border-gray-800 relative group overflow-hidden transition-colors">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h4 className="font-bold text-lg text-textDark dark:text-white">{g.title}</h4>
+                                            <p className="text-sm text-gray-500 mt-1">{formatMoney(g.current)} / <span className="font-medium text-gray-400">{formatMoney(g.target)}</span></p>
+                                        </div>
+                                        <div className={`w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center ${g.iconColor || 'text-primary'} text-xl shadow-sm`}><i className={`fa-solid ${g.icon}`}></i></div>
+                                    </div>
+                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 mb-4 overflow-hidden">
+                                        <div className={`${g.color} h-3 rounded-full transition-all duration-700 ease-out`} style={{width: `${perc}%`}}></div>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-sm text-textDark dark:text-gray-300">{perc}% собрано</span>
+                                        <div className="flex gap-2">
+                                            <button onClick={()=>handleDeleteGoal(g.id)} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-100 transition-colors"><i className="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             );
@@ -651,7 +606,6 @@
                     <TopHeader title="Советы и Знания" rightIcon="fa-bell" />
                     
                     <div className="px-4 py-4 space-y-6">
-                        {/* Блок ИИ */}
                         <div>
                             <h3 className="font-bold text-textDark dark:text-white mb-3">Умный ассистент</h3>
                             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl p-5 shadow-lg text-white relative overflow-hidden">
@@ -662,7 +616,6 @@
                             </div>
                         </div>
 
-                        {/* Финансовая грамотность */}
                         <div>
                             <h3 className="font-bold text-textDark dark:text-white mb-3">Финансовая грамотность</h3>
                             <div className="space-y-3">
@@ -812,8 +765,7 @@
         const App = () => {
             const [currentScreen, setCurrentScreen] = useState('home');
             const [isAddingMode, setIsAddingMode] = useState(false);
-            const [txType, setTxType] = useState('expense'); // 'expense' or 'income'
-            const [goalsTab, setGoalsTab] = useState('goals');
+            const [txType, setTxType] = useState('expense');
 
             const [isLoading, setIsLoading] = useState(true);
             const [transactions, setTransactions] = useState([]);
@@ -821,7 +773,6 @@
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
             const [tgUser, setTgUser] = useState(null);
             
-            // Custom Modal State
             const [modalConfig, setModalConfig] = useState(null);
 
             const showModal = (title, text, onConfirm, onCancel, confirmText, cancelText, isDanger) => {
@@ -835,10 +786,10 @@
             });
 
             const defaultCategories = [
-                { name: 'Продукты', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', limit: 2000000 },
-                { name: 'Транспорт', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', limit: 500000 },
-                { name: 'Еда вне дома', icon: 'fa-utensils', color: 'text-amber-600', bg: 'bg-amber-100', limit: 1000000 },
-                { name: 'Развлечения', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', limit: 1000000 }
+                { name: 'Продукты', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100' },
+                { name: 'Транспорт', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100' },
+                { name: 'Еда вне дома', icon: 'fa-utensils', color: 'text-amber-600', bg: 'bg-amber-100' },
+                { name: 'Развлечения', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100' }
             ];
             const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('financeAppCategories')) || defaultCategories);
             
@@ -846,10 +797,9 @@
                 { id: 1, title: 'Новая машина', current: 15000000, target: 100000000, icon: 'fa-car', color: 'bg-primary', iconColor: 'text-primary' }
             ]);
 
-            // Add Form State
             const [newTxAmountStr, setNewTxAmountStr] = useState('');
             const [newTxTitle, setNewTxTitle] = useState('');
-            const [newTxCat, setNewTxCat] = useState(defaultCategories[0].name);
+            const [newTxCat, setNewTxCat] = useState(categories.length > 0 ? categories[0].name : 'Разное');
             const [newTxIcon, setNewTxIcon] = useState(TOP_ICONS[0]);
 
             useEffect(() => { localStorage.setItem('financeAppCategories', JSON.stringify(categories)); }, [categories]);
@@ -868,7 +818,6 @@
                 return tgUser ? tgUser.id.toString() : 'browser_test_user';
             };
 
-            // LOAD DATA
             useEffect(() => {
                 let currentUserId = 'browser_test_user';
                 if (window.Telegram && window.Telegram.WebApp) {
@@ -899,7 +848,7 @@
 
             const openAddModal = (type = 'expense') => {
                 setTxType(type);
-                setNewTxCat(categories[0].name);
+                setNewTxCat(categories.length > 0 ? categories[0].name : 'Разное');
                 setNewTxIcon(TOP_ICONS[0]);
                 setNewTxAmountStr('');
                 setNewTxTitle('');
@@ -915,7 +864,7 @@
                 const d = new Date();
                 const dateString = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0') + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 
-                const selectedCatObj = categories.find(c => c.name === newTxCat) || categories[0];
+                const selectedCatObj = categories.find(c => c.name === newTxCat) || categories[0] || { color: 'text-gray-500', bg: 'bg-gray-100' };
                 const newTxPayload = {
                     title: newTxTitle, 
                     category: txType === 'income' ? 'Доход' : newTxCat, 
@@ -949,23 +898,43 @@
                 }
             };
 
-            // Сканер чека симуляция для стабильности
-            const simulateScan = () => { 
-                setNewTxTitle("Супермаркет Korzinka"); 
-                setNewTxAmountStr(formatInputNumber('125000')); 
-                setNewTxCat("Продукты");
-                setNewTxIcon('fa-basket-shopping');
+            const handleScan = () => {
+                const input = document.createElement('input');
+                input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    setNewTxTitle("ИИ читает чек...");
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64Data = reader.result.split(',')[1];
+                        try {
+                            const res = await fetch(`${API_URL}/scan`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-tg-user-id': getEffectiveUserId() }, body: JSON.stringify({ imageBase64: base64Data, mimeType: file.type }) });
+                            const data = await res.json();
+                            if(data.amount) setNewTxAmountStr(formatInputNumber(data.amount.toString()));
+                            if(data.title) setNewTxTitle(data.title);
+                            if(data.category) {
+                                const catExists = categories.find(c => c.name.toLowerCase() === data.category.toLowerCase());
+                                if(catExists) setNewTxCat(catExists.name);
+                            }
+                            setNewTxIcon('fa-receipt');
+                        } catch (error) { setNewTxTitle("Ошибка сканирования"); }
+                    };
+                    reader.readAsDataURL(file);
+                };
+                input.click();
             };
 
             const renderScreen = () => {
                 if (isLoading) return <div className="h-screen flex items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary"></i></div>;
                 switch(currentScreen) {
-                    case 'home': return <ScreenHome setScreen={setCurrentScreen} setGoalsTab={setGoalsTab} openAddModal={openAddModal} transactions={transactions} user={tgUser} onTransactionClick={(t) => {
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} openAddModal={openAddModal} transactions={transactions} user={tgUser} onTransactionClick={(t) => {
                         showModal(t.title, `${t.category} • ${t.date}\nСумма: ${formatMoney(t.amount)}`, () => handleDeleteTransaction(t.id), null, "Удалить операцию", "Закрыть", true);
                     }} />;
                     case 'analytics': return <ScreenAnalytics transactions={transactions} />;
                     case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
-                    case 'goals': return <ScreenGoalsAndLimits onBack={() => setCurrentScreen('home')} initialTab={goalsTab} goals={goals} setGoals={setGoals} categories={categories} setCategories={setCategories} transactions={transactions} showModal={showModal} />;
+                    case 'goals': return <ScreenGoals onBack={() => setCurrentScreen('home')} goals={goals} setGoals={setGoals} showModal={showModal} />;
+                    case 'categories': return <ScreenCategories onBack={() => setCurrentScreen('home')} categories={categories} setCategories={setCategories} showModal={showModal} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
                     case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={getEffectiveUserId()} />;
                     case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} familyId={familyId} setFamilyId={setFamilyId} showModal={showModal} />;
@@ -984,10 +953,9 @@
                 <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
                     {renderScreen()}
 
-                    {/* Глобальное модальное окно */}
                     <CustomModal {...(modalConfig || {})} isOpen={!!modalConfig} />
 
-                    {/* Модальное окно добавления */}
+                    { }
                     {isAddingMode && (
                         <div className="fixed inset-0 z-[60] flex items-end">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAddingMode(false)}></div>
@@ -1010,7 +978,7 @@
                                                 <label className="text-xs text-gray-500">Название / Место</label>
                                                 <div className="flex gap-2">
                                                     <button type="button" onClick={() => { setNewTxTitle("Голосовой ввод..."); setTimeout(()=>setNewTxTitle("Такси"), 1500) }} className="w-8 h-8 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-xs hover:bg-blue-100 transition-colors"><i className="fa-solid fa-microphone"></i></button>
-                                                    <button type="button" onClick={simulateScan} className="w-8 h-8 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xs hover:bg-green-100 transition-colors"><i className="fa-solid fa-camera"></i></button>
+                                                    <button type="button" onClick={handleScan} className="w-8 h-8 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-xs hover:bg-green-100 transition-colors"><i className="fa-solid fa-camera"></i></button>
                                                 </div>
                                             </div>
                                             <input required type="text" value={newTxTitle} onChange={e=>setNewTxTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-textDark dark:text-white focus:outline-none focus:border-primary" placeholder={txType === 'income' ? 'Зарплата...' : 'Кафе, Продукты...'} />
@@ -1019,7 +987,7 @@
                                         {txType === 'expense' && (
                                             <>
                                                 <div>
-                                                    <label className="text-xs text-gray-500 ml-1">Категория лимита</label>
+                                                    <label className="text-xs text-gray-500 ml-1">Категория</label>
                                                     <select value={newTxCat} onChange={e=>setNewTxCat(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary appearance-none font-bold">
                                                         {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                                     </select>
@@ -1045,7 +1013,7 @@
                         </div>
                     )}
 
-                    {currentScreen !== 'aichat' && currentScreen !== 'calculator' && currentScreen !== 'goals' && (
+                    {currentScreen !== 'aichat' && currentScreen !== 'calculator' && currentScreen !== 'goals' && currentScreen !== 'categories' && (
                         <div className="fixed bottom-0 w-full max-w-md bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-2 flex justify-between items-center z-40 transition-colors">
                             <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center p-2 ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-medium">Главная</span></button>
                             <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-medium">Отчеты</span></button>
