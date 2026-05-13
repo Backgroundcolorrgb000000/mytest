@@ -105,18 +105,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const initialTransactions = [
-            { id: 1, title: 'Супермаркет Korzinka', category: 'Продукты', amount: -120000, date: 'Сегодня, 09:30', icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100', rawDate: new Date() },
-            { id: 2, title: 'Кофейня', category: 'Еда вне дома', amount: -38000, date: 'Сегодня, 11:20', icon: 'fa-mug-hot', color: 'text-amber-700', bg: 'bg-amber-100', rawDate: new Date(Date.now() - 3600000 * 2) },
-            { id: 3, title: 'Аптека', category: 'Здоровье', amount: -15000, date: 'Сегодня, 13:10', icon: 'fa-pills', color: 'text-emerald-500', bg: 'bg-emerald-100', rawDate: new Date(Date.now() - 3600000 * 4) },
-            { id: 4, title: 'Автобус', category: 'Транспорт', amount: -5000, date: 'Сегодня, 15:40', icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100', rawDate: new Date(Date.now() - 3600000 * 6) },
-            { id: 5, title: 'Парковка', category: 'Транспорт', amount: -10000, date: 'Сегодня, 18:30', icon: 'fa-square-parking', color: 'text-blue-600', bg: 'bg-blue-100', rawDate: new Date(Date.now() - 3600000 * 8) },
-            { id: 6, title: 'Онлайн подписка', category: 'Развлечения', amount: -60000, date: 'Сегодня, 20:15', icon: 'fa-play', color: 'text-pink-500', bg: 'bg-pink-100', rawDate: new Date(Date.now() - 3600000 * 10) },
-            { id: 7, title: 'Рынок', category: 'Продукты', amount: -80000, date: 'Вчера, 10:20', icon: 'fa-carrot', color: 'text-orange-500', bg: 'bg-orange-100', rawDate: new Date(Date.now() - 86400000) },
-            { id: 8, title: 'Такси', category: 'Транспорт', amount: -28000, date: 'Вчера, 14:20', icon: 'fa-taxi', color: 'text-yellow-500', bg: 'bg-yellow-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 4) },
-            { id: 9, title: 'Магазин техники', category: 'Покупки', amount: -18000, date: 'Вчера, 17:50', icon: 'fa-mobile-screen', color: 'text-purple-500', bg: 'bg-purple-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 7) },
-            { id: 10, title: 'Зарплата', category: 'Доход', amount: 6500000, date: 'Вчера, 18:00', icon: 'fa-money-bill-wave', color: 'text-green-500', bg: 'bg-green-100', rawDate: new Date(Date.now() - 86400000 - 3600000 * 8) }
-        ];
+        // ВАШ СЕРВЕР НА RAILWAY
+        const API_URL = 'https://mytest-production-6436.up.railway.app/api';
 
         const formatMoney = (num) => {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
@@ -170,10 +160,10 @@
                 return Math.round(((categories[cat] || 0) / totalCatExpenses) * 100);
             };
 
-            const prodPerc = getPerc('Продукты') || 35;
-            const transPerc = getPerc('Транспорт') || 20;
-            const homePerc = getPerc('Развлечения') || 15;
-            const restPerc = 100 - prodPerc - transPerc - homePerc;
+            const prodPerc = getPerc('Продукты') || 0;
+            const transPerc = getPerc('Транспорт') || 0;
+            const homePerc = getPerc('Развлечения') || 0;
+            const restPerc = totalCatExpenses > 0 ? (100 - prodPerc - transPerc - homePerc) : 100;
 
             return (
                 <div className="pb-24 animate-fade-in">
@@ -278,7 +268,11 @@
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <div className="w-24 h-24 rounded-full border-[12px] border-primary border-t-blue-400 border-l-pink-400 border-b-gray-200 dark:border-b-gray-700 relative">
+                                <div className="w-24 h-24 rounded-full border-[12px] border-primary border-t-blue-400 border-l-pink-400 border-b-gray-200 dark:border-b-gray-700 relative" style={{
+                                    borderColor: totalCatExpenses === 0 ? '#E5E7EB' : undefined,
+                                    borderTopColor: totalCatExpenses > 0 ? '#60A5FA' : undefined,
+                                    borderLeftColor: totalCatExpenses > 0 ? '#F472B6' : undefined,
+                                }}>
                                     <div className="absolute inset-0 flex items-center justify-center flex-col">
                                         <i className="fa-solid fa-wallet text-gray-400 text-xl"></i>
                                     </div>
@@ -312,7 +306,9 @@
                         </div>
                         
                         <div className="space-y-3">
-                            {transactions.slice(0, 4).map(t => (
+                            {transactions.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 py-4">У вас пока нет транзакций.</p>
+                            ) : transactions.slice(0, 4).map(t => (
                                 <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
@@ -327,7 +323,7 @@
                                         <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
                                             {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
                                         </p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date}</p>
                                     </div>
                                 </div>
                             ))}
@@ -362,7 +358,7 @@
                     
                     <div className="px-4 mb-5 mt-2">
                         <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-textDark dark:text-white transition-colors">Бюджет на май</h3>
+                            <h3 className="font-bold text-textDark dark:text-white transition-colors">Бюджет на месяц</h3>
                             <button className="text-xs font-medium text-primary bg-primaryLight/10 dark:bg-primary/20 px-2 py-1 rounded-lg transition-colors">Настроить</button>
                         </div>
                         <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm space-y-5 transition-colors duration-300">
@@ -417,64 +413,28 @@
                     </div>
 
                     <div className="px-4 py-2 space-y-4">
-                        <div>
-                            <div className="flex justify-between items-center mb-2 px-1">
-                                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">Сегодня</h4>
-                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 transition-colors">
-                                    {formatMoney(-filteredTxs.filter(t => t.date.includes('Сегодня') && t.amount < 0).reduce((a,c) => a+Math.abs(c.amount), 0))}
-                                </span>
-                            </div>
-                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-sm space-y-1 transition-colors duration-300">
-                                {filteredTxs.filter(t => t.date.includes('Сегодня')).map(t => (
-                                    <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between p-2 rounded-xl active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
-                                                <i className={`fa-solid ${t.icon}`}></i>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
-                                            </div>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-sm space-y-1 transition-colors duration-300">
+                            {filteredTxs.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 py-4">Транзакции не найдены.</p>
+                            ) : filteredTxs.map(t => (
+                                <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between p-2 rounded-xl active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                            <i className={`fa-solid ${t.icon}`}></i>
                                         </div>
-                                        <div className="text-right">
-                                            <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
-                                                {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
+                                        <div>
+                                            <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-2 px-1">
-                                <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase transition-colors">Вчера</h4>
-                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 transition-colors">
-                                    {formatMoney(-filteredTxs.filter(t => t.date.includes('Вчера') && t.amount < 0).reduce((a,c) => a+Math.abs(c.amount), 0))}
-                                </span>
-                            </div>
-                            <div className="bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-sm space-y-1 transition-colors duration-300">
-                                {filteredTxs.filter(t => t.date.includes('Вчера')).map(t => (
-                                    <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between p-2 rounded-xl active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
-                                                <i className={`fa-solid ${t.icon}`}></i>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
-                                                {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date.split(',')[1]}</p>
-                                        </div>
+                                    <div className="text-right">
+                                        <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                            {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.date}</p>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -527,17 +487,11 @@
                     
                     <div className="px-4 py-2">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-3xl">🥔</div>
+                            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center text-3xl">🥔</div>
                             <div>
                                 <h2 className="text-2xl font-bold text-textDark dark:text-white transition-colors">Картошка</h2>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">Все магазины <i className="fa-solid fa-chevron-down text-[10px]"></i></p>
                             </div>
-                        </div>
-
-                        <div className="flex gap-6 border-b border-gray-200 dark:border-gray-800 mb-6 transition-colors">
-                            <button className="pb-2 border-b-2 border-primary text-primary font-medium text-sm">Обзор</button>
-                            <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm transition-colors">Покупки</button>
-                            <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm transition-colors">Аналитика</button>
                         </div>
 
                         <div className="mb-6">
@@ -551,29 +505,6 @@
                         <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm mb-4 transition-colors">
                             <div className="h-40 w-full">
                                 <canvas id="priceChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Мин. цена</p>
-                                <p className="font-bold text-textDark dark:text-white transition-colors">3 500 сум</p>
-                                <p className="text-[10px] text-gray-400 mt-1">12 фев, Korzinka</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Макс. цена</p>
-                                <p className="font-bold text-textDark dark:text-white transition-colors">6 800 сум</p>
-                                <p className="text-[10px] text-gray-400 mt-1">18 май, Базар</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Всего покупок</p>
-                                <p className="font-bold text-textDark dark:text-white transition-colors">12 раз</p>
-                                <p className="text-[10px] text-gray-400 mt-1">Общее количество: 24.5 кг</p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm transition-colors">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 transition-colors">Всего потрачено</p>
-                                <p className="font-bold text-textDark dark:text-white transition-colors">153 000 сум</p>
-                                <p className="text-[10px] text-gray-400 mt-1">Среднее за покупку: 12 750 сум</p>
                             </div>
                         </div>
 
@@ -609,10 +540,6 @@
                             <span className="text-sm text-gray-500 dark:text-gray-400">Срок вклада</span>
                             <span className="font-bold text-textDark dark:text-white">12 месяцев</span>
                         </div>
-                        <div className="flex justify-between items-center py-3">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">Капитализация</span>
-                            <span className="font-bold text-textDark dark:text-white flex items-center gap-1">Ежемесячно <i className="fa-solid fa-chevron-down text-xs text-gray-400"></i></span>
-                        </div>
                     </div>
 
                     <div className="bg-gradient-to-br from-primary to-purple-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
@@ -626,16 +553,6 @@
                             </p>
                         </div>
                     </div>
-
-                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl p-4 shadow-sm transition-colors duration-300">
-                        <div className="flex items-start gap-3">
-                            <div className="text-emerald-500 text-xl"><i className="fa-regular fa-lightbulb"></i></div>
-                            <div>
-                                <h4 className="font-bold text-textDark dark:text-white text-sm mb-1 transition-colors">Совет ИИ</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed transition-colors">Если увеличить срок до 24 месяцев, прибыль составит <strong className="text-emerald-500">4 390 000 сум</strong>.</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         );
@@ -643,12 +560,7 @@
         const ScreenGoals = ({ onBack }) => (
             <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
                 <TopHeader title="Цели" showBack={true} onBack={onBack} rightIcon="fa-plus" />
-                <div className="px-4 py-2 flex gap-4 border-b border-gray-200 dark:border-gray-800 mb-4 transition-colors">
-                    <button className="pb-2 border-b-2 border-primary text-primary font-medium text-sm flex-1">Активные</button>
-                    <button className="pb-2 text-gray-500 dark:text-gray-400 font-medium text-sm flex-1 transition-colors">Достигнутые</button>
-                </div>
-                
-                <div className="px-4 space-y-4">
+                <div className="px-4 space-y-4 pt-4">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm transition-colors duration-300">
                         <div className="flex justify-between items-start mb-2">
                             <div>
@@ -663,23 +575,6 @@
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 transition-colors">
                             <span>Осталось 8 месяцев</span>
                             <span className="font-bold text-textDark dark:text-gray-300">30%</span>
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm transition-colors duration-300">
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 className="font-bold text-textDark dark:text-white transition-colors">Путешествие в Турцию</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">3 200 000 / 8 000 000 сум</p>
-                            </div>
-                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-xl transition-colors">✈️</div>
-                        </div>
-                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 transition-colors">
-                            <div className="bg-blue-500 h-2.5 rounded-full" style={{width: '40%'}}></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 transition-colors">
-                            <span>Осталось 12 месяцев</span>
-                            <span className="font-bold text-textDark dark:text-gray-300">40%</span>
                         </div>
                     </div>
                 </div>
@@ -703,36 +598,11 @@
                     <div className="px-4 space-y-4">
                         <h3 className="font-bold text-textDark dark:text-white transition-colors">Анализ ваших финансов</h3>
                         
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300">
-                            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500 text-xl flex-shrink-0 transition-colors">🍔</div>
-                            <div>
-                                <p className="text-sm text-textDark dark:text-gray-200 leading-relaxed transition-colors">Вы тратите на еду вне дома на <strong className="text-red-500">37% больше</strong>, чем в прошлом месяце.<br/>Попробуйте готовить дома — это сэкономит до 500 000 сум в месяц.</p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 text-xl flex-shrink-0 transition-colors">🚌</div>
-                            <div>
-                                <p className="text-sm text-textDark dark:text-gray-200 leading-relaxed transition-colors">Ваши расходы на транспорт составляют 20% от всех трат.<br/>Можно оптимизировать маршруты и сэкономить до 200 000 сум.</p>
-                            </div>
-                        </div>
-
                         <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex gap-4 items-start transition-colors duration-300 border border-green-100 dark:border-green-900/30">
                             <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-500 text-xl flex-shrink-0 transition-colors">🎉</div>
                             <div>
                                 <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">Отличная работа!</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 transition-colors">Вы увеличили доходы на 15% по сравнению с прошлым месяцем.</p>
-                            </div>
-                        </div>
-
-                        <h3 className="font-bold text-textDark dark:text-white mt-6 transition-colors">Полезные статьи</h3>
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex justify-between items-center transition-colors duration-300">
-                            <div>
-                                <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">5 правил финансовой<br/>грамотности</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 transition-colors">5 мин чтения</p>
-                            </div>
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 transition-colors">
-                                <i className="fa-regular fa-image"></i>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 transition-colors">Вы используете умный анализ финансов.</p>
                             </div>
                         </div>
                     </div>
@@ -750,28 +620,39 @@
 
         const ScreenAIChat = ({ onBack }) => {
             const [messages, setMessages] = useState([
-                { type: 'bot', text: 'Привет! 👋\nЯ помогу вам разобраться с финансами и подскажу, как можно улучшить ваше финансовое состояние.' }
+                { type: 'bot', text: 'Привет! 👋\nЯ подключен к Gemini 1.5 и вижу ваши расходы в базе данных. Чем могу помочь?' }
             ]);
             const [isTyping, setIsTyping] = useState(false);
+            const [inputText, setInputText] = useState('');
 
-            const sendPrompt = (text) => {
+            const sendPrompt = async (text) => {
+                if (!text.trim()) return;
                 setMessages(prev => [...prev, { type: 'user', text }]);
+                setInputText('');
                 setIsTyping(true);
                 
-                setTimeout(() => {
+                try {
+                    const res = await fetch(`${API_URL}/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: text })
+                    });
+                    const data = await res.json();
+                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Извините, не смог получить ответ от ИИ." }]);
+                } catch (error) {
+                    console.error("Chat error:", error);
+                    setMessages(prev => [...prev, { type: 'bot', text: "Ошибка связи с сервером. Проверьте Railway." }]);
+                } finally {
                     setIsTyping(false);
-                    let reply = "Анализирую ваши данные... Вы тратите больше всего на 'Продукты' (35%). В этом месяце можно сэкономить, если закупаться на оптовых рынках.";
-                    if (text.includes("накопить")) reply = "Чтобы накопить 10 млн сум, откладывайте по 850 000 сум ежемесячно в течение года на вклад под 18%.";
-                    setMessages(prev => [...prev, { type: 'bot', text: reply }]);
-                }, 1500);
+                }
             };
 
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen flex flex-col animate-fade-in z-50 relative transition-colors duration-300">
                     <TopHeader title="Финансовый помощник" showBack={true} onBack={onBack} rightIcon="fa-broom" />
                     
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        <p className="text-center text-xs text-gray-400">Ваш AI ассистент</p>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+                        <p className="text-center text-xs text-gray-400">Ваш AI ассистент (Gemini)</p>
                         
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -792,11 +673,11 @@
                         )}
                     </div>
 
-                    <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 transition-colors">
+                    <div className="fixed bottom-0 w-full max-w-md p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 transition-colors z-50">
                         {messages.length === 1 && (
                             <div className="mb-4 space-y-2">
                                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">Примеры вопросов:</p>
-                                {['Где я больше всего трачу?', 'Как мне накопить 10 млн сум?', 'Стоит ли открывать вклад?'].map(q => (
+                                {['Проанализируй мои расходы', 'Как мне накопить деньги?', 'Где я больше всего трачу?'].map(q => (
                                     <button key={q} onClick={() => sendPrompt(q)} className="block w-full text-left px-4 py-2 text-sm text-primary border border-primary/30 rounded-xl hover:bg-primary/5 transition-colors">
                                         {q}
                                     </button>
@@ -804,12 +685,18 @@
                             </div>
                         )}
                         <div className="flex items-center gap-2">
-                            <input type="text" placeholder="Напишите ваш вопрос..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-4 py-3 text-sm focus:outline-none transition-colors" />
-                            <button className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
+                            <input 
+                                type="text" 
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && sendPrompt(inputText)}
+                                placeholder="Спросите Gemini..." 
+                                className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-4 py-3 text-sm focus:outline-none transition-colors" 
+                            />
+                            <button onClick={() => sendPrompt(inputText)} className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
                                 <i className="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
-                        <p className="text-center text-[10px] text-gray-400 mt-2">AI может ошибаться. Проверяйте важную информацию.</p>
                     </div>
                 </div>
             );
@@ -834,7 +721,7 @@
                 const link = document.createElement("a");
                 const url = URL.createObjectURL(blob);
                 link.setAttribute("href", url);
-                link.setAttribute("download", `FinanceApp_Export_${new Date().toISOString().split('T')[0]}.csv`);
+                link.setAttribute("download", `FinanceApp_Export.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -861,42 +748,15 @@
                                     <i className="fa-solid fa-crown text-sm"></i>
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white text-sm">Finance Premium</h3>
-                                    <p className="text-xs text-gray-300 mt-0.5">Все ИИ-функции активны</p>
+                                    <h3 className="font-bold text-white text-sm">Cloud Sync Active</h3>
+                                    <p className="text-xs text-gray-300 mt-0.5">Данные в безопасности на сервере</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-900 px-4 py-5 mb-2 transition-colors duration-300">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-textDark dark:text-white text-sm transition-colors">Мои достижения</h3>
-                            <span className="text-xs font-bold text-primary bg-primaryLight bg-opacity-10 px-2 py-1 rounded-lg">3/12 открыто</span>
-                        </div>
-                        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                            <div className="min-w-[105px] bg-gradient-to-br from-yellow-50 to-orange-50 p-3 rounded-2xl border border-yellow-100 text-center flex-shrink-0">
-                                <div className="w-10 h-10 mx-auto bg-white rounded-full flex items-center justify-center text-yellow-500 shadow-sm mb-2 text-lg"><i className="fa-solid fa-fire"></i></div>
-                                <p className="text-xs font-bold text-textDark leading-tight">3 дня подряд</p>
-                                <p className="text-[9px] text-gray-500 mt-1">Учет трат</p>
-                            </div>
-                            <div className="min-w-[105px] bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-2xl border border-green-100 text-center flex-shrink-0">
-                                <div className="w-10 h-10 mx-auto bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm mb-2 text-lg"><i className="fa-solid fa-piggy-bank"></i></div>
-                                <p className="text-xs font-bold text-textDark leading-tight">Копилка</p>
-                                <p className="text-[9px] text-gray-500 mt-1">Отложен 1 млн</p>
-                            </div>
-                            <div className="min-w-[105px] bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center flex-shrink-0 transition-colors">
-                                <div className="w-10 h-10 mx-auto bg-white dark:bg-gray-800 rounded-full flex items-center justify-center text-blue-500 shadow-sm mb-2 text-lg transition-colors"><i className="fa-solid fa-robot"></i></div>
-                                <p className="text-xs font-bold text-textDark dark:text-gray-200 leading-tight transition-colors">ИИ-бро</p>
-                                <p className="text-[9px] text-gray-500 mt-1">Спросил 10 раз</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1 transition-colors duration-300">
+                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1 transition-colors duration-300 mt-2">
                         {[
-                            { id: 'settings', icon: 'fa-user-gear', title: 'Настройки аккаунта', color: 'text-gray-500 dark:text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800' },
-                            { id: 'currency', icon: 'fa-coins', title: 'Валюты', value: 'UZS - Сум', color: 'text-yellow-600 dark:text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
-                            { id: 'family', icon: 'fa-users', title: 'Семейный доступ', value: 'Выкл', color: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
                             { id: 'theme', icon: 'fa-moon', title: 'Темная тема', value: isDarkMode ? 'Вкл' : 'Выкл', color: 'text-indigo-500 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
                             { id: 'export', icon: 'fa-file-csv', title: 'Экспорт данных', color: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
                         ].map((item, i) => (
@@ -921,12 +781,6 @@
                             </div>
                         ))}
                     </div>
-
-                    <div className="px-4 mt-8 mb-8 text-center">
-                        <button className="text-red-500 text-sm font-bold hover:bg-red-50 px-6 py-2 rounded-xl transition-colors">
-                            Выйти из аккаунта
-                        </button>
-                    </div>
                 </div>
             );
         };
@@ -935,18 +789,9 @@
             const [currentScreen, setCurrentScreen] = useState('home');
             const [isAddingMode, setIsAddingMode] = useState(false);
             
-            const [transactions, setTransactions] = useState(() => {
-                const saved = localStorage.getItem('financeAppTransactions');
-                if (saved) {
-                    try {
-                        const parsed = JSON.parse(saved);
-                        return parsed.map(t => ({...t, rawDate: new Date(t.rawDate)}));
-                    } catch (e) {
-                        return initialTransactions;
-                    }
-                }
-                return initialTransactions;
-            });
+            // Состояние загрузки данных с сервера
+            const [isLoading, setIsLoading] = useState(true);
+            const [transactions, setTransactions] = useState([]);
 
             const [isSplashVisible, setIsSplashVisible] = useState(true);
             
@@ -960,26 +805,35 @@
             const [isProcessing, setIsProcessing] = useState(false);
             const [selectedTransaction, setSelectedTransaction] = useState(null);
 
+            // Инициализация Telegram и загрузка данных с СЕРВЕРА
             useEffect(() => {
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.expand();
-                    
                     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                         setTgUser(tg.initDataUnsafe.user);
                     }
-                    
                     if (tg.colorScheme === 'dark' && !localStorage.getItem('financeAppTheme')) {
                         setIsDarkMode(true);
                     }
                 }
 
+                // Запрос к нашему серверу Railway для получения транзакций
+                fetch(`${API_URL}/transactions`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setTransactions(data);
+                        }
+                        setIsLoading(false);
+                    })
+                    .catch(err => {
+                        console.error("Ошибка загрузки данных с сервера:", err);
+                        setIsLoading(false);
+                    });
+
                 setTimeout(() => setIsSplashVisible(false), 2500);
             }, []);
-
-            useEffect(() => {
-                localStorage.setItem('financeAppTransactions', JSON.stringify(transactions));
-            }, [transactions]);
 
             useEffect(() => {
                 if (isDarkMode) {
@@ -1011,7 +865,8 @@
                 }, 3000);
             };
 
-            const handleManualAdd = (e) => {
+            // Добавление транзакции НА СЕРВЕР
+            const handleManualAdd = async (e) => {
                 e.preventDefault();
                 const amount = parseInt(e.target.amount.value);
                 const title = e.target.title.value;
@@ -1028,25 +883,51 @@
                 if(category === 'Еда вне дома') { icon = 'fa-utensils'; color = 'text-amber-600'; bg = 'bg-amber-100'; }
                 if(category === 'Развлечения') { icon = 'fa-play'; color = 'text-pink-500'; bg = 'bg-pink-100'; }
 
-                const newTx = {
-                    id: Date.now(),
+                const d = new Date();
+                const dateString = d.getDate().toString().padStart(2, '0') + '.' + 
+                                   (d.getMonth() + 1).toString().padStart(2, '0') + ' ' + 
+                                   d.getHours().toString().padStart(2, '0') + ':' + 
+                                   d.getMinutes().toString().padStart(2, '0');
+
+                const newTxPayload = {
                     title,
                     category,
                     amount: -amount,
-                    date: 'Сегодня, ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    icon,
-                    color,
-                    bg,
-                    rawDate: new Date()
+                    date: dateString,
+                    icon, color, bg,
+                    rawDate: new Date().toISOString()
                 };
 
-                setTransactions([newTx, ...transactions]);
-                closeAddModal();
+                try {
+                    // Отправляем POST запрос на Railway
+                    const res = await fetch(`${API_URL}/transactions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newTxPayload)
+                    });
+                    const savedTx = await res.json();
+                    
+                    // Обновляем локальный список
+                    setTransactions([savedTx, ...transactions]);
+                    closeAddModal();
+                } catch (error) {
+                    console.error("Ошибка сохранения на сервере:", error);
+                    alert("Не удалось сохранить расход на сервере.");
+                }
             };
 
-            const handleDeleteTransaction = (id) => {
-                setTransactions(transactions.filter(t => t.id !== id));
-                setSelectedTransaction(null);
+            // Удаление транзакции С СЕРВЕРА
+            const handleDeleteTransaction = async (id) => {
+                try {
+                    // Отправляем DELETE запрос на Railway
+                    await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
+                    // Удаляем локально
+                    setTransactions(transactions.filter(t => t.id !== id));
+                    setSelectedTransaction(null);
+                } catch (error) {
+                    console.error("Ошибка удаления:", error);
+                    alert("Не удалось удалить транзакцию.");
+                }
             };
 
             const handleTransactionClick = (t) => {
@@ -1058,6 +939,9 @@
             };
 
             const renderScreen = () => {
+                if (isLoading) {
+                    return <div className="h-screen flex items-center justify-center text-primary"><i className="fa-solid fa-circle-notch fa-spin text-4xl"></i></div>;
+                }
                 switch(currentScreen) {
                     case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={handleTransactionClick} />;
                     case 'analytics': return <ScreenAnalytics transactions={transactions} onTransactionClick={handleTransactionClick} />;
