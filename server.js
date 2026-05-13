@@ -66,8 +66,22 @@ app.get('/', (req, res) => {
     res.send('🚀 FinanceApp Server is running!');
 });
 
+// Получить все транзакции (ЭТОТ БЛОК БЫЛ ПОВРЕЖДЕН, ТЕПЕРЬ ИСПРАВЛЕН)
 app.get('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
+    try {
+        const snapshot = await db.collection('transactions')
+            .where('userId', '==', req.userId)
+            .orderBy('id', 'desc')
+            .get();
+        const txs = snapshot.docs.map(doc => doc.data());
+        res.json(txs);
+    } catch (error) {
+        console.error("Ошибка получения транзакций:", error);
+        res.status(500).json({ error: 'Ошибка БД' });
+    }
+});
+
 // Добавить транзакцию
 app.post('/api/transactions', verifyUser, async (req, res) => {
     if (!db) return res.status(500).json({ error: 'База данных не подключена' });
@@ -83,11 +97,11 @@ app.post('/api/transactions', verifyUser, async (req, res) => {
         // Сохраняем в коллекцию 'transactions'
         await db.collection('transactions').doc(newTx.id.toString()).set(newTx);
         
-        // НОВАЯ ЛОГИКА: Проверка на крупную трату (например, больше 500 000 сум)
+        // ЛОГИКА: Проверка на крупную трату (больше 500 000 сум)
         const absoluteAmount = Math.abs(amount);
         if (absoluteAmount >= 500000 && req.userId !== 'browser_test_user') {
             const message = `⚠️ <b>Крупная трата!</b>\n\nВы только что добавили расход: <b>${title}</b> на сумму <b>${absoluteAmount.toLocaleString('ru-RU')} сум</b> (Категория: ${category}).\n\n<i>Постарайтесь не выходить за рамки бюджета в этом месяце!</i> 🤖`;
-            // Отправляем уведомление асинхронно, не задерживая ответ клиенту
+            // Отправляем уведомление асинхронно
             sendTelegramMessage(req.userId, message);
         }
 
@@ -111,7 +125,7 @@ app.delete('/api/transactions/:id', verifyUser, async (req, res) => {
     }
 });
 
-// НОВЫЙ ЭНДПОИНТ: Распознавание чека (OCR)
+// Распознавание чека (OCR)
 app.post('/api/scan', verifyUser, async (req, res) => {
     try {
         const { imageBase64, mimeType } = req.body;
@@ -129,7 +143,6 @@ app.post('/api/scan', verifyUser, async (req, res) => {
         const response = await result.response;
         let text = response.text();
 
-        // Очищаем ответ от лишних символов, чтобы остался только чистый JSON
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(text);
 
