@@ -3,24 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FinanceAI PRO</title>
+    <title>FinanceAI</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#7C3AED', primaryLight: '#8B5CF6', primaryDark: '#5B21B6',
-                        bgLight: '#F9FAFB', bgDark: '#030712', textDark: '#111827', cardDark: '#111827'
-                    },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
-                }
-            }
+            theme: { extend: { colors: { primary: '#7C3AED', primaryLight: '#8B5CF6', primaryDark: '#5B21B6', bgLight: '#F3F4F6', bgDark: '#030712', textDark: '#111827', cardDark: '#1F2937' } } }
         }
     </script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -46,321 +37,210 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+        const { useState, useEffect, useRef } = React;
 
         const API_URL = 'https://mytest-production-6436.up.railway.app/api';
 
         const TOP_ICONS = [
-            'fa-basket-shopping', 'fa-bus', 'fa-utensils', 'fa-play', 'fa-bag-shopping', 'fa-pills', 'fa-house', 'fa-car',
-            'fa-plane', 'fa-dumbbell', 'fa-paw', 'fa-gamepad', 'fa-mug-hot', 'fa-scissors', 'fa-music', 'fa-book',
-            'fa-shirt', 'fa-shoe-prints', 'fa-glasses', 'fa-baby-carriage', 'fa-graduation-cap', 'fa-laptop', 'fa-mobile',
-            'fa-tv', 'fa-camera', 'fa-couch', 'fa-bed', 'fa-bath', 'fa-tooth', 'fa-screwdriver-wrench',
-            'fa-gift', 'fa-motorcycle', 'fa-briefcase-medical', 'fa-burger', 'fa-pizza-slice', 'fa-ticket', 'fa-smoking',
-            'fa-wine-glass', 'fa-martini-glass', 'fa-gas-pump', 'fa-train-subway', 'fa-bicycle', 'fa-palette', 'fa-camera-retro',
-            'fa-headphones', 'fa-microphone', 'fa-guitar', 'fa-volleyball', 'fa-basketball', 'fa-futbol'
-        ];
-
-        const PREMIUM_EMOJIS = [
-            '🍔','🍟','🥩','🍻','✈️','🏖️','🚗','⛽','📱','💻','🎮','🧸','🐾','🐕','⚽','🎿','🎨','🎸','🏥','💊','🛍️','👠','💍','👑','💸','🔥','✨','🚀','🎯','💡'
+            'fa-basket-shopping', 'fa-bus', 'fa-utensils', 'fa-play', 'fa-cart-shopping', 'fa-pills', 
+            'fa-car', 'fa-house', 'fa-bolt', 'fa-mobile-screen', 'fa-wifi', 'fa-plane', 'fa-dumbbell', 
+            'fa-paw', 'fa-book', 'fa-gamepad', 'fa-mug-hot', 'fa-shirt', 'fa-gift', 'fa-music', 
+            'fa-baby-carriage', 'fa-scissors', 'fa-hammer', 'fa-camera', 'fa-graduation-cap', 'fa-heart', 
+            'fa-briefcase', 'fa-gas-pump', 'fa-tooth', 'fa-seedling', 'fa-bicycle', 'fa-burger',
+            'fa-ticket', 'fa-laptop', 'fa-pen', 'fa-wallet', 'fa-piggy-bank', 'fa-coins', 'fa-gem',
+            'fa-globe', 'fa-medal', 'fa-key', 'fa-truck', 'fa-tools', 'fa-umbrella', 'fa-fire',
+            'fa-water', 'fa-leaf', 'fa-moon', 'fa-sun'
         ];
 
         const CATEGORY_COLORS = [
-            { bg: 'bg-red-100', color: 'text-red-500', hex: '#EF4444' }, { bg: 'bg-orange-100', color: 'text-orange-500', hex: '#F97316' },
-            { bg: 'bg-amber-100', color: 'text-amber-500', hex: '#F59E0B' }, { bg: 'bg-yellow-100', color: 'text-yellow-500', hex: '#EAB308' },
-            { bg: 'bg-lime-100', color: 'text-lime-500', hex: '#84CC16' }, { bg: 'bg-green-100', color: 'text-green-500', hex: '#22C55E' },
-            { bg: 'bg-emerald-100', color: 'text-emerald-500', hex: '#10B981' }, { bg: 'bg-teal-100', color: 'text-teal-500', hex: '#14B8A6' },
-            { bg: 'bg-cyan-100', color: 'text-cyan-500', hex: '#06B6D4' }, { bg: 'bg-sky-100', color: 'text-sky-500', hex: '#0EA5E9' },
-            { bg: 'bg-blue-100', color: 'text-blue-500', hex: '#3B82F6' }, { bg: 'bg-indigo-100', color: 'text-indigo-500', hex: '#6366F1' },
-            { bg: 'bg-violet-100', color: 'text-violet-500', hex: '#8B5CF6' }, { bg: 'bg-pink-100', color: 'text-pink-500', hex: '#EC4899' }
+            'text-red-500 bg-red-100 dark:bg-red-900/30', 'text-orange-500 bg-orange-100 dark:bg-orange-900/30', 
+            'text-amber-500 bg-amber-100 dark:bg-amber-900/30', 'text-green-500 bg-green-100 dark:bg-green-900/30', 
+            'text-blue-500 bg-blue-100 dark:bg-blue-900/30', 'text-purple-500 bg-purple-100 dark:bg-purple-900/30',
+            'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30', 'text-teal-500 bg-teal-100 dark:bg-teal-900/30', 
+            'text-cyan-500 bg-cyan-100 dark:bg-cyan-900/30', 'text-sky-500 bg-sky-100 dark:bg-sky-900/30', 
+            'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/30', 'text-violet-500 bg-violet-100 dark:bg-violet-900/30', 
+            'text-fuchsia-500 bg-fuchsia-100 dark:bg-fuchsia-900/30', 'text-pink-500 bg-pink-100 dark:bg-pink-900/30', 
+            'text-rose-500 bg-rose-100 dark:bg-rose-900/30', 'text-lime-500 bg-lime-100 dark:bg-lime-900/30',
+            'text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30', 'text-stone-500 bg-stone-100 dark:bg-stone-900/30',
+            'text-gray-500 bg-gray-100 dark:bg-gray-900/30', 'text-zinc-500 bg-zinc-100 dark:bg-zinc-900/30'
         ];
 
-        const PREMIUM_COLORS = [
-            { bg: 'bg-gradient-to-br from-fuchsia-500 to-pink-500', color: 'text-white', hex: 'linear-gradient(to right, #d946ef, #ec4899)' },
-            { bg: 'bg-gradient-to-br from-violet-500 to-purple-500', color: 'text-white', hex: 'linear-gradient(to right, #8b5cf6, #a855f7)' },
-            { bg: 'bg-gradient-to-br from-blue-500 to-cyan-500', color: 'text-white', hex: 'linear-gradient(to right, #3b82f6, #06b6d4)' },
-            { bg: 'bg-gradient-to-br from-emerald-500 to-teal-500', color: 'text-white', hex: 'linear-gradient(to right, #10b981, #14b8a6)' },
-            { bg: 'bg-gradient-to-br from-orange-500 to-amber-500', color: 'text-white', hex: 'linear-gradient(to right, #f97316, #f59e0b)' },
-            { bg: 'bg-gradient-to-br from-rose-500 to-red-500', color: 'text-white', hex: 'linear-gradient(to right, #f43f5e, #ef4444)' },
-            { bg: 'bg-slate-800', color: 'text-white', hex: '#1e293b' },
-            { bg: 'bg-gradient-to-br from-yellow-300 to-orange-400', color: 'text-gray-900', hex: 'linear-gradient(to right, #fde047, #fb923c)' }
+        const PRO_EMOJIS = [
+            '🍔', '🚕', '🛒', '💊', '🏠', '🎮', '🐾', '👕', '📱', '✈️',
+            '🍕', '🍣', '🥩', '🍩', '☕', '🍷', '🥂', '🚗', '🚌', '🚂', 
+            '🛳️', '🛥️', '🚀', '⛽', '🏡', '🏢', '🛍️', '👗', '👠', '👟', 
+            '💍', '💎', '💄', '💻', '⌚', '📺', '🎧', '🧸', '🎈', '📚', 
+            '🖊️', '🎨', '🎵', '🎸', '⚽', '🏀', '🎾', '🏋️‍♂️', '🚴', '🏊'
         ];
 
-        const IconRenderer = ({ icon, className }) => {
-            if (!icon) return null;
-            if (icon.startsWith('fa-')) {
-                return <i className={`fa-solid ${icon} ${className || ''}`}></i>;
-            }
-            return <span className={`${className || ''} font-normal`}>{icon}</span>;
-        };
-
-        const triggerHaptic = (style = 'light') => {
+        const triggerHaptic = (type = 'light') => {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
+                window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
             }
         };
 
         const formatMoneyInput = (value) => {
-            if (!value) return '';
-            const num = value.toString().replace(/\D/g, '');
-            return num.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         };
 
-        const generate100Achievements = (transactions, goals) => {
-            const list = [];
-            const txCount = transactions.length;
-            list.push({ name: 'Первый шаг', icon: '🌱', color: 'text-green-500', unlocked: txCount > 0 });
-            list.push({ name: 'Инвестор', icon: '📈', color: 'text-blue-500', unlocked: goals.length > 0 });
-            list.push({ name: 'Копилка', icon: '💰', color: 'text-yellow-500', unlocked: goals.some(g => g.current > 0) });
-            list.push({ name: 'Ночная сова', icon: '🦉', color: 'text-indigo-400', unlocked: transactions.some(t => { const h = parseInt(t.date.split(' ')[1].split(':')[0]); return h >= 23 || h < 4; }) });
-            const txLevels = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200, 250, 300, 400, 500];
-            txLevels.forEach(lvl => list.push({ name: `Мастер x${lvl}`, icon: '📝', color: 'text-purple-400', unlocked: txCount >= lvl }));
-            let counter = list.length + 1;
-            while(list.length < 100) {
-                list.push({ name: `Уровень ${counter}`, icon: '⭐', color: 'text-yellow-400', unlocked: txCount >= (counter * 10) });
-                counter++;
-            }
-            return list.sort((a, b) => (b.unlocked === a.unlocked) ? 0 : b.unlocked ? 1 : -1);
+        const getMonthYear = (dateStr) => {
+            if(!dateStr) return "";
+            const parts = dateStr.split(' ');
+            if(!parts[0]) return "";
+            const [d, m, y] = parts[0].split('.');
+            if(!m || !y) return "";
+            return `${m}.${y}`;
         };
 
-        const generateDemoData = () => {
-            const txs = [];
-            let idCounter = Date.now();
-            const places = {
-                'Продукты': ['Korzinka', 'Makro', 'Базар', 'Korzinka', 'Корзинка у дома', 'Korzinka'],
-                'Транспорт': ['Яндекс Такси', 'Метро', 'Автобус', 'Яндекс Такси', 'Такси', 'Яндекс Такси'],
-                'Еда вне дома': ['Кофейня', 'Evos', 'KFC', 'Кофейня', 'Ресторан', 'Кофейня'],
-                'Развлечения': ['Кинотеатр', 'Подписка Netflix', 'Кинотеатр', 'Парк', 'Подписка Netflix'],
-                'Покупки': ['Zara', 'Техника', 'Zara', 'Одежда', 'Zara']
-            };
-            const colors = {
-                'Продукты': {icon: 'fa-basket-shopping', bg: 'bg-orange-100', color: 'text-orange-500'},
-                'Транспорт': {icon: 'fa-bus', bg: 'bg-blue-100', color: 'text-blue-500'},
-                'Еда вне дома': {icon: 'fa-utensils', bg: 'bg-amber-100', color: 'text-amber-600'},
-                'Развлечения': {icon: 'fa-play', bg: 'bg-pink-100', color: 'text-pink-500'},
-                'Покупки': {icon: 'fa-bag-shopping', bg: 'bg-purple-100', color: 'text-purple-500'}
-            };
-
-            const now = new Date();
-            for (let i = 0; i < 60; i++) {
-                const date = new Date(now.getTime() - Math.floor(Math.random() * 90 * 24 * 60 * 60 * 1000));
-                const catKeys = Object.keys(places);
-                const category = catKeys[Math.floor(Math.random() * catKeys.length)];
-                const title = places[category][Math.floor(Math.random() * places[category].length)];
-                let baseAmount = category === 'Транспорт' ? 20000 : (category === 'Еда вне дома' ? 50000 : 150000);
-                const amount = -(baseAmount + Math.floor(Math.random() * 5) * 5000);
-                const dateString = date.getDate().toString().padStart(2, '0') + '.' + (date.getMonth() + 1).toString().padStart(2, '0') + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
-                const walletAssigned = Math.random() > 0.3 ? 'card' : 'cash';
-
-                txs.push({
-                    id: idCounter--, userId: 'demo', title, category, amount,
-                    icon: colors[category].icon, color: colors[category].color, bg: colors[category].bg,
-                    date: dateString, rawDate: date.toISOString(), wallet: walletAssigned
-                });
-            }
-            return txs.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+        const getMonthName = (monthYearStr) => {
+            if(!monthYearStr) return "";
+            const [m, y] = monthYearStr.split('.');
+            const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            return `${months[parseInt(m)-1]}, ${y}`;
         };
 
         const TopHeader = ({ title, showBack = false, onBack, rightIcon = null, onRightClick = null }) => (
-            <div className="flex justify-between items-center px-4 py-4 bg-bgLight dark:bg-bgDark sticky top-0 z-10 transition-colors duration-300">
+            <div className="flex justify-between items-center px-4 py-4 bg-white dark:bg-gray-900 sticky top-0 z-10 transition-colors duration-300 border-b border-gray-50 dark:border-gray-800/50">
                 <div className="flex items-center gap-3">
                     {showBack && (
-                        <button onClick={()=>{triggerHaptic('light'); onBack();}} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 hover:text-primary transition-colors shadow-sm">
-                            <i className="fa-solid fa-arrow-left text-sm"></i>
+                        <button onClick={() => {triggerHaptic('light'); onBack();}} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                            <i className="fa-solid fa-arrow-left text-lg"></i>
                         </button>
                     )}
                     <h1 className="text-xl font-bold text-textDark dark:text-white transition-colors">{title}</h1>
                 </div>
-                {rightIcon && (
-                    <button onClick={()=>{triggerHaptic('light'); if(onRightClick) onRightClick();}} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 hover:text-primary transition-colors shadow-sm">
-                        <i className={`fa-solid ${rightIcon} text-sm`}></i>
-                    </button>
-                )}
+                <div className="flex gap-4">
+                    {rightIcon && (
+                        <button onClick={() => {triggerHaptic('light'); if(onRightClick) onRightClick();}} className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                            <i className={`fa-regular ${rightIcon} text-xl`}></i>
+                        </button>
+                    )}
+                </div>
             </div>
         );
 
-        const ScreenPin = ({ onUnlock }) => {
-            const [input, setInput] = useState('');
-            const savedPin = localStorage.getItem('financeAppPin');
-            const [error, setError] = useState(false);
+        const ScreenHome = ({ setScreen, transactions, user, onTransactionClick, activeMonth, prevMonth, nextMonth, currency, rates, openAddModal }) => {
+            const userName = (user && user.first_name) ? user.first_name : 'Ильхом';
+            const [activeCard, setActiveCard] = useState('all');
 
-            const handlePress = (num) => {
-                triggerHaptic('light');
-                if (input.length < 4) {
-                    const newVal = input + num;
-                    setInput(newVal);
-                    if (newVal.length === 4) {
-                        if (newVal === savedPin) {
-                            triggerHaptic('success');
-                            setTimeout(onUnlock, 200);
-                        } else {
-                            triggerHaptic('error');
-                            setError(true);
-                            setTimeout(() => { setInput(''); setError(false); }, 500);
-                        }
-                    }
-                }
+            const filteredTxs = activeCard === 'all' ? transactions : transactions.filter(t => t.wallet === activeCard);
+            const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0);
+            const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
+            
+            const baseBalance = 12150000;
+            const currentBalance = baseBalance + totalIncome - totalExpense;
+
+            const formatCurrency = (amount) => {
+                if(currency === 'USD') return '$ ' + (amount / rates.USD).toFixed(2);
+                if(currency === 'EUR') return '€ ' + (amount / rates.EUR).toFixed(2);
+                return amount.toLocaleString('ru-RU').replace(/,/g, ' ') + ' сум';
             };
-
-            const handleDelete = () => {
-                triggerHaptic('light');
-                setInput(input.slice(0, -1));
-            };
-
-            return (
-                <div className="fixed inset-0 bg-bgLight dark:bg-bgDark z-[100] flex flex-col items-center justify-center">
-                    <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-6">
-                        <i className="fa-solid fa-lock text-3xl text-primary"></i>
-                    </div>
-                    <h2 className="text-2xl font-bold text-textDark dark:text-white mb-8">Введите ПИН-код</h2>
-                    <div className={`flex gap-4 mb-12 ${error ? 'animate-bounce' : ''}`}>
-                        {[0, 1, 2, 3].map(i => (
-                            <div key={i} className={`w-4 h-4 rounded-full border-2 ${input.length > i ? 'bg-primary border-primary' : 'border-gray-300 dark:border-gray-600'}`}></div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-3 gap-6">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                            <button key={num} onClick={() => handlePress(num)} className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 text-2xl font-bold text-textDark dark:text-white shadow-sm active:scale-95 transition-transform">{num}</button>
-                        ))}
-                        <div className="w-16 h-16"></div>
-                        <button onClick={() => handlePress(0)} className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 text-2xl font-bold text-textDark dark:text-white shadow-sm active:scale-95 transition-transform">0</button>
-                        <button onClick={handleDelete} className="w-16 h-16 rounded-full bg-transparent text-xl text-textDark dark:text-white active:scale-95 transition-transform"><i className="fa-solid fa-delete-left"></i></button>
-                    </div>
-                </div>
-            );
-        };
-
-        const ScreenHome = ({ setScreen, transactions, user, onTransactionClick, currencyRate, setAddMethod }) => {
-            const userName = (user && user.first_name) ? user.first_name : 'Dima';
-            const [activeWallet, setActiveWallet] = useState('all');
-
-            const formatMoney = (num) => {
-                const converted = Math.round(num * currencyRate.rate);
-                return currencyRate.symbol + ' ' + converted.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-            };
-
-            const getStats = (filterType) => {
-                let baseIncome = 0;
-                if (filterType === 'all') baseIncome = 12150000;
-                if (filterType === 'card') baseIncome = 8400000;
-                if (filterType === 'cash') baseIncome = 3750000;
-
-                const txs = filterType === 'all' ? transactions : transactions.filter(t => (t.wallet || 'card') === filterType);
-                const inc = txs.filter(t => t.amount > 0).reduce((acc, t) => acc + t.amount, 0) + baseIncome;
-                const exp = txs.filter(t => t.amount < 0).reduce((acc, t) => acc + Math.abs(t.amount), 0);
-                return { inc, exp, bal: inc - exp };
-            };
-
-            const globalStats = getStats('all');
-            const cardStats = getStats('card');
-            const cashStats = getStats('cash');
-
-            const filteredTransactions = activeWallet === 'all' ? transactions : transactions.filter(t => (t.wallet || 'card') === activeWallet);
 
             return (
                 <div className="pb-24 animate-fade-in">
-                    <div className="px-5 pt-4 pb-2 flex justify-between items-center transition-colors">
+                    <div className="px-4 pt-4 pb-2 flex justify-between items-center bg-bgLight dark:bg-bgDark transition-colors">
                         <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Добрый день,</p>
-                            <h2 className="text-2xl font-bold text-textDark dark:text-white">{userName}</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Добрый день,</p>
+                            <h2 className="text-xl font-bold text-textDark dark:text-white">{userName}</h2>
                         </div>
-                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 relative transition-colors cursor-pointer" onClick={() => {triggerHaptic(); setScreen('profile');}}>
-                            <i className="fa-regular fa-bell"></i>
-                            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
+                        <div className="flex gap-3">
+                            <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 transition-colors">
+                                <i className="fa-regular fa-calendar"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="px-5 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
-                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('all');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'all' ? 'bg-gradient-to-br from-primary to-purple-600 ring-4 ring-primary/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
-                            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
-                            <div className="flex justify-between items-center mb-2 relative z-10">
-                                <span className="text-sm font-medium text-white/90">Общий баланс</span>
-                                {activeWallet === 'all' && <i className="fa-solid fa-circle-check text-white/90"></i>}
+                    <div className="flex justify-center items-center gap-4 py-2">
+                        <button onClick={() => {triggerHaptic('light'); prevMonth();}} className="text-gray-400 hover:text-primary p-2"><i className="fa-solid fa-chevron-left"></i></button>
+                        <h2 className="font-bold text-textDark dark:text-white w-32 text-center capitalize">{getMonthName(activeMonth)}</h2>
+                        <button onClick={() => {triggerHaptic('light'); nextMonth();}} className="text-gray-400 hover:text-primary p-2"><i className="fa-solid fa-chevron-right"></i></button>
+                    </div>
+
+                    <div className="px-4 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
+                        <div onClick={() => {triggerHaptic('medium'); setActiveCard('all');}} className={`min-w-[90%] snap-center rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform ${activeCard === 'all' ? 'bg-gradient-to-r from-primary to-purple-600 scale-100 ring-2 ring-primaryLight' : 'bg-gray-400 dark:bg-gray-700 scale-95 opacity-80'}`}>
+                            <i className="fa-solid fa-wallet absolute -right-4 -bottom-4 text-white opacity-10 text-6xl"></i>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-white/80">Общий баланс</span>
                             </div>
-                            <h2 className="text-3xl font-bold mb-6 relative z-10 tracking-tight">{formatMoney(globalStats.bal)}</h2>
+                            <h2 className="text-3xl font-bold mb-4 relative z-10">{formatCurrency(currentBalance)}</h2>
                             <div className="flex justify-between relative z-10">
                                 <div>
-                                    <p className="text-[11px] font-medium text-white/70 mb-0.5 uppercase tracking-wider">Доходы</p>
-                                    <p className="font-bold text-sm">{formatMoney(globalStats.inc)}</p>
+                                    <p className="text-xs text-white/80">Доходы</p>
+                                    <p className="font-semibold text-sm">{formatCurrency(totalIncome)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[11px] font-medium text-white/70 mb-0.5 uppercase tracking-wider">Расходы</p>
-                                    <p className="font-bold text-sm">{formatMoney(globalStats.exp)}</p>
+                                    <p className="text-xs text-white/80">Расходы</p>
+                                    <p className="font-semibold text-sm">{formatCurrency(totalExpense)}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('card');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'card' ? 'bg-gray-900 ring-4 ring-gray-500/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
-                            <div className="absolute right-5 top-5 text-gray-500 text-xl font-bold italic pointer-events-none">UZCARD</div>
-                            <div className="flex justify-between items-center mb-2 relative z-10">
-                                <span className="text-sm font-medium text-gray-400">Зарплатная карта</span>
-                                {activeWallet === 'card' && <i className="fa-solid fa-circle-check text-white/90"></i>}
+                        <div onClick={() => {triggerHaptic('medium'); setActiveCard('card');}} className={`min-w-[90%] snap-center rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform ${activeCard === 'card' ? 'bg-gray-900 scale-100 ring-2 ring-gray-400' : 'bg-gray-400 dark:bg-gray-700 scale-95 opacity-80'}`}>
+                            <div className="absolute right-4 top-4 text-gray-400 text-2xl font-bold italic">UZCARD</div>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-gray-400">Зарплатная карта</span>
                             </div>
-                            <h2 className="text-3xl font-bold mb-8 relative z-10 tracking-tight">{formatMoney(cardStats.bal)}</h2>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(8400000 + transactions.filter(t => t.wallet === 'card' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'card' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
                             <div className="flex justify-between items-end relative z-10">
-                                <p className="font-mono tracking-widest text-sm text-gray-400">**** 4512</p>
-                                <div className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center bg-gray-800"><i className="fa-solid fa-chevron-right text-xs"></i></div>
+                                <p className="font-mono tracking-widest text-sm text-gray-300">**** 4512</p>
                             </div>
                         </div>
 
-                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('cash');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'cash' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 ring-4 ring-emerald-500/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
-                            <i className="fa-solid fa-money-bill absolute -right-2 -bottom-2 text-white opacity-20 text-6xl pointer-events-none"></i>
-                            <div className="flex justify-between items-center mb-2 relative z-10">
-                                <span className="text-sm font-medium text-white/90">Наличные</span>
-                                {activeWallet === 'cash' && <i className="fa-solid fa-circle-check text-white/90"></i>}
+                        <div onClick={() => {triggerHaptic('medium'); setActiveCard('cash');}} className={`min-w-[90%] snap-center rounded-3xl p-5 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform ${activeCard === 'cash' ? 'bg-gradient-to-br from-emerald-500 to-green-600 scale-100 ring-2 ring-emerald-400' : 'bg-gray-400 dark:bg-gray-700 scale-95 opacity-80'}`}>
+                            <i className="fa-solid fa-money-bill absolute -right-2 -bottom-2 text-white opacity-20 text-6xl"></i>
+                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                <span className="text-sm text-green-100">Наличные</span>
                             </div>
-                            <h2 className="text-3xl font-bold mb-8 relative z-10 tracking-tight">{formatMoney(cashStats.bal)}</h2>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(1200000 + transactions.filter(t => t.wallet === 'cash' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'cash' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
                             <div className="flex justify-between items-end relative z-10">
-                                <p className="font-medium text-sm text-white/80">В кошельке</p>
+                                <p className="text-sm text-green-100">В кошельке</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between px-6 py-5 max-w-sm mx-auto">
-                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setAddMethod('income');}}>
-                            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-500 text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-down"></i></div>
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Доход</span>
+                    <div className="flex justify-between px-6 py-4">
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => {triggerHaptic('light'); openAddModal('income');}}>
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center text-green-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-arrow-down"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Доход</span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setAddMethod('expense');}}>
-                            <div className="w-14 h-14 bg-red-50 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-500 text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-up"></i></div>
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Расход</span>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => {triggerHaptic('light'); openAddModal('expense');}}>
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center text-red-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-arrow-up"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Расход</span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setScreen('invest');}}>
-                            <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-primary text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-calculator"></i></div>
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Вклад</span>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => {triggerHaptic('light'); setScreen('calculator');}}>
+                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/40 rounded-2xl flex items-center justify-center text-primary text-xl shadow-sm transition-colors"><i className="fa-solid fa-piggy-bank"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Вклад</span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setScreen('categories');}}>
-                            <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-500 text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-layer-group"></i></div>
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Категории</span>
+                        <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => {triggerHaptic('light'); setScreen('categories');}}>
+                            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center text-blue-500 text-xl shadow-sm transition-colors"><i className="fa-solid fa-layer-group"></i></div>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 transition-colors">Категории</span>
                         </div>
                     </div>
 
-                    <div className="px-5 py-2">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-textDark dark:text-white transition-colors">
-                                {activeWallet === 'all' ? 'Последние операции' : (activeWallet === 'card' ? 'Операции по карте' : 'Операции наличными')}
-                            </h3>
-                            <button onClick={() => {triggerHaptic(); setScreen('reports');}} className="text-sm font-medium text-primary hover:text-primaryDark">Все</button>
+                    <div className="px-4 py-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-textDark dark:text-white transition-colors">{activeCard === 'all' ? 'Последние операции' : (activeCard === 'card' ? 'Операции по карте' : 'Наличные')}</h3>
+                            <button onClick={() => {triggerHaptic('light'); setScreen('analytics');}} className="text-xs font-medium text-primary">Отчеты <i className="fa-solid fa-chevron-right ml-1"></i></button>
                         </div>
-                        
                         <div className="space-y-3">
-                            {filteredTransactions.length === 0 ? (
-                                <p className="text-center text-sm text-gray-400 py-6">У вас пока нет транзакций.</p>
-                            ) : filteredTransactions.slice(0, 5).map(t => (
-                                <div key={t.id} onClick={() => {triggerHaptic('light'); onTransactionClick(t);}} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3.5 rounded-2xl shadow-sm active:scale-[0.98] transition-all cursor-pointer">
-                                    <div className="flex items-center gap-3.5">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${t.bg} dark:bg-opacity-20 ${t.color}`}>
-                                            <IconRenderer icon={t.icon} />
+                            {filteredTxs.length === 0 ? (
+                                <p className="text-center text-sm text-gray-400 py-4">У вас пока нет транзакций.</p>
+                            ) : filteredTxs.slice(0, 10).map(t => (
+                                <div key={t.id} onClick={() => onTransactionClick(t)} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3 rounded-2xl shadow-sm active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer border border-gray-50 dark:border-gray-800/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.bg} dark:bg-opacity-20 ${t.color}`}>
+                                            {t.icon.startsWith('fa-') ? <i className={`fa-solid ${t.icon}`}></i> : <span className="text-xl">{t.icon}</span>}
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
-                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors mt-0.5">{t.category}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors">{t.category}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
-                                            {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
+                                            {t.amount > 0 ? '+' : ''}{formatCurrency(t.amount)}
                                         </p>
-                                        <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 transition-colors mt-1">{t.date.split(' ')[0]}</p>
+                                        <p className="text-[10px] text-gray-500 dark:text-gray-400 transition-colors">{t.date}</p>
                                     </div>
                                 </div>
                             ))}
@@ -370,41 +250,39 @@
             );
         };
 
-        const ScreenReports = ({ transactions, onTransactionClick, currencyRate }) => {
+        const ScreenAnalytics = ({ transactions, onTransactionClick, activeMonth, prevMonth, nextMonth, currency, rates }) => {
             const chartRef = useRef(null);
-            const [expandedCategory, setExpandedCategory] = useState(null);
-            const [expandedPlace, setExpandedPlace] = useState(null);
-
-            const formatMoney = (num) => {
-                const converted = Math.round(num * currencyRate.rate);
-                return currencyRate.symbol + ' ' + converted.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            const [expandedCat, setExpandedCat] = useState(null);
+            
+            const formatCurrency = (amount) => {
+                if(currency === 'USD') return '$ ' + (amount / rates.USD).toFixed(2);
+                if(currency === 'EUR') return '€ ' + (amount / rates.EUR).toFixed(2);
+                return amount.toLocaleString('ru-RU').replace(/,/g, ' ') + ' сум';
             };
 
             const expenses = transactions.filter(t => t.amount < 0);
-            const totalExpense = expenses.reduce((acc, t) => acc + Math.abs(t.amount), 0);
+            const totalExp = expenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-            const categoryData = useMemo(() => {
-                const data = {};
-                expenses.forEach(t => {
-                    if(!data[t.category]) data[t.category] = { total: 0, items: [], colorHex: t.color, bg: t.bg, icon: t.icon, textCol: t.color };
-                    data[t.category].total += Math.abs(t.amount);
-                    data[t.category].items.push(t);
-                });
-                return Object.entries(data).map(([name, val]) => ({
-                    name, 
-                    total: val.total, 
-                    percent: totalExpense ? Math.round((val.total / totalExpense) * 100) : 0,
-                    ...val
-                })).sort((a, b) => b.total - a.total);
-            }, [expenses, totalExpense]);
+            const catData = {};
+            expenses.forEach(t => {
+                if(!catData[t.category]) catData[t.category] = { total: 0, items: [], color: t.color, icon: t.icon, bg: t.bg };
+                catData[t.category].total += Math.abs(t.amount);
+                catData[t.category].items.push(t);
+            });
+
+            const categoryData = Object.keys(catData).map(k => ({
+                name: k, ...catData[k], percent: totalExp ? Math.round((catData[k].total / totalExp) * 100) : 0
+            })).sort((a,b) => b.total - a.total);
 
             const getHexColor = (colorClass) => {
+                if(!colorClass) return '#9CA3AF';
                 if(colorClass.includes('orange')) return '#F97316';
-                if(colorClass.includes('blue')) return '#3B82F6';
-                if(colorClass.includes('amber')) return '#F59E0B';
-                if(colorClass.includes('pink')) return '#EC4899';
-                if(colorClass.includes('green') || colorClass.includes('emerald')) return '#10B981';
-                if(colorClass.includes('purple') || colorClass.includes('primary')) return '#7C3AED';
+                if(colorClass.includes('blue') || colorClass.includes('sky')) return '#3B82F6';
+                if(colorClass.includes('pink') || colorClass.includes('rose') || colorClass.includes('fuchsia')) return '#EC4899';
+                if(colorClass.includes('green') || colorClass.includes('emerald') || colorClass.includes('teal') || colorClass.includes('lime')) return '#10B981';
+                if(colorClass.includes('purple') || colorClass.includes('violet') || colorClass.includes('indigo') || colorClass.includes('primary')) return '#7C3AED';
+                if(colorClass.includes('amber') || colorClass.includes('yellow')) return '#F59E0B';
+                if(colorClass.includes('red')) return '#EF4444';
                 if(colorClass.includes('cyan')) return '#06B6D4';
                 return '#9CA3AF';
             };
@@ -419,438 +297,495 @@
                             labels: categoryData.map(c => c.name),
                             datasets: [{
                                 data: categoryData.map(c => c.total),
-                                backgroundColor: categoryData.map(c => getHexColor(c.textCol)),
-                                borderWidth: 0,
-                                hoverOffset: 4
+                                backgroundColor: categoryData.map(c => getHexColor(c.color)),
+                                borderWidth: 0, hoverOffset: 4
                             }]
                         },
                         options: {
-                            cutout: '75%', responsive: true, maintainAspectRatio: false,
+                            cutout: '75%', responsive: true, maintainAspectRatio: false, animation: false,
                             plugins: { legend: { display: false }, tooltip: { enabled: false } }
                         }
                     });
                 }
-            }, [categoryData, expandedCategory]); 
+            }, [categoryData]); 
 
             const renderGroupedItems = (catItems, catName) => {
-                const grouped = {};
+                const groups = {};
                 catItems.forEach(t => {
-                    const title = t.title.trim();
-                    if(!grouped[title]) grouped[title] = { total: 0, count: 0, txs: [] };
-                    grouped[title].total += Math.abs(t.amount);
-                    grouped[title].count += 1;
-                    grouped[title].txs.push(t);
+                    const cleanName = t.title.trim();
+                    if(!groups[cleanName]) groups[cleanName] = { total: 0, txs: [] };
+                    groups[cleanName].total += Math.abs(t.amount);
+                    groups[cleanName].txs.push(t);
                 });
 
-                return Object.entries(grouped).sort((a, b) => b[1].total - a[1].total).map(([title, group], i) => (
-                    <div key={i} className="bg-white dark:bg-gray-900 rounded-xl mb-2 overflow-hidden shadow-sm transition-colors border border-gray-100 dark:border-gray-800">
-                        <div 
-                            className="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800"
-                            onClick={() => {
-                                triggerHaptic('light'); 
-                                const id = `${catName}-${title}`;
-                                setExpandedPlace(expandedPlace === id ? null : id);
-                            }}
-                        >
-                            <div>
-                                <h4 className="font-bold text-sm text-textDark dark:text-white">{title} <span className="text-xs text-gray-400 font-normal ml-1">x{group.count}</span></h4>
-                            </div>
+                const groupArr = Object.keys(groups).map(k => ({ name: k, ...groups[k] })).sort((a,b) => b.total - a.total);
+
+                return groupArr.map((group, idx) => (
+                    <details key={idx} className="group mb-2 last:mb-0 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                        <summary className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800/50 cursor-pointer list-none active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-textDark dark:text-white">{formatMoney(group.total)}</span>
-                                <i className={`fa-solid fa-chevron-down text-xs text-gray-400 transition-transform ${expandedPlace === `${catName}-${title}` ? 'rotate-180' : ''}`}></i>
+                                <span className="font-bold text-sm text-textDark dark:text-white">{group.name}</span>
+                                <span className="text-[10px] bg-white dark:bg-gray-700 px-1.5 py-0.5 rounded shadow-sm text-gray-500 dark:text-gray-300">x{group.txs.length}</span>
                             </div>
-                        </div>
-                        {expandedPlace === `${catName}-${title}` && (
-                            <div className="pl-4 pr-3 pb-2 animate-fade-in bg-gray-50 dark:bg-gray-800/50">
-                                <div className="border-l-2 border-gray-200 dark:border-gray-700 pl-3 space-y-4 pt-4 pb-2">
-                                    {group.txs.map((t, idx) => {
-                                        let diffElement = null;
-                                        if (idx < group.txs.length - 1) {
-                                            const prevT = group.txs[idx + 1]; 
-                                            const currAmt = Math.abs(t.amount);
-                                            const prevAmt = Math.abs(prevT.amount);
-                                            if (currAmt !== prevAmt && prevAmt > 0) {
-                                                const diffPerc = Math.round(((currAmt - prevAmt) / prevAmt) * 100);
-                                                if (diffPerc > 0) {
-                                                    diffElement = <span className="text-[10px] font-bold text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded ml-2">↑ +{diffPerc}%</span>;
-                                                } else if (diffPerc < 0) {
-                                                    diffElement = <span className="text-[10px] font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded ml-2">↓ {Math.abs(diffPerc)}%</span>;
-                                                }
-                                            }
+                            <div className="flex items-center gap-3">
+                                <span className="font-bold text-sm text-textDark dark:text-white">{formatCurrency(group.total)}</span>
+                                <i className="fa-solid fa-chevron-down text-xs text-gray-400 group-open:rotate-180 transition-transform"></i>
+                            </div>
+                        </summary>
+                        <div className="bg-white dark:bg-gray-900 px-3 py-2 space-y-2">
+                            {group.txs.map((t, tidx) => {
+                                let diffElement = null;
+                                if (tidx < group.txs.length - 1) {
+                                    const prevT = group.txs[tidx + 1];
+                                    const currAmt = Math.abs(t.amount);
+                                    const prevAmt = Math.abs(prevT.amount);
+                                    if (currAmt !== prevAmt && prevAmt > 0) {
+                                        const diffPerc = Math.round(((currAmt - prevAmt) / prevAmt) * 100);
+                                        if (diffPerc > 0) {
+                                            diffElement = <span className="text-[10px] text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded ml-2">↑ +{diffPerc}%</span>;
+                                        } else if (diffPerc < 0) {
+                                            diffElement = <span className="text-[10px] text-green-500 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded ml-2">↓ {Math.abs(diffPerc)}%</span>;
                                         }
-                                        return (
-                                            <div key={t.id} onClick={() => {triggerHaptic('light'); onTransactionClick(t);}} className="flex justify-between items-center active:opacity-50 transition-opacity cursor-pointer">
-                                                <div>
-                                                    <p className="text-sm font-medium text-textDark dark:text-white flex items-center">{t.date.split(' ')[0]} {diffElement}</p>
-                                                    <p className="text-xs text-gray-400">{t.date.split(' ')[1]}</p>
-                                                </div>
-                                                <span className="font-bold text-sm text-textDark dark:text-white">{formatMoney(Math.abs(t.amount))}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                                    }
+                                }
+
+                                const timeParts = t.date.split(' ');
+                                const dateStr = timeParts[0];
+                                const timeStr = timeParts[1] || "12:00";
+                                const hour = parseInt(timeStr.split(':')[0]);
+                                const isNight = hour >= 18 || hour < 6;
+                                const timeIcon = isNight ? '🌙' : '☀️';
+
+                                return (
+                                    <div key={t.id} className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800/50 last:border-0" onClick={() => {triggerHaptic('light'); onTransactionClick(t);}}>
+                                        <div>
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center">{timeIcon} <span className="ml-1 font-medium">{dateStr}</span> <span className="ml-1.5 opacity-70">{timeStr}</span></p>
+                                            <div className="mt-0.5">{diffElement}</div>
+                                        </div>
+                                        <span className="text-sm font-bold text-textDark dark:text-gray-300">{formatCurrency(Math.abs(t.amount))}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </details>
                 ));
             };
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300">
-                    <TopHeader title="Отчет" rightIcon="fa-ellipsis" />
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
+                    <TopHeader title="Отчет" rightIcon="fa-chart-pie" />
                     
-                    <div className="flex items-center justify-center gap-4 py-2 mb-4">
-                        <button className="text-primary w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center"><i className="fa-solid fa-arrow-left"></i></button>
-                        <span className="font-bold text-textDark dark:text-white">Май, 2026</span>
-                        <button className="text-gray-300 dark:text-gray-700 w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center" disabled><i className="fa-solid fa-arrow-right"></i></button>
+                    <div className="flex justify-center items-center gap-4 py-2">
+                        <button onClick={() => {triggerHaptic('light'); prevMonth();}} className="text-gray-400 hover:text-primary p-2"><i className="fa-solid fa-chevron-left"></i></button>
+                        <h2 className="font-bold text-textDark dark:text-white w-32 text-center capitalize">{getMonthName(activeMonth)}</h2>
+                        <button onClick={() => {triggerHaptic('light'); nextMonth();}} className="text-gray-400 hover:text-primary p-2"><i className="fa-solid fa-chevron-right"></i></button>
                     </div>
 
-                    <div className="relative w-64 h-64 mx-auto mb-8">
-                        <canvas id="donutChart"></canvas>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-sm text-gray-500 dark:text-gray-400 mb-1">Всего</span>
-                            <span className="text-2xl font-bold text-textDark dark:text-white">{formatMoney(totalExpense)}</span>
-                        </div>
-                    </div>
+                    {totalExp > 0 ? (
+                        <>
+                            <div className="relative w-56 h-56 mx-auto my-6">
+                                <canvas id="donutChart"></canvas>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Всего</p>
+                                    <h2 className="text-xl font-bold text-textDark dark:text-white">{formatCurrency(totalExp)}</h2>
+                                </div>
+                            </div>
 
-                    <div className="px-5">
-                        {categoryData.length === 0 ? (
-                            <p className="text-center text-gray-400">Нет данных для отчета.</p>
-                        ) : (
-                            <div className="space-y-4">
-                                {categoryData.map(cat => (
-                                    <div key={cat.name}>
-                                        <div 
-                                            className="flex items-center justify-between cursor-pointer mb-2 active:opacity-70 transition-opacity p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900"
-                                            onClick={() => {triggerHaptic('light'); setExpandedCategory(expandedCategory === cat.name ? null : cat.name);}}
-                                        >
+                            <div className="px-4 space-y-3">
+                                {categoryData.map(c => (
+                                    <div key={c.name} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 overflow-hidden transition-colors">
+                                        <div onClick={() => {triggerHaptic('light'); setExpandedCat(expandedCat === c.name ? null : c.name);}} className="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800 transition-colors">
                                             <div className="flex items-center gap-3">
-                                                <span className={`w-3 h-3 rounded-full`} style={{backgroundColor: getHexColor(cat.textCol)}}></span>
-                                                <span className="font-bold text-sm text-textDark dark:text-white">{cat.name}</span>
+                                                <div className={`w-3 h-3 rounded-full`} style={{backgroundColor: getHexColor(c.color)}}></div>
+                                                <span className="font-bold text-sm text-textDark dark:text-white">{c.name}</span>
                                             </div>
-                                            <div className="flex items-center gap-4 text-right">
-                                                <span className="font-bold text-sm text-textDark dark:text-white">{formatMoney(cat.total)}</span>
-                                                <span className="text-xs font-mono text-gray-400 w-8 text-right">{cat.percent}%</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-bold text-sm text-textDark dark:text-white">{formatCurrency(c.total)}</span>
+                                                <span className="text-xs text-gray-400 font-mono w-8 text-right">{c.percent}%</span>
                                             </div>
                                         </div>
-                                        {expandedCategory === cat.name && (
-                                            <div className="animate-fade-in pl-6 pr-2 mb-6 mt-2 border-l-2 border-gray-100 dark:border-gray-800 ml-1.5">
-                                                {renderGroupedItems(cat.items, cat.name)}
+                                        {expandedCat === c.name && (
+                                            <div className="px-4 pb-4 animate-fade-in border-t border-gray-50 dark:border-gray-800 pt-3">
+                                                {renderGroupedItems(c.items, c.name)}
                                             </div>
                                         )}
                                     </div>
                                 ))}
                             </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-20 text-gray-400">В этом месяце операций нет.</div>
+                    )}
+                </div>
+            );
+        };
+
+        const AddTransactionModal = ({ close, saveTx, categories, addCategory, isPremium, initialTab = 'expense' }) => {
+            const [tab, setTab] = useState(initialTab);
+            const [amount, setAmount] = useState('');
+            const [title, setTitle] = useState('');
+            const [selCat, setSelCat] = useState('');
+            const [wallet, setWallet] = useState('card');
+            const [isProcessing, setIsProcessing] = useState(false);
+            const [smsText, setSmsText] = useState('');
+            const [addMethod, setAddMethod] = useState(null);
+            
+            const [newCatName, setNewCatName] = useState('');
+            const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[0]);
+            const [newCatIcon, setNewCatIcon] = useState(TOP_ICONS[0]);
+            const [iconTab, setIconTab] = useState('icons');
+
+            useEffect(() => {
+                if (categories.length > 0 && !selCat) setSelCat(categories[0].name);
+            }, [categories]);
+
+            const simulateAI = (type) => {
+                setIsProcessing(true);
+                setTimeout(() => {
+                    setIsProcessing(false);
+                    setAmount(type === 'sms' ? '45000' : '150000');
+                    setTitle(type === 'sms' ? 'Yandex GO' : 'Супермаркет');
+                    setSelCat(type === 'sms' ? 'Транспорт' : 'Продукты');
+                    setAddMethod(null);
+                    triggerHaptic('success');
+                }, 2500);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if(tab === 'category') {
+                    if(!newCatName) return;
+                    addCategory({ name: newCatName, icon: newCatIcon, colorClass: newCatColor });
+                    setSelCat(newCatName);
+                    setTab('expense');
+                    triggerHaptic('success');
+                    return;
+                }
+
+                if(!amount || !title) return;
+                const numAmt = parseInt(amount.replace(/\s/g, ''));
+                const catObj = categories.find(c => c.name === selCat) || categories[0];
+                saveTx({
+                    title, category: selCat, wallet,
+                    amount: tab === 'expense' ? -numAmt : numAmt,
+                    icon: catObj.icon, color: catObj.colorClass.split(' ')[0], bg: catObj.colorClass.split(' ')[1]
+                });
+            };
+
+            return (
+                <div className="fixed inset-0 z-[60] flex items-end">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={close}></div>
+                    <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto no-scrollbar transition-colors">
+                        <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
+                        
+                        {(addMethod === 'voice' || addMethod === 'scan' || addMethod === 'sms') ? (
+                            <div className="py-6 text-center">
+                                {addMethod === 'voice' && (
+                                    <>
+                                        <div className="relative mb-6 mx-auto w-24 h-24">
+                                            <div className="w-full h-full bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl relative z-10">{isProcessing ? <i className="fa-solid fa-robot animate-pulse"></i> : <i className="fa-solid fa-microphone"></i>}</div>
+                                            {!isProcessing && <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse-ring z-0"></div>}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-textDark dark:text-white mb-2">{isProcessing ? "AI распознает речь..." : "Внимательно слушаю"}</h3>
+                                        <button onClick={() => simulateAI('voice')} className="mt-6 bg-blue-50 text-blue-500 font-bold px-6 py-2 rounded-full">Имитировать</button>
+                                    </>
+                                )}
+                                {addMethod === 'scan' && (
+                                    <>
+                                        <div className="w-48 h-64 bg-gray-100 dark:bg-gray-800 mx-auto rounded-xl relative overflow-hidden flex items-center justify-center mb-6">
+                                            <i className="fa-solid fa-receipt text-6xl text-gray-300"></i>
+                                            {isProcessing && <div className="animate-scanline"></div>}
+                                        </div>
+                                        <h3 className="text-xl font-bold text-textDark dark:text-white mb-2">{isProcessing ? "AI читает чек..." : "Наведите камеру"}</h3>
+                                        <button onClick={() => simulateAI('scan')} className="mt-2 bg-green-50 text-green-500 font-bold px-6 py-2 rounded-full">Фото</button>
+                                    </>
+                                )}
+                                {addMethod === 'sms' && (
+                                    <>
+                                        <div className="w-16 h-16 bg-purple-100 text-purple-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i className="fa-solid fa-comment-sms"></i></div>
+                                        <textarea value={smsText} onChange={e => setSmsText(e.target.value)} placeholder="Вставьте текст SMS..." className="w-full h-24 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-sm focus:border-primary mb-4 text-textDark dark:text-white"></textarea>
+                                        <button onClick={() => simulateAI('sms')} className="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/30">Анализировать</button>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4">
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'expense' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Расход</button>
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('income');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'income' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Доход</button>
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('category');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'category' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Категория +</button>
+                                </div>
+
+                                {tab === 'category' ? (
+                                    <div className="space-y-4 animate-fade-in">
+                                        <div>
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Название категории</label>
+                                            <input required type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary" placeholder="Например: Питомцы" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1 mb-2 block flex justify-between">
+                                                Выберите цвет <span className="text-primary font-bold text-[10px] bg-primary/10 px-2 py-0.5 rounded">PRO: 20 цветов</span>
+                                            </label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {CATEGORY_COLORS.map((c, i) => {
+                                                    const locked = !isPremium && i >= 6;
+                                                    return (
+                                                        <div key={i} onClick={() => { if(!locked) { triggerHaptic('light'); setNewCatColor(c); } else { alert("Требуется PRO версия!"); } }} className={`w-8 h-8 rounded-full cursor-pointer relative ${c} ${newCatColor === c ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-gray-900 scale-110' : ''} ${locked ? 'opacity-50' : ''}`}>
+                                                            {locked && <i className="fa-solid fa-lock absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white/80 text-[10px]"></i>}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Выберите иконку</label>
+                                                <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+                                                    <button type="button" onClick={() => setIconTab('icons')} className={`px-3 py-1 text-[10px] font-bold rounded-md ${iconTab==='icons'?'bg-white dark:bg-gray-700 shadow text-textDark dark:text-white':'text-gray-500'}`}>Иконки</button>
+                                                    <button type="button" onClick={() => setIconTab('emojis')} className={`px-3 py-1 text-[10px] font-bold rounded-md ${iconTab==='emojis'?'bg-white dark:bg-gray-700 shadow text-textDark dark:text-white':'text-gray-500'}`}>Эмодзи 👑</button>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto no-scrollbar p-1 border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900">
+                                                {iconTab === 'icons' && TOP_ICONS.map((ic, i) => (
+                                                    <div key={i} onClick={() => {triggerHaptic('light'); setNewCatIcon(ic);}} className={`w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer text-lg transition-colors ${newCatIcon === ic ? 'bg-primary text-white shadow-md' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'}`}>
+                                                        <i className={`fa-solid ${ic}`}></i>
+                                                    </div>
+                                                ))}
+                                                {iconTab === 'emojis' && PRO_EMOJIS.map((em, i) => {
+                                                    const locked = !isPremium && i >= 10;
+                                                    return (
+                                                        <div key={i} onClick={() => { if(!locked) { triggerHaptic('light'); setNewCatIcon(em); } else { alert("Требуется PRO версия!"); } }} className={`w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer text-xl relative transition-colors ${newCatIcon === em ? 'bg-primary text-white shadow-md' : 'hover:bg-gray-200 dark:hover:bg-gray-800'} ${locked ? 'opacity-30' : ''}`}>
+                                                            {em}
+                                                            {locked && <i className="fa-solid fa-lock absolute top-1 right-1 text-gray-500 text-[8px]"></i>}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50">
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-sm ${newCatColor}`}>
+                                                {newCatIcon.startsWith('fa-') ? <i className={`fa-solid ${newCatIcon}`}></i> : <span>{newCatIcon}</span>}
+                                            </div>
+                                            <span className="font-bold text-textDark dark:text-white">{newCatName || 'Предпросмотр'}</span>
+                                        </div>
+                                        <button type="submit" className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-purple-500/30 mt-2 hover:bg-primaryDark transition-colors">Создать категорию</button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 animate-fade-in">
+                                        <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-xl p-1 mb-2">
+                                            <button type="button" onClick={() => setWallet('card')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${wallet === 'card' ? 'bg-white dark:bg-gray-700 shadow text-textDark dark:text-white' : 'text-gray-500'}`}><i className="fa-regular fa-credit-card mr-2 text-primary"></i>Карта</button>
+                                            <button type="button" onClick={() => setWallet('cash')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${wallet === 'cash' ? 'bg-white dark:bg-gray-700 shadow text-textDark dark:text-white' : 'text-gray-500'}`}><i className="fa-solid fa-money-bill mr-2 text-emerald-500"></i>Наличные</button>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Сумма</label>
+                                            <input required type="text" inputMode="numeric" value={amount} onChange={(e) => setAmount(formatMoneyInput(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-2xl font-bold mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors" placeholder="0" />
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Название / Место</label>
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={() => setAddMethod('voice')} className="text-primary text-xs font-bold bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded"><i className="fa-solid fa-microphone"></i></button>
+                                                    <button type="button" onClick={() => setAddMethod('scan')} className="text-green-500 text-xs font-bold bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded"><i className="fa-solid fa-camera"></i></button>
+                                                    <button type="button" onClick={() => setAddMethod('sms')} className="text-orange-500 text-xs font-bold bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded"><i className="fa-solid fa-comment-sms"></i> SMS</button>
+                                                </div>
+                                            </div>
+                                            <input required type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors" placeholder="Например: Супермаркет" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 dark:text-gray-400 ml-1">Категория</label>
+                                            <div className="relative mt-1">
+                                                <select value={selCat} onChange={(e) => setSelCat(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-12 py-3 text-textDark dark:text-white focus:outline-none focus:border-primary transition-colors appearance-none font-bold">
+                                                    {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                                                </select>
+                                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-sm shadow-sm" style={{backgroundColor: 'rgba(124, 58, 237, 0.1)', color: '#7C3AED'}}>
+                                                    {categories.find(c=>c.name===selCat)?.icon?.startsWith('fa-') ? <i className={`fa-solid ${categories.find(c=>c.name===selCat)?.icon}`}></i> : categories.find(c=>c.name===selCat)?.icon}
+                                                </div>
+                                                <i className="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                                            </div>
+                                        </div>
+                                        <button type="submit" className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg mt-2 transition-transform hover:scale-[1.02] ${tab === 'expense' ? 'bg-red-500 shadow-red-500/30' : 'bg-green-500 shadow-green-500/30'}`}>
+                                            Добавить {tab === 'expense' ? 'расход' : 'доход'}
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
                         )}
                     </div>
                 </div>
             );
         };
 
-        const ScreenCategories = ({ onBack, categories, setCategories }) => {
-            const [showConfirm, setShowConfirm] = useState(null);
+        const ScreenCalculator = ({ onBack }) => {
+            const [tab, setTab] = useState('deposit');
+            const [amount, setAmount] = useState('10000000');
+            const [percent, setPercent] = useState('18');
+            const [months, setMonths] = useState('12');
 
-            const handleDeleteCategory = (catName) => {
-                triggerHaptic('heavy');
-                setCategories(categories.filter(c => c.name !== catName));
-                setShowConfirm(null);
-            };
+            const numAmt = parseInt(amount.replace(/\s/g, '')) || 0;
+            const numPerc = parseFloat(percent) || 0;
+            const numMonths = parseInt(months) || 1;
+
+            // Deposit Math
+            const depositProfit = Math.round((numAmt * (numPerc / 100) * (numMonths / 12)));
+            const depositMonthly = Math.round(depositProfit / numMonths);
+
+            // Credit Math
+            const i = (numPerc / 100) / 12;
+            const creditMonthly = i === 0 ? Math.round(numAmt / numMonths) : Math.round(numAmt * (i + (i / (Math.pow(1 + i, numMonths) - 1))));
+            const creditTotal = creditMonthly * numMonths;
+            const creditOverpay = creditTotal - numAmt;
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300">
-                    <TopHeader title="Категории" showBack={true} onBack={onBack} />
-                    
-                    <div className="px-5 py-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">Управление вашими категориями</p>
-                        <div className="space-y-3">
-                            {categories.map((cat, i) => (
-                                <div key={i} className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${cat.bg} dark:bg-opacity-20 ${cat.color}`} style={cat.hex && cat.hex.includes('gradient') ? {background: cat.hex, color: '#fff'} : {}}>
-                                            <IconRenderer icon={cat.icon} />
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                    <TopHeader title="Финансовые инструменты" showBack={true} onBack={onBack} />
+                    <div className="px-4 py-4 space-y-4">
+                        <div className="flex bg-gray-200 dark:bg-gray-800 rounded-xl p-1">
+                            <button onClick={() => {triggerHaptic(); setTab('deposit');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'deposit' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Вклад</button>
+                            <button onClick={() => {triggerHaptic(); setTab('credit');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'credit' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Кредит</button>
+                            <button onClick={() => {triggerHaptic(); setTab('goals');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'goals' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Копилки</button>
+                        </div>
+
+                        {tab === 'goals' ? (
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 transition-colors duration-300">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h4 className="font-bold text-textDark dark:text-white transition-colors">Новая машина</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">10 000 000 / 50 000 000 сум</p>
                                         </div>
-                                        <span className="font-bold text-textDark dark:text-white">{cat.name}</span>
+                                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-xl transition-colors">🚗</div>
                                     </div>
-                                    {cat.isCustom && (
-                                        <button onClick={() => setShowConfirm(cat.name)} className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
-                                            <i className="fa-solid fa-trash-can text-sm"></i>
-                                        </button>
-                                    )}
+                                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-2 transition-colors">
+                                        <div className="bg-blue-500 h-2.5 rounded-full" style={{width: '20%'}}></div>
+                                    </div>
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 dark:text-gray-400">Осталось 10 месяцев</p>
+                                            <p className="text-xs font-bold text-primary mt-0.5">Откладывать: 4 000 000 / мес</p>
+                                        </div>
+                                        <span className="font-bold text-textDark dark:text-gray-300">20%</span>
+                                    </div>
                                 </div>
+                            </div>
+                        ) : (
+                            <div className="animate-fade-in space-y-4">
+                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-50 dark:border-gray-800 space-y-3">
+                                    <div>
+                                        <label className="text-xs text-gray-500 dark:text-gray-400">Сумма</label>
+                                        <input type="text" value={formatMoneyInput(amount.toString())} onChange={e=>setAmount(e.target.value.replace(/\D/g, ''))} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 font-bold text-textDark dark:text-white focus:outline-none focus:border-primary" />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400">Ставка (%)</label>
+                                            <input type="number" value={percent} onChange={e=>setPercent(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 font-bold text-textDark dark:text-white focus:outline-none focus:border-primary" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 dark:text-gray-400">Срок (мес)</label>
+                                            <input type="number" value={months} onChange={e=>setMonths(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 mt-1 font-bold text-textDark dark:text-white focus:outline-none focus:border-primary" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {tab === 'deposit' ? (
+                                    <div className="bg-gradient-to-br from-primary to-purple-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden animate-fade-in">
+                                        <i className="fa-solid fa-piggy-bank absolute -right-4 -bottom-4 opacity-10 text-7xl"></i>
+                                        <p className="text-sm text-purple-200 mb-1 relative z-10">Итоговая сумма</p>
+                                        <h2 className="text-3xl font-bold mb-4 relative z-10">{formatMoneyInput((numAmt + depositProfit).toString())}</h2>
+                                        <div className="flex justify-between bg-white/10 rounded-xl p-3 relative z-10">
+                                            <div><p className="text-xs text-purple-200">Прибыль</p><p className="font-bold">+{formatMoneyInput(depositProfit.toString())}</p></div>
+                                            <div className="text-right"><p className="text-xs text-purple-200">В месяц</p><p className="font-bold">+{formatMoneyInput(depositMonthly.toString())}</p></div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden animate-fade-in">
+                                        <i className="fa-solid fa-file-invoice-dollar absolute -right-4 -bottom-4 opacity-10 text-7xl"></i>
+                                        <p className="text-sm text-red-100 mb-1 relative z-10">Ежемесячный платеж</p>
+                                        <h2 className="text-3xl font-bold mb-4 relative z-10">{formatMoneyInput(creditMonthly.toString())}</h2>
+                                        <div className="flex justify-between bg-white/10 rounded-xl p-3 relative z-10">
+                                            <div><p className="text-xs text-red-100">Итого выплатить</p><p className="font-bold">{formatMoneyInput(creditTotal.toString())}</p></div>
+                                            <div className="text-right"><p className="text-xs text-red-100">Переплата</p><p className="font-bold">{formatMoneyInput(creditOverpay.toString())}</p></div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const ScreenCategories = ({ onBack, categories, setCategories }) => (
+            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                <TopHeader title="Категории и Лимиты" showBack={true} onBack={onBack} />
+                <div className="px-4 py-4 space-y-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Управление вашими категориями</p>
+                    {categories.map((c, i) => (
+                        <div key={i} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-50 dark:border-gray-800">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${c.colorClass}`}>
+                                    {c.icon.startsWith('fa-') ? <i className={`fa-solid ${c.icon}`}></i> : <span>{c.icon}</span>}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-textDark dark:text-white">{c.name}</h4>
+                                </div>
+                            </div>
+                            <button onClick={() => setCategories(categories.filter(cat => cat.name !== c.name))} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl transition-colors hover:bg-red-100"><i className="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const ScreenTips = ({ openAIChat }) => {
+            const tipsData = [
+                { title: "Правило 50/30/20", text: "Разделите доход: 50% на базовые нужды (жилье, еда), 30% на желания (развлечения), 20% в накопления и инвестиции." },
+                { title: "Сложный процент", text: "Восьмое чудо света. Проценты начисляются на проценты. Начните инвестировать раньше, даже малыми суммами." },
+                { title: "Инфляция", text: "Обесценивание денег со временем. Храните деньги на вкладах, чтобы обогнать инфляцию." },
+                { title: "Подушка безопасности", text: "Накопите сумму, равную вашим расходам за 3-6 месяцев. Храните её на ликвидном вкладе." },
+                { title: "Диверсификация", text: "Не кладите все яйца в одну корзину. Разделяйте инвестиции по классам активов." }
+            ];
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
+                    <TopHeader title="Финансовая Грамотность" rightIcon="fa-graduation-cap" />
+                    
+                    <div className="px-4 space-y-4 pt-4">
+                        <div className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-4 shadow-sm flex gap-4 items-center text-white relative overflow-hidden">
+                            <i className="fa-solid fa-brain absolute -right-4 -bottom-4 opacity-10 text-7xl"></i>
+                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl flex-shrink-0 relative z-10"><i className="fa-solid fa-robot"></i></div>
+                            <div className="relative z-10">
+                                <h4 className="font-bold text-sm">Ваш личный ИИ-ментор</h4>
+                                <p className="text-xs text-purple-100 mt-1">Готов проанализировать вашу ситуацию.</p>
+                            </div>
+                        </div>
+
+                        <h3 className="font-bold text-textDark dark:text-white mt-6 mb-2">Золотые Правила</h3>
+                        <div className="space-y-3">
+                            {tipsData.map((tip, idx) => (
+                                <details key={idx} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group transition-colors duration-300">
+                                    <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-primary opacity-50 font-mono text-xs">{String(idx+1).padStart(2, '0')}</span>
+                                            {tip.title}
+                                        </div>
+                                        <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
+                                    </summary>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed border-t border-gray-50 dark:border-gray-800 pt-3">{tip.text}</p>
+                                </details>
                             ))}
                         </div>
                     </div>
 
-                    {showConfirm && (
-                        <div className="fixed inset-0 z-[80] flex items-center justify-center">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(null)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-5/6 max-w-sm rounded-3xl p-6 relative z-10 animate-fade-in text-center">
-                                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-500 text-3xl mx-auto mb-4">
-                                    <i className="fa-solid fa-triangle-exclamation"></i>
-                                </div>
-                                <h3 className="text-xl font-bold text-textDark dark:text-white mb-2">Удалить категорию?</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Категория "{showConfirm}" будет удалена из списка.</p>
-                                <div className="flex gap-3">
-                                    <button onClick={() => setShowConfirm(null)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-xl">Отмена</button>
-                                    <button onClick={() => handleDeleteCategory(showConfirm)} className="flex-1 bg-red-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-500/30">Удалить</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <button onClick={openAIChat} className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-r from-primary to-purple-600 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center text-white text-2xl z-40 hover:scale-105 transition-transform">
+                        <i className="fa-solid fa-robot"></i>
+                        <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-[#F9FAFB] dark:border-gray-950 rounded-full"></span>
+                    </button>
                 </div>
             );
         };
-
-        const ScreenInvest = ({ onBack, currencyRate, goals, setGoals, isPremium, setShowPaywall }) => {
-            const [mainTab, setMainTab] = useState('calc'); 
-            const [calcMode, setCalcMode] = useState('deposit');
-            const [sum, setSum] = useState('10000000');
-            const [percent, setPercent] = useState('18');
-            const [months, setMonths] = useState('12');
-
-            const [showAddGoal, setShowAddGoal] = useState(false);
-            const [newGoal, setNewGoal] = useState({ title: '', target: '', months: '12', icon: 'fa-plane', color: CATEGORY_COLORS[10], iconType: 'icons' });
-
-            const handleSumChange = (e) => setSum(e.target.value.replace(/\D/g, ''));
-            
-            const formatMoneyStr = (val) => {
-                if(!val) return '0';
-                const converted = Math.round(parseInt(val) * currencyRate.rate);
-                return currencyRate.symbol + ' ' + converted.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-            };
-
-            const calculate = () => {
-                const S = parseInt(sum) || 0;
-                const P = parseFloat(percent) || 0;
-                const M = parseInt(months) || 0;
-                
-                if (calcMode === 'deposit') {
-                    const profit = S * (P / 100) * (M / 12);
-                    return { total: S + profit, profit: profit, monthly: profit / (M || 1) };
-                } else {
-                    if (P === 0) return { total: S, monthly: S / (M || 1), overpay: 0 };
-                    const r = (P / 100) / 12;
-                    const monthly = S * (r * Math.pow(1 + r, M)) / (Math.pow(1 + r, M) - 1);
-                    const total = monthly * M;
-                    return { total: total, monthly: monthly, overpay: total - S };
-                }
-            };
-
-            const res = calculate();
-
-            const handleAddGoalSubmit = (e) => {
-                e.preventDefault();
-                const targetNum = parseInt(newGoal.target.replace(/\D/g, ''));
-                if(newGoal.title && targetNum) {
-                    setGoals([...goals, {
-                        id: Date.now(), title: newGoal.title, current: 0, target: targetNum,
-                        months: parseInt(newGoal.months) || 12,
-                        icon: newGoal.icon, bg: newGoal.color.bg, color: newGoal.color.color, hex: newGoal.color.hex
-                    }]);
-                    setShowAddGoal(false);
-                }
-            };
-
-            const handleDeleteGoal = (id) => {
-                triggerHaptic('heavy');
-                setGoals(goals.filter(goal => goal.id !== id));
-            };
-
-            return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
-                    <TopHeader 
-                        title="Вклад и Цели" 
-                        showBack={true} 
-                        onBack={onBack} 
-                        rightIcon={mainTab === 'goals' ? 'fa-plus' : null} 
-                        onRightClick={mainTab === 'goals' ? () => setShowAddGoal(true) : null} 
-                    />
-                    
-                    <div className="px-5 py-2 mb-4">
-                        <div className="flex bg-gray-200 dark:bg-gray-800 p-1 rounded-xl">
-                            <button onClick={()=>{triggerHaptic('light'); setMainTab('calc');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${mainTab==='calc' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500'}`}>Калькулятор</button>
-                            <button onClick={()=>{triggerHaptic('light'); setMainTab('goals');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${mainTab==='goals' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-500'}`}>Копилки</button>
-                        </div>
-                    </div>
-
-                    {mainTab === 'calc' ? (
-                        <div className="animate-fade-in">
-                            <div className="px-5 mb-4">
-                                <div className="flex bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
-                                    <button onClick={()=>{triggerHaptic(); setCalcMode('deposit');}} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${calcMode==='deposit' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}>Вклад</button>
-                                    <button onClick={()=>{triggerHaptic(); setCalcMode('credit');}} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${calcMode==='credit' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}>Кредит</button>
-                                </div>
-                            </div>
-                            <div className="px-5 space-y-4 mb-6">
-                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-                                    <label className="text-xs font-medium text-gray-500 mb-1 block">Сумма</label>
-                                    <input type="text" value={formatMoneyInput(sum)} onChange={handleSumChange} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex-1">
-                                        <label className="text-xs font-medium text-gray-500 mb-1 block">Процент (%)</label>
-                                        <input type="number" value={percent} onChange={e=>setPercent(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
-                                    </div>
-                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex-1">
-                                        <label className="text-xs font-medium text-gray-500 mb-1 block">Срок (мес)</label>
-                                        <input type="number" value={months} onChange={e=>setMonths(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="px-5">
-                                <div className={`rounded-3xl p-6 text-white shadow-lg relative overflow-hidden ${calcMode==='deposit' ? 'bg-gradient-to-br from-primary to-purple-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
-                                    <i className={`fa-solid ${calcMode==='deposit' ? 'fa-piggy-bank' : 'fa-building-columns'} absolute -right-4 -top-4 text-white opacity-10 text-7xl`}></i>
-                                    <p className="text-sm text-white/80 mb-1 font-medium">{calcMode==='deposit' ? 'Итоговая сумма' : 'Общая выплата'}</p>
-                                    <h2 className="text-3xl font-bold mb-6 tracking-tight">{formatMoneyStr(res.total)}</h2>
-                                    
-                                    <div className="flex justify-between items-end bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
-                                        <div>
-                                            <p className="text-[11px] uppercase tracking-wider text-white/70 font-bold mb-1">{calcMode==='deposit' ? 'Прибыль' : 'Переплата'}</p>
-                                            <p className={`font-bold text-sm ${calcMode==='deposit' ? 'text-emerald-300' : 'text-orange-300'}`}>
-                                                {calcMode==='deposit' ? '+' : ''}{formatMoneyStr(res.profit || res.overpay)}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[11px] uppercase tracking-wider text-white/70 font-bold mb-1">{calcMode==='deposit' ? 'Доход в месяц' : 'Платеж в месяц'}</p>
-                                            <p className="font-bold text-sm text-white">{formatMoneyStr(res.monthly)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-4 px-5 animate-fade-in pt-2">
-                            {goals.map(g => {
-                                const perc = Math.min(100, Math.round((g.current / g.target) * 100));
-                                const monthly = Math.round((g.target - g.current) / (g.months || 1));
-                                return (
-                                    <div key={g.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm transition-colors">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h4 className="font-bold text-lg text-textDark dark:text-white">{g.title}</h4>
-                                                <p className="text-xs font-medium text-gray-500 mt-1">{formatMoneyStr(g.current)} / {formatMoneyStr(g.target)}</p>
-                                            </div>
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${g.bg} dark:bg-opacity-20 ${g.color}`} style={g.hex && g.hex.includes('gradient') ? {background: g.hex, color: '#fff'} : {}}>
-                                                <IconRenderer icon={g.icon} />
-                                            </div>
-                                        </div>
-                                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-3">
-                                            <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{width: `${perc}%`}}></div>
-                                        </div>
-                                        <div className="flex justify-between items-center text-xs mb-4">
-                                            <span className="font-bold text-gray-400">Прогресс: {perc}%</span>
-                                            <span className="font-medium text-primary bg-primary/10 px-2 py-1 rounded">Откладывать: {formatMoneyStr(monthly)}/мес</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button className="flex-1 bg-green-50 text-green-600 dark:bg-green-900/20 font-bold py-2.5 rounded-xl text-sm transition-colors active:bg-green-100" onClick={()=>{triggerHaptic(); setGoals(goals.map(goal => goal.id === g.id ? {...goal, current: goal.current + 100000} : goal))}}>+ Пополнить</button>
-                                            <button className="w-12 bg-red-50 text-red-500 dark:bg-red-900/20 rounded-xl flex items-center justify-center transition-colors active:bg-red-100" onClick={()=>handleDeleteGoal(g.id)}><i className="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {goals.length === 0 && <p className="text-center text-gray-400 mt-10">У вас пока нет копилок.</p>}
-                        </div>
-                    )}
-
-                    {showAddGoal && (
-                        <div className="fixed inset-0 z-[70] flex items-end">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={()=>setShowAddGoal(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl p-6 relative z-10 animate-fade-in flex flex-col transition-colors">
-                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
-                                <h3 className="text-xl font-bold mb-6 text-textDark dark:text-white">Новая цель</h3>
-                                <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-10">
-                                    <input type="text" placeholder="Название (напр. Отпуск)" value={newGoal.title} onChange={e=>setNewGoal({...newGoal, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
-                                    <input type="text" placeholder="Сумма цели" value={formatMoneyInput(newGoal.target)} onChange={e=>setNewGoal({...newGoal, target: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
-                                    <input type="number" placeholder="За сколько месяцев?" value={newGoal.months} onChange={e=>setNewGoal({...newGoal, months: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
-                                    
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Цвет</p>
-                                        <div className="flex flex-wrap gap-3 mb-4">
-                                            {CATEGORY_COLORS.map((c, i) => (
-                                                <div key={i} onClick={() => setNewGoal({...newGoal, color: c})} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newGoal.color.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{backgroundColor: c.hex}}></div>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Градиенты (PRO)</p>
-                                        <div className="flex flex-wrap gap-3 relative">
-                                            {PREMIUM_COLORS.map((c, i) => (
-                                                <div key={`p${i}`} onClick={() => { if(!isPremium){setShowPaywall(true); return;} setNewGoal({...newGoal, color: c}); }} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newGoal.color.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{background: c.hex}}></div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="flex gap-4 mb-3">
-                                            <p onClick={() => setNewGoal({...newGoal, iconType: 'icons', icon: TOP_ICONS[0]})} className={`text-xs font-bold uppercase cursor-pointer ${newGoal.iconType === 'icons' ? 'text-primary' : 'text-gray-400'}`}>Иконки</p>
-                                            <p onClick={() => { if(!isPremium) { setShowPaywall(true); return; } setNewGoal({...newGoal, iconType: 'emojis', icon: PREMIUM_EMOJIS[0]}) }} className={`text-xs font-bold uppercase cursor-pointer flex items-center gap-1 ${newGoal.iconType === 'emojis' ? 'text-primary' : 'text-gray-400'}`}>Эмодзи <i className="fa-solid fa-crown text-yellow-500 text-[10px]"></i></p>
-                                        </div>
-                                        <div className="grid grid-cols-6 gap-3 relative">
-                                            {newGoal.iconType === 'icons' ? TOP_ICONS.map(ic => (
-                                                <div key={ic} onClick={() => setNewGoal({...newGoal, icon: ic})} className={`aspect-square rounded-xl flex items-center justify-center text-xl cursor-pointer transition-all ${newGoal.icon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}><i className={`fa-solid ${ic}`}></i></div>
-                                            )) : PREMIUM_EMOJIS.map(em => (
-                                                <div key={em} onClick={() => setNewGoal({...newGoal, icon: em})} className={`aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all ${newGoal.icon === em ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800'}`}>{em}</div>
-                                            ))}
-                                            {newGoal.iconType === 'emojis' && !isPremium && (
-                                                <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl" onClick={() => setShowPaywall(true)}></div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
-                                    <button onClick={()=>setShowAddGoal(false)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-4 rounded-2xl">Отмена</button>
-                                    <button onClick={handleAddGoalSubmit} className="flex-1 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg">Создать</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const ScreenTips = ({ openAIChat }) => (
-            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
-                <TopHeader title="Советы" rightIcon="fa-bell" />
-                <div className="px-5 space-y-6 pt-4">
-                    <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 rounded-3xl p-5 relative overflow-hidden">
-                        <i className="fa-solid fa-wand-magic-sparkles absolute -right-4 -bottom-4 text-primary opacity-10 text-7xl"></i>
-                        <h4 className="font-bold text-textDark dark:text-white mb-2 relative z-10">Ваш AI-консультант</h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4 relative z-10">Нейросеть проанализирует ваши расходы, найдет скрытые подписки и подскажет, как быстрее накопить на цель.</p>
-                        <button onClick={openAIChat} className="bg-primary text-white font-bold py-3 px-6 rounded-xl text-sm shadow-md shadow-purple-500/30 relative z-10">Запустить чат</button>
-                    </div>
-
-                    <div>
-                        <h3 className="font-bold text-lg text-textDark dark:text-white mb-3">База знаний</h3>
-                        <div className="space-y-3">
-                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
-                                <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
-                                    Что такое сложный процент? <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
-                                </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Сложный процент — это когда проценты начисляются не только на первоначальную сумму вклада, но и на проценты, накопленные за прошлые периоды.</p>
-                            </details>
-                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
-                                <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
-                                    Финансовая подушка <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
-                                </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Это запас денег на непредвиденный случай. Идеальный размер подушки — сумма ваших обязательных расходов за 3–6 месяцев.</p>
-                            </details>
-                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
-                                <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
-                                    Инфляция: как победить? <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
-                                </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Деньги "под подушкой" теряют покупательную способность. Доходность ваших вложений должна быть выше официального уровня инфляции.</p>
-                            </details>
-                        </div>
-                    </div>
-                </div>
-
-                <button onClick={openAIChat} className="fixed bottom-24 right-5 w-14 h-14 bg-gradient-to-r from-primary to-purple-600 rounded-full shadow-lg shadow-purple-500/40 flex items-center justify-center text-white text-2xl z-40 hover:scale-105 transition-transform">
-                    <i className="fa-solid fa-robot"></i>
-                    <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-bgLight dark:border-bgDark rounded-full animate-pulse"></span>
-                </button>
-            </div>
-        );
 
         const ScreenAIChat = ({ onBack, userId }) => {
-            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! 👋 Я ваш AI-ассистент. Я вижу вашу базу расходов. Что вас интересует?' }]);
+            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! Я подключен к Gemini и вижу ваши расходы в базе данных. Чем могу помочь?' }]);
             const [isTyping, setIsTyping] = useState(false);
             const [inputText, setInputText] = useState('');
 
@@ -859,7 +794,6 @@
                 setMessages(prev => [...prev, { type: 'user', text }]);
                 setInputText('');
                 setIsTyping(true);
-                triggerHaptic('medium');
                 
                 try {
                     const res = await fetch(`${API_URL}/chat`, {
@@ -868,10 +802,9 @@
                         body: JSON.stringify({ message: text })
                     });
                     const data = await res.json();
-                    triggerHaptic('light');
-                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Не смог получить ответ." }]);
+                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Извините, не смог получить ответ от ИИ." }]);
                 } catch (error) {
-                    setMessages(prev => [...prev, { type: 'bot', text: "Серверы сейчас перегружены. Попробуйте через пару минут." }]);
+                    setMessages(prev => [...prev, { type: 'bot', text: "Серверы Google временно перегружены. Попробуйте через пару минут." }]);
                 } finally {
                     setIsTyping(false);
                 }
@@ -879,363 +812,253 @@
 
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen flex flex-col animate-fade-in z-50 relative transition-colors duration-300">
-                    <TopHeader title="AI Чат" showBack={true} onBack={onBack} rightIcon="fa-broom" onRightClick={() => setMessages([messages[0]])} />
+                    <TopHeader title="Финансовый помощник" showBack={true} onBack={onBack} rightIcon="fa-broom" />
                     
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32 no-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
+                        <p className="text-center text-xs text-gray-400">Ваш AI ассистент (Gemini)</p>
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-2xl p-3.5 text-sm leading-relaxed ${msg.type === 'user' ? 'bg-gray-200 dark:bg-gray-800 text-textDark dark:text-white rounded-tr-sm' : 'bg-primary text-white rounded-tl-sm shadow-md shadow-purple-500/20'}`}>
+                                <div className={`max-w-[80%] rounded-2xl p-3 text-sm ${msg.type === 'user' ? 'bg-gray-200 dark:bg-gray-800 text-textDark dark:text-white rounded-tr-sm' : 'bg-primary text-white rounded-tl-sm shadow-md'}`}>
                                     {msg.text.split('\n').map((line, j) => <p key={j} className="mb-1 last:mb-0">{line}</p>)}
                                 </div>
                             </div>
                         ))}
                         {isTyping && (
-                            <div className="flex justify-start"><div className="bg-primary text-white rounded-2xl rounded-tl-sm p-3.5 shadow-md flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span><span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{animationDelay:'0.2s'}}></span><span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{animationDelay:'0.4s'}}></span></div></div>
+                            <div className="flex justify-start">
+                                <div className="bg-primary text-white rounded-2xl rounded-tl-sm p-3 shadow-md flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                                    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
+                                </div>
+                            </div>
                         )}
                     </div>
 
-                    <div className="absolute bottom-0 w-full p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+                    <div className="fixed bottom-0 w-full max-w-md p-4 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 transition-colors z-50">
                         {messages.length === 1 && (
-                            <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 pb-1">
-                                {['Где я много трачу?', 'Как накопить?', 'Проанализируй траты'].map(q => (
-                                    <button key={q} onClick={() => sendPrompt(q)} className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 text-primary dark:text-primaryLight text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">{q}</button>
+                            <div className="mb-4 space-y-2">
+                                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">Примеры вопросов:</p>
+                                {['Проанализируй мои расходы', 'Как мне накопить деньги?', 'Где я больше всего трачу?'].map(q => (
+                                    <button key={q} onClick={() => sendPrompt(q)} className="block w-full text-left px-4 py-2 text-sm text-primary border border-primary/30 rounded-xl hover:bg-primary/5 transition-colors">
+                                        {q}
+                                    </button>
                                 ))}
                             </div>
                         )}
-                        <div className="flex items-center gap-3">
-                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendPrompt(inputText)} placeholder="Спросить ИИ..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-5 py-3.5 text-sm focus:outline-none" />
-                            <button onClick={() => sendPrompt(inputText)} className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-md transform active:scale-95"><i className="fa-solid fa-paper-plane"></i></button>
+                        <div className="flex items-center gap-2">
+                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendPrompt(inputText)} placeholder="Спросите Gemini..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-4 py-3 text-sm focus:outline-none transition-colors" />
+                            <button onClick={() => sendPrompt(inputText)} className="w-11 h-11 bg-primary text-white rounded-full flex items-center justify-center shadow-md">
+                                <i className="fa-solid fa-paper-plane"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, achievements, currencyRate, setCurrencyMode, isPremium, setShowPaywall, onSetPin }) => {
-            const userName = (user && user.first_name) ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Dima';
-            const username = (user && user.username) ? `@${user.username}` : '@dima_finance';
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, isPremium, setPremium }) => {
+            const userName = (user && user.first_name) ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Ильхом';
+            const username = (user && user.username) ? `@${user.username}` : '@ilkhom_finance';
             const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
-            const hasPin = !!localStorage.getItem('financeAppPin');
+            const [showPaywall, setShowPaywall] = useState(false);
 
-            const handleExport = () => {
-                if (!isPremium) {
-                    setShowPaywall(true);
-                    return;
-                }
-                triggerHaptic('medium');
-                let csvContent = "Дата,Счет,Категория,Название,Сумма\n";
-                transactions.forEach(t => csvContent += `"${t.date}","${t.wallet==='cash'?'Наличные':'Карта'}","${t.category}","${t.title}",${t.amount}\n`);
-                const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `Finance_Export.csv`;
-                link.click();
+            const handleBuyPremium = () => {
+                triggerHaptic('success');
+                setTimeout(() => {
+                    setPremium(true);
+                    setShowPaywall(false);
+                }, 1500);
             };
 
             return (
-                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300">
+                <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
                     <TopHeader title="Профиль" rightIcon="fa-gear" />
                     
-                    <div className="px-5 py-6 flex items-center gap-5 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 mb-4">
-                        <img src={userPhoto} alt="Аватар" className="w-20 h-20 rounded-full border-[3px] border-primaryLight shadow-md object-cover" />
+                    <div className="bg-white dark:bg-gray-900 px-4 py-6 mb-2 flex items-center gap-4 transition-colors duration-300">
+                        <img src={userPhoto} alt="Аватар" className="w-16 h-16 rounded-full border-2 border-primaryLight shadow-sm object-cover" />
                         <div>
-                            <h2 className="text-2xl font-bold text-textDark dark:text-white">{userName}</h2>
-                            <p className="text-gray-500 font-medium">{username}</p>
-                            {isPremium && <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-yellow-400 to-orange-500 px-2 py-0.5 rounded shadow-sm"><i className="fa-solid fa-crown mr-1"></i> Premium</span>}
+                            <h2 className="text-xl font-bold text-textDark dark:text-white transition-colors duration-300 flex items-center gap-2">
+                                {userName} {isPremium && <i className="fa-solid fa-crown text-yellow-500 text-sm"></i>}
+                            </h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium transition-colors">{username}</p>
                         </div>
                     </div>
 
-                    <div className="px-5 mb-6">
-                        <div 
-                            onClick={() => { triggerHaptic('light'); if(!isPremium) setShowPaywall(true); }}
-                            className={`rounded-3xl p-5 flex items-center justify-between shadow-md relative overflow-hidden cursor-pointer transition-transform active:scale-[0.98] ${isPremium ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-gradient-to-r from-gray-900 to-indigo-900'}`}
-                        >
-                            <i className={`fa-brands fa-telegram absolute -right-4 -bottom-4 text-white opacity-10 text-7xl transform -rotate-12`}></i>
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg ${isPremium ? 'bg-white/20' : 'bg-gradient-to-br from-yellow-400 to-orange-500'}`}>
-                                    <i className="fa-solid fa-crown text-lg"></i>
+                    {!isPremium && (
+                        <div className="px-4 py-2 mb-2" onClick={() => setShowPaywall(true)}>
+                            <div className="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-4 flex items-center justify-between shadow-md relative overflow-hidden cursor-pointer transform transition-transform hover:scale-[1.02]">
+                                <i className="fa-solid fa-gem absolute -right-4 -bottom-4 text-white opacity-10 text-6xl transform -rotate-12"></i>
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                        <i className="fa-solid fa-crown text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-sm">FinanceAI PRO</h3>
+                                        <p className="text-xs text-gray-300 mt-0.5">Разблокировать все функции</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-white text-base">{isPremium ? 'PRO Подписка Активна' : 'FinanceAI PRO'}</h3>
-                                    <p className="text-xs text-white/80 mt-0.5">{isPremium ? 'Все функции разблокированы' : 'Безлимитный ИИ и Экспорт'}</p>
+                                <i className="fa-solid fa-chevron-right text-white opacity-50"></i>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="bg-white dark:bg-gray-900 px-4 py-2 space-y-1 transition-colors duration-300 mt-2">
+                        {[
+                            { id: 'theme', icon: 'fa-moon', title: 'Темная тема', value: isDarkMode ? 'Вкл' : 'Выкл', color: 'text-indigo-500 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
+                            { id: 'lang', icon: 'fa-globe', title: 'Язык', value: 'Русский', color: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+                            { id: 'currency', icon: 'fa-coins', title: 'Основная валюта', value: 'UZS', color: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' }
+                        ].map((item, i) => (
+                            <div key={i} onClick={() => { if(item.id==='theme') toggleDarkMode(); }} className="flex items-center justify-between py-3.5 border-b border-gray-50 dark:border-gray-800/50 last:border-0 active:bg-gray-50 dark:active:bg-gray-800 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${item.bg} ${item.color} transition-colors`}>
+                                        <i className={`fa-solid ${item.icon} text-sm`}></i>
+                                    </div>
+                                    <span className="text-textDark dark:text-white font-bold text-sm transition-colors flex items-center gap-2">
+                                        {item.title} {item.lock && <i className="fa-solid fa-lock text-gray-400 text-[10px]"></i>}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {item.value && <span className="text-xs font-medium text-gray-400">{item.value}</span>}
+                                    <i className="fa-solid fa-chevron-right text-gray-300 dark:text-gray-600 text-xs transition-colors"></i>
                                 </div>
                             </div>
-                            {!isPremium && <i className="fa-solid fa-chevron-right text-white/50 relative z-10 text-sm"></i>}
-                        </div>
+                        ))}
                     </div>
 
-                    <div className="px-5 mb-6">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider">Мои Достижения</h3>
-                            <span className="text-xs font-bold text-primary">{achievements.filter(a=>a.unlocked).length} / 100</span>
-                        </div>
-                        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                            {achievements.map((ach, i) => (
-                                <div key={i} className={`flex-shrink-0 w-24 p-3 rounded-2xl flex flex-col items-center justify-center text-center gap-2 ${ach.unlocked ? 'bg-white dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800' : 'bg-gray-100 dark:bg-gray-800/50 opacity-60 grayscale'}`}>
-                                    <div className={`text-3xl ${ach.unlocked ? ach.color : 'text-gray-400'}`}>{ach.icon}</div>
-                                    <span className="text-[10px] font-bold text-textDark dark:text-white leading-tight">{ach.name}</span>
+                    {showPaywall && (
+                        <div className="fixed inset-0 z-[100] flex items-end">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPaywall(false)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in transition-colors">
+                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
+                                <div className="text-center mb-6">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 transform rotate-3">
+                                        <i className="fa-solid fa-crown text-white text-4xl transform -rotate-3"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-textDark dark:text-white mb-2">FinanceAI PRO</h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Откройте все возможности для умного контроля финансов.</p>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="px-5 space-y-2">
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-                            <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Настройки</h3>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500"><i className="fa-solid fa-coins text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">Валюта</span>
-                                </div>
-                                <select value={currencyRate.name} onChange={e=>setCurrencyMode(e.target.value)} className="bg-transparent text-sm font-bold text-primary focus:outline-none dir-rtl">
-                                    <option value="UZS">UZS</option>
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer" onClick={toggleDarkMode}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500"><i className="fa-solid fa-moon text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">Темная тема</span>
-                                </div>
-                                <div className={`w-12 h-6 rounded-full transition-colors relative ${isDarkMode ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}>
-                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isDarkMode ? 'left-7' : 'left-1'}`}></div>
-                                </div>
+                                <button onClick={handleBuyPremium} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-500/30 mb-3 hover:scale-[1.02] transition-transform">
+                                    Купить за 100 ⭐️
+                                </button>
                             </div>
                         </div>
-
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mt-4">
-                            <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Безопасность (PRO)</h3>
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer" onClick={() => { if(!isPremium) setShowPaywall(true); else onSetPin(); }}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500"><i className="fa-solid fa-lock text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">ПИН-код при входе <i className="fa-solid fa-crown text-yellow-500 ml-1 text-[10px]"></i></span>
-                                </div>
-                                <span className={`text-xs font-bold ${hasPin ? 'text-green-500' : 'text-gray-400'}`}>{hasPin ? 'Вкл' : 'Выкл'}</span>
-                            </div>
-                            <div className="flex justify-between items-center py-3 cursor-pointer" onClick={handleExport}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-500"><i className="fa-solid fa-file-csv text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">Экспорт в CSV <i className="fa-solid fa-crown text-yellow-500 ml-1 text-[10px]"></i></span>
-                                </div>
-                                <i className="fa-solid fa-download text-gray-400 text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             );
         };
 
         const App = () => {
-            const [isLocked, setIsLocked] = useState(!!localStorage.getItem('financeAppPin'));
             const [currentScreen, setCurrentScreen] = useState('home');
             const [isAddingMode, setIsAddingMode] = useState(false);
-            const [isLoading, setIsLoading] = useState(true);
+            const [addingTab, setAddingTab] = useState('expense');
+            const [isLoading, setIsLoading] = useState(false);
+            const [isSplashVisible, setIsSplashVisible] = useState(true);
             const [transactions, setTransactions] = useState([]);
-            
-            const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
-            const [isPremium, setIsPremium] = useState(() => localStorage.getItem('financeAppPremium') === 'true');
+            const [isPremium, setIsPremium] = useState(false);
             const [tgUser, setTgUser] = useState(null);
-            
-            const [addMethod, setAddMethod] = useState(null);
-            const [isProcessing, setIsProcessing] = useState(false);
             const [selectedTransaction, setSelectedTransaction] = useState(null);
-            const [showPaywall, setShowPaywall] = useState(false);
-
-            const [currencyMode, setCurrencyMode] = useState('UZS');
-            const [rates, setRates] = useState({ USD: 12650, EUR: 13600 });
-
-            const [txWallet, setTxWallet] = useState('card');
+            const [activeMonth, setActiveMonth] = useState('05.2026');
 
             const [categories, setCategories] = useState([
-                { name: 'Продукты', icon: 'fa-basket-shopping', bg: 'bg-orange-100', color: 'text-orange-500', isCustom: false },
-                { name: 'Транспорт', icon: 'fa-bus', bg: 'bg-blue-100', color: 'text-blue-500', isCustom: false },
-                { name: 'Еда вне дома', icon: 'fa-utensils', bg: 'bg-amber-100', color: 'text-amber-600', isCustom: false },
-                { name: 'Развлечения', icon: 'fa-play', bg: 'bg-pink-100', color: 'text-pink-500', isCustom: false }
+                { name: 'Продукты', icon: 'fa-basket-shopping', colorClass: CATEGORY_COLORS[1] },
+                { name: 'Транспорт', icon: 'fa-bus', colorClass: CATEGORY_COLORS[4] },
+                { name: 'Еда вне дома', icon: 'fa-utensils', colorClass: CATEGORY_COLORS[2] },
+                { name: 'Развлечения', icon: 'fa-play', colorClass: CATEGORY_COLORS[15] }
             ]);
 
-            const [goals, setGoals] = useState([
-                { id: 1, title: 'Машина', current: 5000000, target: 150000000, months: 24, icon: 'fa-car', bg: 'bg-blue-100', color: 'text-blue-500' }
-            ]);
-
-            const [prefill, setPrefill] = useState({ amount: '', title: '', category: 'Продукты' });
-            const [displayAmount, setDisplayAmount] = useState('');
-            const [txTitle, setTxTitle] = useState('');
-            const [txCat, setTxCat] = useState('Продукты');
-
-            const [newCatName, setNewCatName] = useState('');
-            const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[10]);
-            const [newCatIcon, setNewCatIcon] = useState(TOP_ICONS[0]);
-            const [newCatIconType, setNewCatIconType] = useState('icons'); 
-
-            useEffect(() => {
-                let currentUserId = 'browser_test_user';
-                if (window.Telegram && window.Telegram.WebApp) {
-                    const tg = window.Telegram.WebApp;
-                    tg.expand();
-                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                        setTgUser(tg.initDataUnsafe.user);
-                        currentUserId = tg.initDataUnsafe.user.id.toString();
-                    }
-                    if (tg.colorScheme === 'dark' && !localStorage.getItem('financeAppTheme')) setIsDarkMode(true);
-                }
-
-                const loadData = async () => {
-                    try {
-                        const savedTxs = localStorage.getItem('financeAppTxs');
-                        if (savedTxs) {
-                            setTransactions(JSON.parse(savedTxs));
-                        } else {
-                            const demo = generateDemoData();
-                            setTransactions(demo);
-                            localStorage.setItem('financeAppTxs', JSON.stringify(demo));
-                        }
-                    } catch (e) {
-                        console.error(e);
-                    } finally {
-                        setIsLoading(false);
-                    }
-                };
-                loadData();
-            }, []);
-
-            useEffect(() => {
-                if (!isLoading) localStorage.setItem('financeAppTxs', JSON.stringify(transactions));
-            }, [transactions, isLoading]);
+            const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
 
             useEffect(() => {
                 if (isDarkMode) { document.documentElement.classList.add('dark'); localStorage.setItem('financeAppTheme', 'dark'); } 
                 else { document.documentElement.classList.remove('dark'); localStorage.setItem('financeAppTheme', 'light'); }
             }, [isDarkMode]);
 
-            const getCurrencyRate = () => {
-                if (currencyMode === 'USD') return { rate: 1 / rates.USD, symbol: '$', name: 'USD' };
-                if (currencyMode === 'EUR') return { rate: 1 / rates.EUR, symbol: '€', name: 'EUR' };
-                return { rate: 1, symbol: '', name: 'UZS' }; 
-            };
-
-            const achievements = useMemo(() => generate100Achievements(transactions, goals), [transactions, goals]);
-
-            const closeAddModal = () => {
-                setIsAddingMode(false);
-                setAddMethod(null);
-                setPrefill({ amount: '', title: '', category: 'Продукты' });
-                setDisplayAmount(''); setTxTitle(''); setTxWallet('card');
-            };
-
-            const handleAmountChange = (e) => {
-                const rawValue = e.target.value.replace(/\D/g, '');
-                setDisplayAmount(rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, " "));
-            };
-
-            const handleAddCategory = (e) => {
-                e.preventDefault();
-                if(newCatName.trim()) {
-                    setCategories([{ name: newCatName, icon: newCatIcon, bg: newCatColor.bg, color: newCatColor.color, hex: newCatColor.hex, isCustom: true }, ...categories]);
-                    triggerHaptic('medium');
-                    setTxCat(newCatName);
-                    setAddMethod('expense');
-                    setNewCatName('');
+            useEffect(() => {
+                const saved = localStorage.getItem('finance_txs');
+                if (saved) {
+                    setTransactions(JSON.parse(saved));
+                } else {
+                    const t = [];
+                    let id = 1;
+                    const generateDemoDataForMonth = (m, y) => {
+                        t.push({ id: id++, title: 'Зарплата', category: 'Доход', wallet: 'card', amount: 6500000, date: `10.${m}.${y} 10:00`, icon: 'fa-briefcase', color: 'text-green-500', bg: 'bg-green-100' });
+                        t.push({ id: id++, title: 'Яндекс Такси', category: 'Транспорт', wallet: 'card', amount: -25000, date: `15.${m}.${y} 18:30`, icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100' });
+                        t.push({ id: id++, title: 'Яндекс Такси', category: 'Транспорт', wallet: 'card', amount: -32000, date: `16.${m}.${y} 19:00`, icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100' });
+                        t.push({ id: id++, title: 'Кофейня', category: 'Еда вне дома', wallet: 'cash', amount: -45000, date: `12.${m}.${y} 09:00`, icon: 'fa-utensils', color: 'text-amber-500', bg: 'bg-amber-100' });
+                        t.push({ id: id++, title: 'Кофейня', category: 'Еда вне дома', wallet: 'card', amount: -55000, date: `18.${m}.${y} 13:00`, icon: 'fa-utensils', color: 'text-amber-500', bg: 'bg-amber-100' });
+                        t.push({ id: id++, title: 'Супермаркет Korzinka', category: 'Продукты', wallet: 'card', amount: -150000, date: `20.${m}.${y} 20:00`, icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100' });
+                    };
+                    generateDemoDataForMonth('04', '2026');
+                    generateDemoDataForMonth('05', '2026');
+                    const sortedTxs = t.sort((a,b) => b.id - a.id);
+                    setTransactions(sortedTxs);
+                    localStorage.setItem('finance_txs', JSON.stringify(sortedTxs));
                 }
-            };
+                setTimeout(() => setIsSplashVisible(false), 2000);
+            }, []);
 
-            const handleSaveTransaction = (e) => {
-                e.preventDefault();
-                const num = parseInt(displayAmount.replace(/\s/g, ''));
-                if (!num || !txTitle) return;
+            const currentMonthTransactions = transactions.filter(t => {
+                const parts = t.date.split(' ');
+                if(!parts[0]) return false;
+                const dmy = parts[0].split('.');
+                return `${dmy[1]}.${dmy[2]}` === activeMonth;
+            });
 
-                const catObj = categories.find(c => c.name === txCat) || categories[0];
-                
+            const prevMonth = () => { let [m, y] = activeMonth.split('.'); m = parseInt(m)-1; if(m<1){m=12;y=parseInt(y)-1;} setActiveMonth(`${m.toString().padStart(2,'0')}.${y}`); };
+            const nextMonth = () => { let [m, y] = activeMonth.split('.'); m = parseInt(m)+1; if(m>12){m=1;y=parseInt(y)+1;} setActiveMonth(`${m.toString().padStart(2,'0')}.${y}`); };
+
+            const handleSaveTx = (tx) => {
                 const d = new Date();
-                const dateString = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0') + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-
-                let finalAmount = addMethod === 'income' ? num : -num;
-                
-                if(currencyMode === 'USD') finalAmount = finalAmount * rates.USD;
-                if(currencyMode === 'EUR') finalAmount = finalAmount * rates.EUR;
-
-                const newTx = {
-                    id: Date.now(), title: txTitle, category: txCat,
-                    amount: finalAmount, date: dateString, rawDate: new Date().toISOString(),
-                    icon: catObj.icon, color: catObj.color, bg: catObj.bg,
-                    wallet: txWallet
-                };
-
-                triggerHaptic('heavy');
-                setTransactions([newTx, ...transactions]);
-                closeAddModal();
+                const ds = `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                const newTxs = [{...tx, id: Date.now(), date: ds}, ...transactions];
+                setTransactions(newTxs);
+                localStorage.setItem('finance_txs', JSON.stringify(newTxs));
+                setIsAddingMode(false);
             };
 
             const handleDeleteTx = (id) => {
-                triggerHaptic('medium');
-                setTransactions(transactions.filter(t => t.id !== id));
+                const newTxs = transactions.filter(t => t.id !== id);
+                setTransactions(newTxs);
+                localStorage.setItem('finance_txs', JSON.stringify(newTxs));
                 setSelectedTransaction(null);
-            };
-
-            const executeTelegramPayment = () => {
-                setIsProcessing(true);
                 triggerHaptic('medium');
-                setTimeout(() => {
-                    setIsProcessing(false);
-                    setIsPremium(true);
-                    localStorage.setItem('financeAppPremium', 'true');
-                    setShowPaywall(false);
-                    triggerHaptic('success');
-                }, 1500);
             };
 
-            const setupPin = () => {
-                const pin = prompt("Введите новый 4-значный ПИН-код (только цифры):");
-                if (pin && pin.length === 4 && /^\d+$/.test(pin)) {
-                    localStorage.setItem('financeAppPin', pin);
-                    triggerHaptic('success');
-                } else {
-                    triggerHaptic('error');
-                }
+            const openAddModal = (tabType) => {
+                setAddingTab(tabType);
+                setIsAddingMode(true);
             };
-
-            const simulateAIProcessing = (method) => {
-                triggerHaptic('medium');
-                setAddMethod(method);
-                setIsProcessing(true);
-
-                let data = { amount: 35000, title: 'Кофе с собой', category: 'Еда вне дома', wallet: 'card' };
-                if (method === 'sms_parsing') {
-                    data = { amount: 45000, title: 'Yandex GO', category: 'Транспорт', wallet: 'card' };
-                } else if (method === 'scan') {
-                    data = { amount: 152000, title: 'Супермаркет Korzinka', category: 'Продукты', wallet: 'card' };
-                }
-
-                setTimeout(() => {
-                    triggerHaptic('success');
-                    setIsProcessing(false);
-                    setPrefill(data);
-                    setDisplayAmount(data.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
-                    setTxTitle(data.title);
-                    setTxCat(data.category);
-                    setTxWallet(data.wallet || 'card');
-                    setAddMethod('manual_prefilled');
-                }, 2500);
-            };
-
-            if (isLocked) {
-                return <ScreenPin onUnlock={() => setIsLocked(false)} />;
-            }
 
             const renderScreen = () => {
-                if (isLoading) return <div className="h-screen flex flex-col items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary mb-4"></i></div>;
-                const cr = getCurrencyRate();
                 switch(currentScreen) {
-                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={(m) => {setAddMethod(m); setIsAddingMode(true);}} />;
-                    case 'reports': return <ScreenReports transactions={transactions} onTransactionClick={setSelectedTransaction} currencyRate={cr} />;
-                    case 'invest': return <ScreenInvest onBack={() => setCurrentScreen('home')} currencyRate={cr} goals={goals} setGoals={setGoals} isPremium={isPremium} setShowPaywall={setShowPaywall} />;
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={currentMonthTransactions} activeMonth={activeMonth} prevMonth={prevMonth} nextMonth={nextMonth} currency="UZS" rates={{USD:12650, EUR:13600}} onTransactionClick={setSelectedTransaction} openAddModal={openAddModal} />;
+                    case 'analytics': return <ScreenAnalytics transactions={currentMonthTransactions} activeMonth={activeMonth} prevMonth={prevMonth} nextMonth={nextMonth} currency="UZS" rates={{USD:12650, EUR:13600}} onTransactionClick={setSelectedTransaction} />;
+                    case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
                     case 'categories': return <ScreenCategories onBack={() => setCurrentScreen('home')} categories={categories} setCategories={setCategories} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
-                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={tgUser ? tgUser.id.toString() : 'browser_test_user'} />;
-                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} achievements={achievements} currencyRate={cr} setCurrencyMode={setCurrencyMode} isPremium={isPremium} setShowPaywall={setShowPaywall} onSetPin={setupPin} />;
-                    default: return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={(m) => {setAddMethod(m); setIsAddingMode(true);}} />;
+                    case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={tgUser ? tgUser.id : 'browser'} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} isPremium={isPremium} setPremium={setIsPremium} />;
+                    case 'product': return (
+                        <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                            <TopHeader title="Динамика цен" showBack={true} onBack={() => setCurrentScreen('home')} rightIcon="fa-star" />
+                            <div className="px-4 py-10 text-center text-gray-500">
+                                <i className="fa-solid fa-chart-line text-6xl mb-4 text-primary opacity-50"></i>
+                                <p>Здесь будет график изменения цен для выбранного продукта.</p>
+                            </div>
+                        </div>
+                    );
+                    default: return <ScreenHome setScreen={setCurrentScreen} transactions={currentMonthTransactions} activeMonth={activeMonth} prevMonth={prevMonth} nextMonth={nextMonth} currency="UZS" rates={{USD:12650, EUR:13600}} onTransactionClick={setSelectedTransaction} openAddModal={openAddModal} />;
                 }
             };
+
+            if (isSplashVisible) {
+                return (
+                    <div className="h-screen w-full bg-primary flex flex-col items-center justify-center text-white z-[100] relative">
+                        <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl mb-6 animate-pulse text-primary text-5xl"><i className="fa-solid fa-wallet"></i></div>
+                        <h1 className="text-3xl font-bold tracking-wide">Finance<span className="font-light">AI</span></h1>
+                    </div>
+                );
+            }
 
             return (
                 <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
@@ -1243,232 +1066,52 @@
 
                     {selectedTransaction && (
                         <div className="fixed inset-0 z-[60] flex items-end">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in border-t border-gray-100 dark:border-gray-800">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setSelectedTransaction(null)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in transition-colors">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
                                 <div className="text-center mb-6">
-                                    <div className={`w-20 h-20 rounded-2xl mx-auto flex items-center justify-center mb-4 ${selectedTransaction.bg} dark:bg-opacity-20 ${selectedTransaction.color} text-4xl shadow-sm`}>
-                                        <IconRenderer icon={selectedTransaction.icon} />
+                                    <div className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-3 ${selectedTransaction.bg} dark:bg-opacity-20 ${selectedTransaction.color} text-2xl`}>
+                                        {selectedTransaction.icon.startsWith('fa-') ? <i className={`fa-solid ${selectedTransaction.icon}`}></i> : <span>{selectedTransaction.icon}</span>}
                                     </div>
-                                    <h3 className="text-2xl font-bold text-textDark dark:text-white mb-1">{selectedTransaction.title}</h3>
-                                    <p className="text-sm font-medium text-gray-500">{selectedTransaction.category} • {selectedTransaction.wallet === 'cash' ? 'Наличные' : 'Карта'} • {selectedTransaction.date}</p>
-                                    <h2 className={`text-4xl font-bold mt-5 tracking-tight ${selectedTransaction.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white'}`}>
-                                        {selectedTransaction.amount > 0 ? '+' : ''}{getCurrencyRate().symbol + ' ' + Math.round(Math.abs(selectedTransaction.amount) * getCurrencyRate().rate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
+                                    <h3 className="text-xl font-bold text-textDark dark:text-white mb-1 transition-colors">{selectedTransaction.title}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{selectedTransaction.category} • {selectedTransaction.date}</p>
+                                    <h2 className={`text-3xl font-bold mt-4 ${selectedTransaction.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
+                                        {selectedTransaction.amount > 0 ? '+' : ''}{formatMoneyInput(Math.abs(selectedTransaction.amount).toString())} сум
                                     </h2>
                                 </div>
-                                <button onClick={() => handleDeleteTx(selectedTransaction.id)} className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-4 rounded-2xl mb-3 transition-colors active:bg-red-100">Удалить операцию</button>
-                                <button onClick={() => setSelectedTransaction(null)} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-4 rounded-2xl transition-colors">Закрыть</button>
+                                
+                                {selectedTransaction.category === 'Продукты' && (
+                                    <button onClick={() => { setCurrentScreen('product'); setSelectedTransaction(null); }} className="w-full bg-purple-50 text-primary dark:bg-purple-900/20 font-bold py-3.5 rounded-2xl mb-3 transition-colors">
+                                        📈 Динамика цен продукта
+                                    </button>
+                                )}
+
+                                <button onClick={() => handleDeleteTx(selectedTransaction.id)} className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-3.5 rounded-2xl mb-4 transition-colors">Удалить операцию</button>
+                                <button onClick={() => setSelectedTransaction(null)} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-2xl transition-colors">Закрыть</button>
                             </div>
                         </div>
                     )}
 
                     {isAddingMode && (
-                        <div className="fixed inset-0 z-[70] flex items-end">
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeAddModal}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full h-[92vh] rounded-t-3xl p-5 relative z-10 animate-fade-in flex flex-col border-t border-gray-100 dark:border-gray-800">
-                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-4"></div>
-                                
-                                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-5 shrink-0">
-                                    <button onClick={()=>{triggerHaptic(); setAddMethod('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${(addMethod==='expense' || addMethod==='manual_prefilled' || !addMethod) ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm' : 'text-gray-400'}`}>Расход</button>
-                                    <button onClick={()=>{triggerHaptic(); setAddMethod('income');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${addMethod==='income' ? 'bg-white dark:bg-gray-700 text-green-500 shadow-sm' : 'text-gray-400'}`}>Доход</button>
-                                    <button onClick={()=>{triggerHaptic(); setAddMethod('category');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${addMethod==='category' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-gray-400'}`}>Категория</button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto no-scrollbar pb-10 px-1">
-                                    {addMethod === 'category' ? (
-                                        <form id="addCatForm" onSubmit={handleAddCategory} className="space-y-6 animate-fade-in">
-                                            <input required type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-4 font-bold text-lg text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" placeholder="Название категории" />
-                                            
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Базовые цвета</p>
-                                                <div className="flex flex-wrap gap-3 mb-4">
-                                                    {CATEGORY_COLORS.map((c, i) => (
-                                                        <div key={i} onClick={() => {triggerHaptic('light'); setNewCatColor(c);}} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newCatColor.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{backgroundColor: c.hex}}></div>
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Premium Градиенты <i className="fa-solid fa-crown text-yellow-500"></i></p>
-                                                <div className="flex flex-wrap gap-3 relative">
-                                                    {PREMIUM_COLORS.map((c, i) => (
-                                                        <div key={`p${i}`} onClick={() => { if(!isPremium){setShowPaywall(true); return;} triggerHaptic('light'); setNewCatColor(c);}} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newCatColor.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{background: c.hex}}></div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div className="flex gap-4 mb-3">
-                                                    <p onClick={() => {triggerHaptic(); setNewCatIconType('icons'); setNewCatIcon(TOP_ICONS[0]);}} className={`text-xs font-bold uppercase cursor-pointer ${newCatIconType === 'icons' ? 'text-primary' : 'text-gray-400'}`}>Иконки</p>
-                                                    <p onClick={() => {triggerHaptic(); setNewCatIconType('emojis'); setNewCatIcon(PREMIUM_EMOJIS[0]);}} className={`text-xs font-bold uppercase cursor-pointer flex items-center gap-1 ${newCatIconType === 'emojis' ? 'text-primary' : 'text-gray-400'}`}>Эмодзи <i className="fa-solid fa-crown text-yellow-500 text-[10px]"></i></p>
-                                                </div>
-                                                <div className="grid grid-cols-6 gap-3 relative">
-                                                    {newCatIconType === 'icons' ? TOP_ICONS.map(ic => (
-                                                        <div key={ic} onClick={() => {triggerHaptic('light'); setNewCatIcon(ic);}} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${newCatIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}`}><i className={`fa-solid ${ic}`}></i></div>
-                                                    )) : PREMIUM_EMOJIS.map(em => (
-                                                        <div key={em} onClick={() => { if(!isPremium){setShowPaywall(true); return;} triggerHaptic('light'); setNewCatIcon(em);}} className={`aspect-square rounded-2xl flex items-center justify-center text-2xl cursor-pointer transition-all ${newCatIcon === em ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800'}`}>{em}</div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${newCatColor.bg} dark:bg-opacity-20 ${newCatColor.color}`} style={newCatColor.hex.includes('gradient') ? {background: newCatColor.hex} : {}}>
-                                                    <IconRenderer icon={newCatIcon} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-gray-400 font-medium">Предпросмотр</p>
-                                                    <p className="font-bold text-textDark dark:text-white text-lg">{newCatName || 'Новая категория'}</p>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div className="animate-fade-in">
-                                            {!addMethod && (
-                                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                                    <div onClick={() => simulateAIProcessing('voice')} className="bg-blue-50 dark:bg-blue-900/30 text-blue-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-microphone text-2xl"></i> Голосом</div>
-                                                    <div onClick={() => simulateAIProcessing('scan')} className="bg-green-50 dark:bg-green-900/30 text-green-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-receipt text-2xl"></i> Скан чека</div>
-                                                    <div onClick={() => setAddMethod('sms_input')} className="bg-orange-50 dark:bg-orange-900/30 text-orange-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-comment-sms text-2xl"></i> SMS от банка</div>
-                                                    <div onClick={() => { setPrefill({ amount: '', title: '', category: 'Продукты' }); setDisplayAmount(''); setTxTitle(''); setAddMethod('manual'); }} className="bg-purple-50 dark:bg-purple-900/30 text-primary py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-pen text-2xl"></i> Вручную</div>
-                                                </div>
-                                            )}
-
-                                            {addMethod === 'sms_input' && (
-                                                <div className="py-4 animate-fade-in">
-                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-3">Вставьте SMS от банка</h3>
-                                                    <textarea 
-                                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-primary transition-colors text-textDark dark:text-white h-32 resize-none" 
-                                                        placeholder="Например: Списание 45 000 UZS. Карта *4512. Получатель: Yandex GO"
-                                                    ></textarea>
-                                                    <button onClick={() => simulateAIProcessing('sms_parsing')} className="w-full mt-4 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-md active:scale-[0.98] transition-transform">Анализировать SMS</button>
-                                                </div>
-                                            )}
-
-                                            {addMethod === 'voice' && (
-                                                <div className="py-10 text-center flex flex-col items-center animate-fade-in mb-6">
-                                                    <div className="relative mb-6">
-                                                        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-500 text-3xl relative z-10">
-                                                            <i className="fa-solid fa-microphone animate-pulse"></i>
-                                                        </div>
-                                                        <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse-ring z-0"></div>
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-2">Внимательно слушаю...</h3>
-                                                    <p className="text-sm text-gray-500">Скажите: "Купил кофе за 35 тысяч"</p>
-                                                </div>
-                                            )}
-                                            {addMethod === 'scan' && (
-                                                <div className="py-6 text-center flex flex-col items-center animate-fade-in mb-6">
-                                                    <div className="w-48 h-64 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl relative overflow-hidden mb-6 flex items-center justify-center">
-                                                        <i className="fa-solid fa-receipt text-6xl text-gray-300 dark:text-gray-600"></i>
-                                                        <div className="animate-scanline"></div>
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-textDark dark:text-white">AI анализирует позиции...</h3>
-                                                </div>
-                                            )}
-                                            {addMethod === 'sms_parsing' && (
-                                                <div className="py-10 text-center flex flex-col items-center animate-fade-in mb-6">
-                                                    <div className="relative mb-6">
-                                                        <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center text-primary text-3xl relative z-10">
-                                                            <i className="fa-solid fa-robot animate-pulse"></i>
-                                                        </div>
-                                                        <div className="absolute inset-0 rounded-full bg-primary animate-pulse-ring z-0"></div>
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-2">ИИ читает сообщение...</h3>
-                                                </div>
-                                            )}
-
-                                            {(addMethod === 'manual' || addMethod === 'manual_prefilled' || addMethod === 'expense' || addMethod === 'income') && (
-                                                <form id="addTxForm" onSubmit={handleSaveTransaction} className={`space-y-4 transition-opacity`}>
-                                                    <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-4 flex items-center justify-center mb-2 border border-gray-200 dark:border-gray-700">
-                                                        <span className="text-2xl text-gray-400 font-bold mr-2">{getCurrencyRate().symbol || 'UZS'}</span>
-                                                        <input required type="text" value={displayAmount} onChange={handleAmountChange} className="w-full bg-transparent text-center font-bold text-4xl text-textDark dark:text-white focus:outline-none placeholder-gray-300 dark:placeholder-gray-600" placeholder="0" />
-                                                    </div>
-                                                    
-                                                    <div className="flex gap-2">
-                                                        <input required type="text" value={txTitle} onChange={e=>setTxTitle(e.target.value)} className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-4 font-bold text-textDark dark:text-white focus:outline-none" placeholder="Название (напр. Кофе)" />
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Счет оплаты</p>
-                                                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
-                                                            <button type="button" onClick={()=>{triggerHaptic('light'); setTxWallet('card');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txWallet==='card' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}><i className="fa-regular fa-credit-card mr-1"></i> Карта</button>
-                                                            <button type="button" onClick={()=>{triggerHaptic('light'); setTxWallet('cash');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txWallet==='cash' ? 'bg-white dark:bg-gray-700 text-emerald-500 shadow-sm' : 'text-gray-400'}`}><i className="fa-solid fa-money-bill-wave mr-1"></i> Наличные</button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Категория</p>
-                                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                                                            {categories.map(c => (
-                                                                <div key={c.name} onClick={()=>{triggerHaptic('light'); setTxCat(c.name);}} className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors border ${txCat === c.name ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
-                                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${c.bg} dark:bg-opacity-20 ${c.color}`} style={c.hex && c.hex.includes('gradient') ? {background: c.hex} : {}}>
-                                                                        <IconRenderer icon={c.icon} />
-                                                                    </div>
-                                                                    <span className={`text-sm font-bold ${txCat === c.name ? 'text-primary' : 'text-gray-600 dark:text-gray-300'}`}>{c.name}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
-                                    <button type="submit" form={addMethod === 'category' ? "addCatForm" : "addTxForm"} disabled={isProcessing} className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-[0.98] ${isProcessing || !addMethod || addMethod === 'sms_input' ? 'hidden' : ''} ${addMethod === 'income' ? 'bg-green-500 shadow-green-500/30' : 'bg-primary shadow-purple-500/30'}`}>
-                                        {addMethod === 'category' ? 'Создать категорию' : (addMethod === 'income' ? 'Добавить доход' : 'Добавить расход')}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <AddTransactionModal 
+                            close={() => setIsAddingMode(false)} 
+                            saveTx={handleSaveTx} 
+                            categories={categories} 
+                            addCategory={(c) => setCategories([...categories, c])} 
+                            isPremium={isPremium}
+                            initialTab={addingTab}
+                        />
                     )}
 
-                    {showPaywall && (
-                        <div className="fixed inset-0 z-[80] flex items-end">
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-[32px] p-6 relative z-10 animate-fade-in flex flex-col items-center">
-                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6 relative z-10"></div>
-                                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white text-3xl shadow-xl shadow-orange-500/30 mb-4 border-4 border-white dark:border-gray-900">
-                                    <i className="fa-solid fa-crown"></i>
-                                </div>
-                                <h2 className="text-3xl font-bold text-textDark dark:text-white mb-2">FinanceAI <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">PRO</span></h2>
-                                <p className="text-center text-gray-500 text-sm mb-6 px-4">Разблокируйте все возможности умного кошелька. Разовая оплата навсегда.</p>
-                                
-                                <div className="w-full space-y-3 mb-6">
-                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
-                                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-primary"><i className="fa-solid fa-robot"></i></div>
-                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Безлимитный ИИ</h4></div>
-                                    </div>
-                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
-                                        <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500"><i className="fa-solid fa-palette"></i></div>
-                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Эмодзи и Градиенты</h4></div>
-                                    </div>
-                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
-                                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500"><i className="fa-solid fa-file-csv"></i></div>
-                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Экспорт отчетов в CSV</h4></div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 w-full text-center border border-blue-100 dark:border-blue-800/50">
-                                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Оплата производится через официальные <strong className="font-bold">Telegram Stars ⭐️</strong>. Их можно купить с любой карты.</p>
-                                    <a href="https://t.me/PremiumBot" target="_blank" className="text-xs text-primary font-bold mt-2 block underline">Как купить Звезды?</a>
-                                </div>
-
-                                <button onClick={executeTelegramPayment} disabled={isProcessing} className="w-full bg-[#2AABEE] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-blue-500/30">
-                                    {isProcessing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <><i className="fa-solid fa-star text-yellow-300"></i> Оплатить 100 Звезд</>}
-                                </button>
+                    {currentScreen !== 'aichat' && currentScreen !== 'product' && (
+                        <div className="fixed bottom-0 w-full max-w-md bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-2 flex justify-between items-center z-40 transition-colors duration-300">
+                            <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-medium">Главная</span></button>
+                            <button onClick={() => setCurrentScreen('analytics')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'analytics' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-medium">Отчеты</span></button>
+                            <div className="relative -top-5">
+                                <button onClick={() => openAddModal('expense')} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/40 transform hover:scale-105 transition-all"><i className="fa-solid fa-plus"></i></button>
                             </div>
-                        </div>
-                    )}
-
-                    {['home', 'reports', 'invest', 'categories', 'tips', 'profile'].includes(currentScreen) && (
-                        <div className="fixed bottom-0 w-full max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 px-6 py-2.5 flex justify-between items-center z-40 transition-colors duration-300">
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('home');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-bold">Главная</span></button>
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('reports');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'reports' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-bold">Отчеты</span></button>
-                            
-                            <div className="relative -top-6">
-                                <button onClick={() => {triggerHaptic('medium'); setIsAddingMode(true); setAddMethod(null);}} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/40 transform active:scale-95 transition-all border-4 border-bgLight dark:border-bgDark"><i className="fa-solid fa-plus"></i></button>
-                            </div>
-
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('tips');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-bold">Советы</span></button>
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('profile');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-bold">Профиль</span></button>
+                            <button onClick={() => setCurrentScreen('tips')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-medium">Советы</span></button>
+                            <button onClick={() => setCurrentScreen('profile')} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-medium">Профиль</span></button>
                         </div>
                     )}
                 </div>
