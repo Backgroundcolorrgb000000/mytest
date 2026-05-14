@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Финансы Telegram App</title>
+    <title>FinanceAI PRO</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -54,10 +54,14 @@
             'fa-basket-shopping', 'fa-bus', 'fa-utensils', 'fa-play', 'fa-bag-shopping', 'fa-pills', 'fa-house', 'fa-car',
             'fa-plane', 'fa-dumbbell', 'fa-paw', 'fa-gamepad', 'fa-mug-hot', 'fa-scissors', 'fa-music', 'fa-book',
             'fa-shirt', 'fa-shoe-prints', 'fa-glasses', 'fa-baby-carriage', 'fa-graduation-cap', 'fa-laptop', 'fa-mobile',
-            'fa-tv', 'fa-camera', 'fa-couch', 'fa-bed', 'fa-bath', 'fa-tooth', 'fa-screwdriver-wrench', 'fa-hammer',
-            'fa-lightbulb', 'fa-plug', 'fa-droplet', 'fa-fire', 'fa-gas-pump', 'fa-ticket', 'fa-popcorn', 'fa-mask',
-            'fa-palette', 'fa-bicycle', 'fa-motorcycle', 'fa-train', 'fa-ship', 'fa-taxi', 'fa-hotel', 'fa-campground',
-            'fa-tree', 'fa-mountain', 'fa-umbrella-beach'
+            'fa-tv', 'fa-camera', 'fa-couch', 'fa-bed', 'fa-bath', 'fa-tooth', 'fa-screwdriver-wrench',
+            'fa-gift', 'fa-motorcycle', 'fa-briefcase-medical', 'fa-burger', 'fa-pizza-slice', 'fa-ticket', 'fa-smoking',
+            'fa-wine-glass', 'fa-martini-glass', 'fa-gas-pump', 'fa-train-subway', 'fa-bicycle', 'fa-palette', 'fa-camera-retro',
+            'fa-headphones', 'fa-microphone', 'fa-guitar', 'fa-volleyball', 'fa-basketball', 'fa-futbol'
+        ];
+
+        const PREMIUM_EMOJIS = [
+            '🍔','🍟','🥩','🍻','✈️','🏖️','🚗','⛽','📱','💻','🎮','🧸','🐾','🐕','⚽','🎿','🎨','🎸','🏥','💊','🛍️','👠','💍','👑','💸','🔥','✨','🚀','🎯','💡'
         ];
 
         const CATEGORY_COLORS = [
@@ -67,10 +71,27 @@
             { bg: 'bg-emerald-100', color: 'text-emerald-500', hex: '#10B981' }, { bg: 'bg-teal-100', color: 'text-teal-500', hex: '#14B8A6' },
             { bg: 'bg-cyan-100', color: 'text-cyan-500', hex: '#06B6D4' }, { bg: 'bg-sky-100', color: 'text-sky-500', hex: '#0EA5E9' },
             { bg: 'bg-blue-100', color: 'text-blue-500', hex: '#3B82F6' }, { bg: 'bg-indigo-100', color: 'text-indigo-500', hex: '#6366F1' },
-            { bg: 'bg-violet-100', color: 'text-violet-500', hex: '#8B5CF6' }, { bg: 'bg-purple-100', color: 'text-purple-500', hex: '#A855F7' },
-            { bg: 'bg-fuchsia-100', color: 'text-fuchsia-500', hex: '#D946EF' }, { bg: 'bg-pink-100', color: 'text-pink-500', hex: '#EC4899' },
-            { bg: 'bg-rose-100', color: 'text-rose-500', hex: '#F43F5E' }
+            { bg: 'bg-violet-100', color: 'text-violet-500', hex: '#8B5CF6' }, { bg: 'bg-pink-100', color: 'text-pink-500', hex: '#EC4899' }
         ];
+
+        const PREMIUM_COLORS = [
+            { bg: 'bg-gradient-to-br from-fuchsia-500 to-pink-500', color: 'text-white', hex: 'linear-gradient(to right, #d946ef, #ec4899)' },
+            { bg: 'bg-gradient-to-br from-violet-500 to-purple-500', color: 'text-white', hex: 'linear-gradient(to right, #8b5cf6, #a855f7)' },
+            { bg: 'bg-gradient-to-br from-blue-500 to-cyan-500', color: 'text-white', hex: 'linear-gradient(to right, #3b82f6, #06b6d4)' },
+            { bg: 'bg-gradient-to-br from-emerald-500 to-teal-500', color: 'text-white', hex: 'linear-gradient(to right, #10b981, #14b8a6)' },
+            { bg: 'bg-gradient-to-br from-orange-500 to-amber-500', color: 'text-white', hex: 'linear-gradient(to right, #f97316, #f59e0b)' },
+            { bg: 'bg-gradient-to-br from-rose-500 to-red-500', color: 'text-white', hex: 'linear-gradient(to right, #f43f5e, #ef4444)' },
+            { bg: 'bg-slate-800', color: 'text-white', hex: '#1e293b' },
+            { bg: 'bg-gradient-to-br from-yellow-300 to-orange-400', color: 'text-gray-900', hex: 'linear-gradient(to right, #fde047, #fb923c)' }
+        ];
+
+        const IconRenderer = ({ icon, className }) => {
+            if (!icon) return null;
+            if (icon.startsWith('fa-')) {
+                return <i className={`fa-solid ${icon} ${className || ''}`}></i>;
+            }
+            return <span className={`${className || ''} font-normal`}>{icon}</span>;
+        };
 
         const triggerHaptic = (style = 'light') => {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
@@ -84,17 +105,33 @@
             return num.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         };
 
+        const generate100Achievements = (transactions, goals) => {
+            const list = [];
+            const txCount = transactions.length;
+            list.push({ name: 'Первый шаг', icon: '🌱', color: 'text-green-500', unlocked: txCount > 0 });
+            list.push({ name: 'Инвестор', icon: '📈', color: 'text-blue-500', unlocked: goals.length > 0 });
+            list.push({ name: 'Копилка', icon: '💰', color: 'text-yellow-500', unlocked: goals.some(g => g.current > 0) });
+            list.push({ name: 'Ночная сова', icon: '🦉', color: 'text-indigo-400', unlocked: transactions.some(t => { const h = parseInt(t.date.split(' ')[1].split(':')[0]); return h >= 23 || h < 4; }) });
+            const txLevels = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200, 250, 300, 400, 500];
+            txLevels.forEach(lvl => list.push({ name: `Мастер x${lvl}`, icon: '📝', color: 'text-purple-400', unlocked: txCount >= lvl }));
+            let counter = list.length + 1;
+            while(list.length < 100) {
+                list.push({ name: `Уровень ${counter}`, icon: '⭐', color: 'text-yellow-400', unlocked: txCount >= (counter * 10) });
+                counter++;
+            }
+            return list.sort((a, b) => (b.unlocked === a.unlocked) ? 0 : b.unlocked ? 1 : -1);
+        };
+
         const generateDemoData = () => {
             const txs = [];
             let idCounter = Date.now();
             const places = {
-                'Продукты': ['Korzinka', 'Makro', 'Базар', 'Korzinka'],
-                'Транспорт': ['Яндекс Такси', 'Метро', 'Яндекс Такси'],
-                'Еда вне дома': ['Кофейня', 'Evos', 'KFC', 'Кофейня'],
-                'Развлечения': ['Кинотеатр', 'Подписка Netflix', 'Кинотеатр'],
-                'Покупки': ['Zara', 'Техника', 'Zara']
+                'Продукты': ['Korzinka', 'Makro', 'Базар', 'Korzinka', 'Корзинка у дома', 'Korzinka'],
+                'Транспорт': ['Яндекс Такси', 'Метро', 'Автобус', 'Яндекс Такси', 'Такси', 'Яндекс Такси'],
+                'Еда вне дома': ['Кофейня', 'Evos', 'KFC', 'Кофейня', 'Ресторан', 'Кофейня'],
+                'Развлечения': ['Кинотеатр', 'Подписка Netflix', 'Кинотеатр', 'Парк', 'Подписка Netflix'],
+                'Покупки': ['Zara', 'Техника', 'Zara', 'Одежда', 'Zara']
             };
-
             const colors = {
                 'Продукты': {icon: 'fa-basket-shopping', bg: 'bg-orange-100', color: 'text-orange-500'},
                 'Транспорт': {icon: 'fa-bus', bg: 'bg-blue-100', color: 'text-blue-500'},
@@ -104,35 +141,23 @@
             };
 
             const now = new Date();
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 60; i++) {
                 const date = new Date(now.getTime() - Math.floor(Math.random() * 90 * 24 * 60 * 60 * 1000));
                 const catKeys = Object.keys(places);
                 const category = catKeys[Math.floor(Math.random() * catKeys.length)];
                 const title = places[category][Math.floor(Math.random() * places[category].length)];
-                
                 let baseAmount = category === 'Транспорт' ? 20000 : (category === 'Еда вне дома' ? 50000 : 150000);
-                const amount = -(baseAmount + Math.floor(Math.random() * 10) * 5000);
-
-                const dateString = date.getDate().toString().padStart(2, '0') + '.' + 
-                                  (date.getMonth() + 1).toString().padStart(2, '0') + ' ' + 
-                                  date.getHours().toString().padStart(2, '0') + ':' + 
-                                  date.getMinutes().toString().padStart(2, '0');
+                const amount = -(baseAmount + Math.floor(Math.random() * 5) * 5000);
+                const dateString = date.getDate().toString().padStart(2, '0') + '.' + (date.getMonth() + 1).toString().padStart(2, '0') + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+                const walletAssigned = Math.random() > 0.3 ? 'card' : 'cash';
 
                 txs.push({
                     id: idCounter--, userId: 'demo', title, category, amount,
                     icon: colors[category].icon, color: colors[category].color, bg: colors[category].bg,
-                    date: dateString, rawDate: date.toISOString()
+                    date: dateString, rawDate: date.toISOString(), wallet: walletAssigned
                 });
             }
             return txs.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
-        };
-
-        const getGreeting = () => {
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 12) return 'Доброе утро';
-            if (hour >= 12 && hour < 18) return 'Добрый день';
-            if (hour >= 18 && hour < 23) return 'Добрый вечер';
-            return 'Доброй ночи';
         };
 
         const TopHeader = ({ title, showBack = false, onBack, rightIcon = null, onRightClick = null }) => (
@@ -153,24 +178,89 @@
             </div>
         );
 
+        const ScreenPin = ({ onUnlock }) => {
+            const [input, setInput] = useState('');
+            const savedPin = localStorage.getItem('financeAppPin');
+            const [error, setError] = useState(false);
+
+            const handlePress = (num) => {
+                triggerHaptic('light');
+                if (input.length < 4) {
+                    const newVal = input + num;
+                    setInput(newVal);
+                    if (newVal.length === 4) {
+                        if (newVal === savedPin) {
+                            triggerHaptic('success');
+                            setTimeout(onUnlock, 200);
+                        } else {
+                            triggerHaptic('error');
+                            setError(true);
+                            setTimeout(() => { setInput(''); setError(false); }, 500);
+                        }
+                    }
+                }
+            };
+
+            const handleDelete = () => {
+                triggerHaptic('light');
+                setInput(input.slice(0, -1));
+            };
+
+            return (
+                <div className="fixed inset-0 bg-bgLight dark:bg-bgDark z-[100] flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-6">
+                        <i className="fa-solid fa-lock text-3xl text-primary"></i>
+                    </div>
+                    <h2 className="text-2xl font-bold text-textDark dark:text-white mb-8">Введите ПИН-код</h2>
+                    <div className={`flex gap-4 mb-12 ${error ? 'animate-bounce' : ''}`}>
+                        {[0, 1, 2, 3].map(i => (
+                            <div key={i} className={`w-4 h-4 rounded-full border-2 ${input.length > i ? 'bg-primary border-primary' : 'border-gray-300 dark:border-gray-600'}`}></div>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-6">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                            <button key={num} onClick={() => handlePress(num)} className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 text-2xl font-bold text-textDark dark:text-white shadow-sm active:scale-95 transition-transform">{num}</button>
+                        ))}
+                        <div className="w-16 h-16"></div>
+                        <button onClick={() => handlePress(0)} className="w-16 h-16 rounded-full bg-white dark:bg-gray-800 text-2xl font-bold text-textDark dark:text-white shadow-sm active:scale-95 transition-transform">0</button>
+                        <button onClick={handleDelete} className="w-16 h-16 rounded-full bg-transparent text-xl text-textDark dark:text-white active:scale-95 transition-transform"><i className="fa-solid fa-delete-left"></i></button>
+                    </div>
+                </div>
+            );
+        };
+
         const ScreenHome = ({ setScreen, transactions, user, onTransactionClick, currencyRate, setAddMethod }) => {
             const userName = (user && user.first_name) ? user.first_name : 'Dima';
-            const greeting = getGreeting();
+            const [activeWallet, setActiveWallet] = useState('all');
 
             const formatMoney = (num) => {
                 const converted = Math.round(num * currencyRate.rate);
                 return currencyRate.symbol + ' ' + converted.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
             };
 
-            const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0) + 12150000;
-            const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
-            const currentBalance = totalIncome - totalExpense;
+            const getStats = (filterType) => {
+                let baseIncome = 0;
+                if (filterType === 'all') baseIncome = 12150000;
+                if (filterType === 'card') baseIncome = 8400000;
+                if (filterType === 'cash') baseIncome = 3750000;
+
+                const txs = filterType === 'all' ? transactions : transactions.filter(t => (t.wallet || 'card') === filterType);
+                const inc = txs.filter(t => t.amount > 0).reduce((acc, t) => acc + t.amount, 0) + baseIncome;
+                const exp = txs.filter(t => t.amount < 0).reduce((acc, t) => acc + Math.abs(t.amount), 0);
+                return { inc, exp, bal: inc - exp };
+            };
+
+            const globalStats = getStats('all');
+            const cardStats = getStats('card');
+            const cashStats = getStats('cash');
+
+            const filteredTransactions = activeWallet === 'all' ? transactions : transactions.filter(t => (t.wallet || 'card') === activeWallet);
 
             return (
                 <div className="pb-24 animate-fade-in">
                     <div className="px-5 pt-4 pb-2 flex justify-between items-center transition-colors">
                         <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{greeting},</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Добрый день,</p>
                             <h2 className="text-2xl font-bold text-textDark dark:text-white">{userName}</h2>
                         </div>
                         <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-sm text-gray-600 dark:text-gray-300 relative transition-colors cursor-pointer" onClick={() => {triggerHaptic(); setScreen('profile');}}>
@@ -179,37 +269,53 @@
                         </div>
                     </div>
 
-                    <div className="px-4 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
-                        <div className="min-w-[85%] snap-center bg-gradient-to-br from-primary to-purple-600 rounded-[28px] p-6 text-white shadow-lg shadow-purple-500/30 relative overflow-hidden flex-shrink-0">
-                            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+                    <div className="px-5 py-2 flex overflow-x-auto snap-x snap-mandatory no-scrollbar space-x-4">
+                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('all');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'all' ? 'bg-gradient-to-br from-primary to-purple-600 ring-4 ring-primary/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
+                            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
                             <div className="flex justify-between items-center mb-2 relative z-10">
-                                <span className="text-sm font-medium text-purple-100">Общий баланс</span>
+                                <span className="text-sm font-medium text-white/90">Общий баланс</span>
+                                {activeWallet === 'all' && <i className="fa-solid fa-circle-check text-white/90"></i>}
                             </div>
-                            <h2 className="text-3xl font-bold mb-6 relative z-10 tracking-tight">{formatMoney(currentBalance)}</h2>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10 tracking-tight">{formatMoney(globalStats.bal)}</h2>
                             <div className="flex justify-between relative z-10">
                                 <div>
-                                    <p className="text-[11px] font-medium text-purple-200 mb-0.5 uppercase tracking-wider">Доходы</p>
-                                    <p className="font-bold text-sm">{formatMoney(totalIncome)}</p>
+                                    <p className="text-[11px] font-medium text-white/70 mb-0.5 uppercase tracking-wider">Доходы</p>
+                                    <p className="font-bold text-sm">{formatMoney(globalStats.inc)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[11px] font-medium text-purple-200 mb-0.5 uppercase tracking-wider">Расходы</p>
-                                    <p className="font-bold text-sm">{formatMoney(-totalExpense)}</p>
+                                    <p className="text-[11px] font-medium text-white/70 mb-0.5 uppercase tracking-wider">Расходы</p>
+                                    <p className="font-bold text-sm">{formatMoney(globalStats.exp)}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="min-w-[85%] snap-center bg-gray-900 rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0">
-                            <div className="absolute right-5 top-5 text-gray-500 text-xl font-bold italic">UZCARD</div>
-                            <span className="text-sm font-medium text-gray-400 mb-2 block relative z-10">Зарплатная карта</span>
-                            <h2 className="text-3xl font-bold mb-8 relative z-10 tracking-tight">{formatMoney(8400000)}</h2>
+                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('card');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'card' ? 'bg-gray-900 ring-4 ring-gray-500/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
+                            <div className="absolute right-5 top-5 text-gray-500 text-xl font-bold italic pointer-events-none">UZCARD</div>
+                            <div className="flex justify-between items-center mb-2 relative z-10">
+                                <span className="text-sm font-medium text-gray-400">Зарплатная карта</span>
+                                {activeWallet === 'card' && <i className="fa-solid fa-circle-check text-white/90"></i>}
+                            </div>
+                            <h2 className="text-3xl font-bold mb-8 relative z-10 tracking-tight">{formatMoney(cardStats.bal)}</h2>
                             <div className="flex justify-between items-end relative z-10">
                                 <p className="font-mono tracking-widest text-sm text-gray-400">**** 4512</p>
                                 <div className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center bg-gray-800"><i className="fa-solid fa-chevron-right text-xs"></i></div>
                             </div>
                         </div>
+
+                        <div onClick={() => {triggerHaptic('light'); setActiveWallet('cash');}} className={`min-w-full snap-center rounded-[28px] p-6 text-white shadow-lg relative overflow-hidden flex-shrink-0 cursor-pointer transition-all duration-300 ${activeWallet === 'cash' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 ring-4 ring-emerald-500/30 scale-100' : 'bg-gray-400 dark:bg-gray-800 scale-95 opacity-80'}`}>
+                            <i className="fa-solid fa-money-bill absolute -right-2 -bottom-2 text-white opacity-20 text-6xl pointer-events-none"></i>
+                            <div className="flex justify-between items-center mb-2 relative z-10">
+                                <span className="text-sm font-medium text-white/90">Наличные</span>
+                                {activeWallet === 'cash' && <i className="fa-solid fa-circle-check text-white/90"></i>}
+                            </div>
+                            <h2 className="text-3xl font-bold mb-8 relative z-10 tracking-tight">{formatMoney(cashStats.bal)}</h2>
+                            <div className="flex justify-between items-end relative z-10">
+                                <p className="font-medium text-sm text-white/80">В кошельке</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex justify-between px-6 py-5">
+                    <div className="flex justify-between px-6 py-5 max-w-sm mx-auto">
                         <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setAddMethod('income');}}>
                             <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-500 text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-down"></i></div>
                             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Доход</span>
@@ -218,8 +324,8 @@
                             <div className="w-14 h-14 bg-red-50 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-500 text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-arrow-up"></i></div>
                             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Расход</span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setScreen('calculator');}}>
-                            <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-primary text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-piggy-bank"></i></div>
+                        <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setScreen('invest');}}>
+                            <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-primary text-xl group-hover:scale-105 transition-transform"><i className="fa-solid fa-calculator"></i></div>
                             <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Вклад</span>
                         </div>
                         <div className="flex flex-col items-center gap-2 cursor-pointer group" onClick={() => {triggerHaptic(); setScreen('categories');}}>
@@ -230,18 +336,20 @@
 
                     <div className="px-5 py-2">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-textDark dark:text-white transition-colors">Последние операции</h3>
+                            <h3 className="text-lg font-bold text-textDark dark:text-white transition-colors">
+                                {activeWallet === 'all' ? 'Последние операции' : (activeWallet === 'card' ? 'Операции по карте' : 'Операции наличными')}
+                            </h3>
                             <button onClick={() => {triggerHaptic(); setScreen('reports');}} className="text-sm font-medium text-primary hover:text-primaryDark">Все</button>
                         </div>
                         
                         <div className="space-y-3">
-                            {transactions.length === 0 ? (
+                            {filteredTransactions.length === 0 ? (
                                 <p className="text-center text-sm text-gray-400 py-6">У вас пока нет транзакций.</p>
-                            ) : transactions.slice(0, 5).map(t => (
+                            ) : filteredTransactions.slice(0, 5).map(t => (
                                 <div key={t.id} onClick={() => {triggerHaptic('light'); onTransactionClick(t);}} className="flex items-center justify-between bg-white dark:bg-gray-900 p-3.5 rounded-2xl shadow-sm active:scale-[0.98] transition-all cursor-pointer">
                                     <div className="flex items-center gap-3.5">
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${t.bg} dark:bg-opacity-20 ${t.color}`}>
-                                            <i className={`fa-solid ${t.icon}`}></i>
+                                            <IconRenderer icon={t.icon} />
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-sm text-textDark dark:text-white transition-colors">{t.title}</h4>
@@ -252,7 +360,7 @@
                                         <p className={`font-bold text-sm ${t.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white transition-colors'}`}>
                                             {t.amount > 0 ? '+' : ''}{formatMoney(t.amount)}
                                         </p>
-                                        <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 transition-colors mt-1">{t.date}</p>
+                                        <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 transition-colors mt-1">{t.date.split(' ')[0]}</p>
                                     </div>
                                 </div>
                             ))}
@@ -295,8 +403,9 @@
                 if(colorClass.includes('blue')) return '#3B82F6';
                 if(colorClass.includes('amber')) return '#F59E0B';
                 if(colorClass.includes('pink')) return '#EC4899';
-                if(colorClass.includes('green')) return '#22C55E';
+                if(colorClass.includes('green') || colorClass.includes('emerald')) return '#10B981';
                 if(colorClass.includes('purple') || colorClass.includes('primary')) return '#7C3AED';
+                if(colorClass.includes('cyan')) return '#06B6D4';
                 return '#9CA3AF';
             };
 
@@ -321,7 +430,7 @@
                         }
                     });
                 }
-            }, [categoryData]);
+            }, [categoryData, expandedCategory]); 
 
             const renderGroupedItems = (catItems, catName) => {
                 const grouped = {};
@@ -334,9 +443,9 @@
                 });
 
                 return Object.entries(grouped).sort((a, b) => b[1].total - a[1].total).map(([title, group], i) => (
-                    <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl mb-2 overflow-hidden transition-colors">
+                    <div key={i} className="bg-white dark:bg-gray-900 rounded-xl mb-2 overflow-hidden shadow-sm transition-colors border border-gray-100 dark:border-gray-800">
                         <div 
-                            className="flex justify-between items-center p-3 cursor-pointer active:bg-gray-100 dark:active:bg-gray-800"
+                            className="flex justify-between items-center p-4 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800"
                             onClick={() => {
                                 triggerHaptic('light'); 
                                 const id = `${catName}-${title}`;
@@ -352,8 +461,8 @@
                             </div>
                         </div>
                         {expandedPlace === `${catName}-${title}` && (
-                            <div className="pl-4 pr-3 pb-2 animate-fade-in">
-                                <div className="border-l-2 border-gray-200 dark:border-gray-700 pl-3 space-y-3 pt-2">
+                            <div className="pl-4 pr-3 pb-2 animate-fade-in bg-gray-50 dark:bg-gray-800/50">
+                                <div className="border-l-2 border-gray-200 dark:border-gray-700 pl-3 space-y-4 pt-4 pb-2">
                                     {group.txs.map((t, idx) => {
                                         let diffElement = null;
                                         if (idx < group.txs.length - 1) {
@@ -365,7 +474,7 @@
                                                 if (diffPerc > 0) {
                                                     diffElement = <span className="text-[10px] font-bold text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded ml-2">↑ +{diffPerc}%</span>;
                                                 } else if (diffPerc < 0) {
-                                                    diffElement = <span className="text-[10px] font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded ml-2">↓ {diffPerc}%</span>;
+                                                    diffElement = <span className="text-[10px] font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded ml-2">↓ {Math.abs(diffPerc)}%</span>;
                                                 }
                                             }
                                         }
@@ -391,9 +500,9 @@
                     <TopHeader title="Отчет" rightIcon="fa-ellipsis" />
                     
                     <div className="flex items-center justify-center gap-4 py-2 mb-4">
-                        <button className="text-primary"><i className="fa-solid fa-arrow-left"></i></button>
+                        <button className="text-primary w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center"><i className="fa-solid fa-arrow-left"></i></button>
                         <span className="font-bold text-textDark dark:text-white">Май, 2026</span>
-                        <button className="text-gray-300 dark:text-gray-700" disabled><i className="fa-solid fa-arrow-right"></i></button>
+                        <button className="text-gray-300 dark:text-gray-700 w-8 h-8 rounded-full bg-white dark:bg-gray-900 shadow-sm flex items-center justify-center" disabled><i className="fa-solid fa-arrow-right"></i></button>
                     </div>
 
                     <div className="relative w-64 h-64 mx-auto mb-8">
@@ -412,11 +521,11 @@
                                 {categoryData.map(cat => (
                                     <div key={cat.name}>
                                         <div 
-                                            className="flex items-center justify-between cursor-pointer mb-2 active:opacity-70 transition-opacity"
+                                            className="flex items-center justify-between cursor-pointer mb-2 active:opacity-70 transition-opacity p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900"
                                             onClick={() => {triggerHaptic('light'); setExpandedCategory(expandedCategory === cat.name ? null : cat.name);}}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className={`w-3 h-3 rounded-full ${cat.bg}`}></span>
+                                                <span className={`w-3 h-3 rounded-full`} style={{backgroundColor: getHexColor(cat.textCol)}}></span>
                                                 <span className="font-bold text-sm text-textDark dark:text-white">{cat.name}</span>
                                             </div>
                                             <div className="flex items-center gap-4 text-right">
@@ -425,7 +534,7 @@
                                             </div>
                                         </div>
                                         {expandedCategory === cat.name && (
-                                            <div className="animate-fade-in pl-6 pr-2 mb-4">
+                                            <div className="animate-fade-in pl-6 pr-2 mb-6 mt-2 border-l-2 border-gray-100 dark:border-gray-800 ml-1.5">
                                                 {renderGroupedItems(cat.items, cat.name)}
                                             </div>
                                         )}
@@ -438,40 +547,61 @@
             );
         };
 
-        const ScreenCategories = ({ setScreen, categories, setCategories, currencyRate }) => {
+        const ScreenCategories = ({ onBack, categories, setCategories }) => {
+            const [showConfirm, setShowConfirm] = useState(null);
+
             const handleDeleteCategory = (catName) => {
                 triggerHaptic('heavy');
                 setCategories(categories.filter(c => c.name !== catName));
+                setShowConfirm(null);
             };
 
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-24 transition-colors duration-300">
-                    <TopHeader title="Категории" showBack={true} onBack={() => setScreen('home')} />
+                    <TopHeader title="Категории" showBack={true} onBack={onBack} />
                     
-                    <div className="space-y-3 px-5 pt-4">
-                        {categories.filter(c=>c.isCustom).map((cat, i) => (
-                            <div key={i} className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${cat.bg} dark:bg-opacity-20 ${cat.color}`}><i className={`fa-solid ${cat.icon}`}></i></div>
-                                    <span className="font-bold text-textDark dark:text-white">{cat.name}</span>
+                    <div className="px-5 py-4">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">Управление вашими категориями</p>
+                        <div className="space-y-3">
+                            {categories.map((cat, i) => (
+                                <div key={i} className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${cat.bg} dark:bg-opacity-20 ${cat.color}`} style={cat.hex && cat.hex.includes('gradient') ? {background: cat.hex, color: '#fff'} : {}}>
+                                            <IconRenderer icon={cat.icon} />
+                                        </div>
+                                        <span className="font-bold text-textDark dark:text-white">{cat.name}</span>
+                                    </div>
+                                    {cat.isCustom && (
+                                        <button onClick={() => setShowConfirm(cat.name)} className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
+                                            <i className="fa-solid fa-trash-can text-sm"></i>
+                                        </button>
+                                    )}
                                 </div>
-                                <button onClick={() => handleDeleteCategory(cat.name)} className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"><i className="fa-solid fa-trash-can text-sm"></i></button>
-                            </div>
-                        ))}
-                        {categories.filter(c=>!c.isCustom).map((cat, i) => (
-                            <div key={i} className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm opacity-60">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${cat.bg} dark:bg-opacity-20 ${cat.color}`}><i className={`fa-solid ${cat.icon}`}></i></div>
-                                    <span className="font-bold text-textDark dark:text-white">{cat.name} <span className="text-[10px] font-normal text-gray-400 ml-2">(Базовая)</span></span>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
+
+                    {showConfirm && (
+                        <div className="fixed inset-0 z-[80] flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(null)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-5/6 max-w-sm rounded-3xl p-6 relative z-10 animate-fade-in text-center">
+                                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-500 text-3xl mx-auto mb-4">
+                                    <i className="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <h3 className="text-xl font-bold text-textDark dark:text-white mb-2">Удалить категорию?</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Категория "{showConfirm}" будет удалена из списка.</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowConfirm(null)} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-xl">Отмена</button>
+                                    <button onClick={() => handleDeleteCategory(showConfirm)} className="flex-1 bg-red-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-500/30">Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
-        const ScreenCalculator = ({ onBack, currencyRate, goals, setGoals }) => {
+        const ScreenInvest = ({ onBack, currencyRate, goals, setGoals, isPremium, setShowPaywall }) => {
             const [mainTab, setMainTab] = useState('calc'); 
             const [calcMode, setCalcMode] = useState('deposit');
             const [sum, setSum] = useState('10000000');
@@ -479,7 +609,7 @@
             const [months, setMonths] = useState('12');
 
             const [showAddGoal, setShowAddGoal] = useState(false);
-            const [newGoal, setNewGoal] = useState({ title: '', target: '', months: '', icon: 'fa-car', color: CATEGORY_COLORS[10] });
+            const [newGoal, setNewGoal] = useState({ title: '', target: '', months: '12', icon: 'fa-plane', color: CATEGORY_COLORS[10], iconType: 'icons' });
 
             const handleSumChange = (e) => setSum(e.target.value.replace(/\D/g, ''));
             
@@ -515,16 +645,21 @@
                     setGoals([...goals, {
                         id: Date.now(), title: newGoal.title, current: 0, target: targetNum,
                         months: parseInt(newGoal.months) || 12,
-                        icon: newGoal.icon, bg: newGoal.color.bg, color: newGoal.color.color
+                        icon: newGoal.icon, bg: newGoal.color.bg, color: newGoal.color.color, hex: newGoal.color.hex
                     }]);
                     setShowAddGoal(false);
                 }
             };
 
+            const handleDeleteGoal = (id) => {
+                triggerHaptic('heavy');
+                setGoals(goals.filter(goal => goal.id !== id));
+            };
+
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
                     <TopHeader 
-                        title={mainTab === 'calc' ? "Калькулятор" : "Копилки"} 
+                        title="Вклад и Цели" 
                         showBack={true} 
                         onBack={onBack} 
                         rightIcon={mainTab === 'goals' ? 'fa-plus' : null} 
@@ -547,16 +682,16 @@
                                 </div>
                             </div>
                             <div className="px-5 space-y-4 mb-6">
-                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm">
+                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
                                     <label className="text-xs font-medium text-gray-500 mb-1 block">Сумма</label>
                                     <input type="text" value={formatMoneyInput(sum)} onChange={handleSumChange} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
                                 </div>
                                 <div className="flex gap-4">
-                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex-1">
+                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex-1">
                                         <label className="text-xs font-medium text-gray-500 mb-1 block">Процент (%)</label>
                                         <input type="number" value={percent} onChange={e=>setPercent(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
                                     </div>
-                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm flex-1">
+                                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 flex-1">
                                         <label className="text-xs font-medium text-gray-500 mb-1 block">Срок (мес)</label>
                                         <input type="number" value={months} onChange={e=>setMonths(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-lg text-textDark dark:text-white focus:outline-none" />
                                     </div>
@@ -589,24 +724,26 @@
                                 const perc = Math.min(100, Math.round((g.current / g.target) * 100));
                                 const monthly = Math.round((g.target - g.current) / (g.months || 1));
                                 return (
-                                    <div key={g.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm">
+                                    <div key={g.id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm transition-colors">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h4 className="font-bold text-lg text-textDark dark:text-white">{g.title}</h4>
                                                 <p className="text-xs font-medium text-gray-500 mt-1">{formatMoneyStr(g.current)} / {formatMoneyStr(g.target)}</p>
                                             </div>
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${g.bg} dark:bg-opacity-20 ${g.color}`}><i className={`fa-solid ${g.icon}`}></i></div>
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl ${g.bg} dark:bg-opacity-20 ${g.color}`} style={g.hex && g.hex.includes('gradient') ? {background: g.hex, color: '#fff'} : {}}>
+                                                <IconRenderer icon={g.icon} />
+                                            </div>
                                         </div>
                                         <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-3">
                                             <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{width: `${perc}%`}}></div>
                                         </div>
-                                        <div className="flex justify-between items-center text-xs mb-3">
+                                        <div className="flex justify-between items-center text-xs mb-4">
                                             <span className="font-bold text-gray-400">Прогресс: {perc}%</span>
                                             <span className="font-medium text-primary bg-primary/10 px-2 py-1 rounded">Откладывать: {formatMoneyStr(monthly)}/мес</span>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button className="flex-1 bg-green-50 text-green-600 dark:bg-green-900/20 font-bold py-2.5 rounded-xl text-sm" onClick={()=>{triggerHaptic(); setGoals(goals.map(goal => goal.id === g.id ? {...goal, current: goal.current + 100000} : goal))}}>+ Пополнить</button>
-                                            <button className="w-12 bg-red-50 text-red-500 dark:bg-red-900/20 rounded-xl flex items-center justify-center" onClick={()=>{triggerHaptic(); setGoals(goals.filter(goal => goal.id !== g.id))}}><i className="fa-solid fa-trash"></i></button>
+                                            <button className="flex-1 bg-green-50 text-green-600 dark:bg-green-900/20 font-bold py-2.5 rounded-xl text-sm transition-colors active:bg-green-100" onClick={()=>{triggerHaptic(); setGoals(goals.map(goal => goal.id === g.id ? {...goal, current: goal.current + 100000} : goal))}}>+ Пополнить</button>
+                                            <button className="w-12 bg-red-50 text-red-500 dark:bg-red-900/20 rounded-xl flex items-center justify-center transition-colors active:bg-red-100" onClick={()=>handleDeleteGoal(g.id)}><i className="fa-solid fa-trash"></i></button>
                                         </div>
                                     </div>
                                 );
@@ -618,28 +755,43 @@
                     {showAddGoal && (
                         <div className="fixed inset-0 z-[70] flex items-end">
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={()=>setShowAddGoal(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl p-6 relative z-10 animate-fade-in flex flex-col">
+                            <div className="bg-white dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl p-6 relative z-10 animate-fade-in flex flex-col transition-colors">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
                                 <h3 className="text-xl font-bold mb-6 text-textDark dark:text-white">Новая цель</h3>
                                 <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-10">
-                                    <input type="text" placeholder="Название (напр. Машина)" value={newGoal.title} onChange={e=>setNewGoal({...newGoal, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none" />
-                                    <input type="text" placeholder="Сумма цели" value={formatMoneyInput(newGoal.target)} onChange={e=>setNewGoal({...newGoal, target: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none" />
-                                    <input type="number" placeholder="За сколько месяцев?" value={newGoal.months} onChange={e=>setNewGoal({...newGoal, months: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none" />
+                                    <input type="text" placeholder="Название (напр. Отпуск)" value={newGoal.title} onChange={e=>setNewGoal({...newGoal, title: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
+                                    <input type="text" placeholder="Сумма цели" value={formatMoneyInput(newGoal.target)} onChange={e=>setNewGoal({...newGoal, target: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
+                                    <input type="number" placeholder="За сколько месяцев?" value={newGoal.months} onChange={e=>setNewGoal({...newGoal, months: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 font-bold text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" />
                                     
                                     <div>
                                         <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Цвет</p>
-                                        <div className="flex flex-wrap gap-3">
-                                            {CATEGORY_COLORS.slice(0,10).map((c, i) => (
+                                        <div className="flex flex-wrap gap-3 mb-4">
+                                            {CATEGORY_COLORS.map((c, i) => (
                                                 <div key={i} onClick={() => setNewGoal({...newGoal, color: c})} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newGoal.color.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{backgroundColor: c.hex}}></div>
                                             ))}
                                         </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Иконка</p>
-                                        <div className="grid grid-cols-6 gap-3">
-                                            {TOP_ICONS.slice(0, 30).map(ic => (
-                                                <div key={ic} onClick={() => setNewGoal({...newGoal, icon: ic})} className={`aspect-square rounded-xl flex items-center justify-center text-xl cursor-pointer transition-all ${newGoal.icon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}><i className={`fa-solid ${ic}`}></i></div>
+                                        <p className="text-xs font-bold text-gray-500 mb-2 uppercase">Градиенты (PRO)</p>
+                                        <div className="flex flex-wrap gap-3 relative">
+                                            {PREMIUM_COLORS.map((c, i) => (
+                                                <div key={`p${i}`} onClick={() => { if(!isPremium){setShowPaywall(true); return;} setNewGoal({...newGoal, color: c}); }} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newGoal.color.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{background: c.hex}}></div>
                                             ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex gap-4 mb-3">
+                                            <p onClick={() => setNewGoal({...newGoal, iconType: 'icons', icon: TOP_ICONS[0]})} className={`text-xs font-bold uppercase cursor-pointer ${newGoal.iconType === 'icons' ? 'text-primary' : 'text-gray-400'}`}>Иконки</p>
+                                            <p onClick={() => { if(!isPremium) { setShowPaywall(true); return; } setNewGoal({...newGoal, iconType: 'emojis', icon: PREMIUM_EMOJIS[0]}) }} className={`text-xs font-bold uppercase cursor-pointer flex items-center gap-1 ${newGoal.iconType === 'emojis' ? 'text-primary' : 'text-gray-400'}`}>Эмодзи <i className="fa-solid fa-crown text-yellow-500 text-[10px]"></i></p>
+                                        </div>
+                                        <div className="grid grid-cols-6 gap-3 relative">
+                                            {newGoal.iconType === 'icons' ? TOP_ICONS.map(ic => (
+                                                <div key={ic} onClick={() => setNewGoal({...newGoal, icon: ic})} className={`aspect-square rounded-xl flex items-center justify-center text-xl cursor-pointer transition-all ${newGoal.icon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}><i className={`fa-solid ${ic}`}></i></div>
+                                            )) : PREMIUM_EMOJIS.map(em => (
+                                                <div key={em} onClick={() => setNewGoal({...newGoal, icon: em})} className={`aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all ${newGoal.icon === em ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-100 dark:bg-gray-800'}`}>{em}</div>
+                                            ))}
+                                            {newGoal.iconType === 'emojis' && !isPremium && (
+                                                <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl" onClick={() => setShowPaywall(true)}></div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -658,35 +810,35 @@
             <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300 relative">
                 <TopHeader title="Советы" rightIcon="fa-bell" />
                 <div className="px-5 space-y-6 pt-4">
+                    <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 rounded-3xl p-5 relative overflow-hidden">
+                        <i className="fa-solid fa-wand-magic-sparkles absolute -right-4 -bottom-4 text-primary opacity-10 text-7xl"></i>
+                        <h4 className="font-bold text-textDark dark:text-white mb-2 relative z-10">Ваш AI-консультант</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4 relative z-10">Нейросеть проанализирует ваши расходы, найдет скрытые подписки и подскажет, как быстрее накопить на цель.</p>
+                        <button onClick={openAIChat} className="bg-primary text-white font-bold py-3 px-6 rounded-xl text-sm shadow-md shadow-purple-500/30 relative z-10">Запустить чат</button>
+                    </div>
+
                     <div>
                         <h3 className="font-bold text-lg text-textDark dark:text-white mb-3">База знаний</h3>
                         <div className="space-y-3">
-                            <details className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm group">
+                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
                                 <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
                                     Что такое сложный процент? <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
                                 </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Сложный процент — это когда проценты начисляются не только на первоначальную сумму вклада, но и на проценты, накопленные за прошлые периоды. Это "восьмое чудо света", которое заставляет ваш капитал расти в геометрической прогрессии.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Сложный процент — это когда проценты начисляются не только на первоначальную сумму вклада, но и на проценты, накопленные за прошлые периоды.</p>
                             </details>
-                            <details className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm group">
+                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
                                 <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
                                     Финансовая подушка <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
                                 </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Это запас денег на непредвиденный случай. Идеальный размер подушки — сумма ваших обязательных расходов за 3–6 месяцев. Хранить её лучше на накопительном счету.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Это запас денег на непредвиденный случай. Идеальный размер подушки — сумма ваших обязательных расходов за 3–6 месяцев.</p>
                             </details>
-                            <details className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm group">
+                            <details className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm group">
                                 <summary className="font-bold text-sm text-textDark dark:text-white cursor-pointer list-none flex justify-between items-center">
-                                    Как победить инфляцию? <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
+                                    Инфляция: как победить? <i className="fa-solid fa-chevron-down text-gray-400 group-open:rotate-180 transition-transform"></i>
                                 </summary>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Деньги "под подушкой" теряют покупательную способность. Чтобы победить инфляцию, доходность ваших вложений должна быть выше официального уровня инфляции.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">Деньги "под подушкой" теряют покупательную способность. Доходность ваших вложений должна быть выше официального уровня инфляции.</p>
                             </details>
                         </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 rounded-3xl p-5 relative overflow-hidden">
-                        <i className="fa-solid fa-wand-magic-sparkles absolute -right-4 -bottom-4 text-primary opacity-10 text-7xl"></i>
-                        <h4 className="font-bold text-textDark dark:text-white mb-2 relative z-10">Ваш личный AI-консультант</h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-4 relative z-10">Нейросеть проанализирует ваши расходы, найдет скрытые подписки и подскажет, как быстрее накопить на цель.</p>
-                        <button onClick={openAIChat} className="bg-primary text-white font-bold py-3 px-6 rounded-xl text-sm shadow-md shadow-purple-500/30 relative z-10">Запустить чат</button>
                     </div>
                 </div>
 
@@ -698,7 +850,7 @@
         );
 
         const ScreenAIChat = ({ onBack, userId }) => {
-            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! 👋 Я ваш личный AI-консультант. Я вижу вашу базу расходов. Что вас интересует?' }]);
+            const [messages, setMessages] = useState([{ type: 'bot', text: 'Привет! 👋 Я ваш AI-ассистент. Я вижу вашу базу расходов. Что вас интересует?' }]);
             const [isTyping, setIsTyping] = useState(false);
             const [inputText, setInputText] = useState('');
 
@@ -717,9 +869,9 @@
                     });
                     const data = await res.json();
                     triggerHaptic('light');
-                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Извините, не смог получить ответ от ИИ." }]);
+                    setMessages(prev => [...prev, { type: 'bot', text: data.reply || "Не смог получить ответ." }]);
                 } catch (error) {
-                    setMessages(prev => [...prev, { type: 'bot', text: "Серверы перегружены. Пожалуйста, попробуйте через пару минут." }]);
+                    setMessages(prev => [...prev, { type: 'bot', text: "Серверы сейчас перегружены. Попробуйте через пару минут." }]);
                 } finally {
                     setIsTyping(false);
                 }
@@ -746,12 +898,12 @@
                         {messages.length === 1 && (
                             <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 pb-1">
                                 {['Где я много трачу?', 'Как накопить?', 'Проанализируй траты'].map(q => (
-                                    <button key={q} onClick={() => sendPrompt(q)} className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 text-primary dark:text-primaryLight text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap">{q}</button>
+                                    <button key={q} onClick={() => sendPrompt(q)} className="flex-shrink-0 bg-gray-100 dark:bg-gray-800 text-primary dark:text-primaryLight text-xs font-bold px-4 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">{q}</button>
                                 ))}
                             </div>
                         )}
                         <div className="flex items-center gap-3">
-                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendPrompt(inputText)} placeholder="Сообщение ИИ..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-5 py-3.5 text-sm focus:outline-none" />
+                            <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendPrompt(inputText)} placeholder="Спросить ИИ..." className="flex-1 bg-gray-100 dark:bg-gray-800 text-textDark dark:text-white rounded-full px-5 py-3.5 text-sm focus:outline-none" />
                             <button onClick={() => sendPrompt(inputText)} className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center shadow-md transform active:scale-95"><i className="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
@@ -759,16 +911,20 @@
             );
         };
 
-        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, achievements, currencyRate, setCurrencyMode }) => {
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, achievements, currencyRate, setCurrencyMode, isPremium, setShowPaywall, onSetPin }) => {
             const userName = (user && user.first_name) ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Dima';
-            const username = (user && user.username) ? `@${user.username}` : '@xyzblendepro100';
+            const username = (user && user.username) ? `@${user.username}` : '@dima_finance';
             const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
-            const familyCode = btoa(user ? user.id.toString() : 'demo').substring(0, 8).toUpperCase();
+            const hasPin = !!localStorage.getItem('financeAppPin');
 
             const handleExport = () => {
+                if (!isPremium) {
+                    setShowPaywall(true);
+                    return;
+                }
                 triggerHaptic('medium');
-                let csvContent = "Дата,Категория,Название,Сумма\n";
-                transactions.forEach(t => csvContent += `"${t.date}","${t.category}","${t.title}",${t.amount}\n`);
+                let csvContent = "Дата,Счет,Категория,Название,Сумма\n";
+                transactions.forEach(t => csvContent += `"${t.date}","${t.wallet==='cash'?'Наличные':'Карта'}","${t.category}","${t.title}",${t.amount}\n`);
                 const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -785,12 +941,34 @@
                         <div>
                             <h2 className="text-2xl font-bold text-textDark dark:text-white">{userName}</h2>
                             <p className="text-gray-500 font-medium">{username}</p>
-                            <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-yellow-400 to-orange-500 px-2 py-0.5 rounded shadow-sm">Premium</span>
+                            {isPremium && <span className="inline-block mt-2 text-[10px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-yellow-400 to-orange-500 px-2 py-0.5 rounded shadow-sm"><i className="fa-solid fa-crown mr-1"></i> Premium</span>}
                         </div>
                     </div>
 
                     <div className="px-5 mb-6">
-                        <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider mb-3">Достижения</h3>
+                        <div 
+                            onClick={() => { triggerHaptic('light'); if(!isPremium) setShowPaywall(true); }}
+                            className={`rounded-3xl p-5 flex items-center justify-between shadow-md relative overflow-hidden cursor-pointer transition-transform active:scale-[0.98] ${isPremium ? 'bg-gradient-to-r from-yellow-400 to-orange-500' : 'bg-gradient-to-r from-gray-900 to-indigo-900'}`}
+                        >
+                            <i className={`fa-brands fa-telegram absolute -right-4 -bottom-4 text-white opacity-10 text-7xl transform -rotate-12`}></i>
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg ${isPremium ? 'bg-white/20' : 'bg-gradient-to-br from-yellow-400 to-orange-500'}`}>
+                                    <i className="fa-solid fa-crown text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white text-base">{isPremium ? 'PRO Подписка Активна' : 'FinanceAI PRO'}</h3>
+                                    <p className="text-xs text-white/80 mt-0.5">{isPremium ? 'Все функции разблокированы' : 'Безлимитный ИИ и Экспорт'}</p>
+                                </div>
+                            </div>
+                            {!isPremium && <i className="fa-solid fa-chevron-right text-white/50 relative z-10 text-sm"></i>}
+                        </div>
+                    </div>
+
+                    <div className="px-5 mb-6">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider">Мои Достижения</h3>
+                            <span className="text-xs font-bold text-primary">{achievements.filter(a=>a.unlocked).length} / 100</span>
+                        </div>
                         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                             {achievements.map((ach, i) => (
                                 <div key={i} className={`flex-shrink-0 w-24 p-3 rounded-2xl flex flex-col items-center justify-center text-center gap-2 ${ach.unlocked ? 'bg-white dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800' : 'bg-gray-100 dark:bg-gray-800/50 opacity-60 grayscale'}`}>
@@ -802,21 +980,19 @@
                     </div>
 
                     <div className="px-5 space-y-2">
-                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm">
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
                             <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Настройки</h3>
-                            
                             <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500"><i className="fa-solid fa-coins text-xs"></i></div>
                                     <span className="font-medium text-sm text-textDark dark:text-white">Валюта</span>
                                 </div>
                                 <select value={currencyRate.name} onChange={e=>setCurrencyMode(e.target.value)} className="bg-transparent text-sm font-bold text-primary focus:outline-none dir-rtl">
-                                    <option value="UZS">UZS (Сум)</option>
-                                    <option value="USD">USD ($)</option>
-                                    <option value="EUR">EUR (€)</option>
+                                    <option value="UZS">UZS</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
                                 </select>
                             </div>
-
                             <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer" onClick={toggleDarkMode}>
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500"><i className="fa-solid fa-moon text-xs"></i></div>
@@ -826,19 +1002,21 @@
                                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isDarkMode ? 'left-7' : 'left-1'}`}></div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer" onClick={() => {document.execCommand('copy'); alert('Код скопирован!');}}>
+                        <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mt-4">
+                            <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider mb-4">Безопасность (PRO)</h3>
+                            <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer" onClick={() => { if(!isPremium) setShowPaywall(true); else onSetPin(); }}>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-500"><i className="fa-solid fa-users text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">Семейный код</span>
+                                    <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500"><i className="fa-solid fa-lock text-xs"></i></div>
+                                    <span className="font-medium text-sm text-textDark dark:text-white">ПИН-код при входе <i className="fa-solid fa-crown text-yellow-500 ml-1 text-[10px]"></i></span>
                                 </div>
-                                <span className="text-xs font-mono font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{familyCode}</span>
+                                <span className={`text-xs font-bold ${hasPin ? 'text-green-500' : 'text-gray-400'}`}>{hasPin ? 'Вкл' : 'Выкл'}</span>
                             </div>
-
                             <div className="flex justify-between items-center py-3 cursor-pointer" onClick={handleExport}>
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-500"><i className="fa-solid fa-file-csv text-xs"></i></div>
-                                    <span className="font-medium text-sm text-textDark dark:text-white">Экспорт в CSV</span>
+                                    <span className="font-medium text-sm text-textDark dark:text-white">Экспорт в CSV <i className="fa-solid fa-crown text-yellow-500 ml-1 text-[10px]"></i></span>
                                 </div>
                                 <i className="fa-solid fa-download text-gray-400 text-xs"></i>
                             </div>
@@ -849,42 +1027,46 @@
         };
 
         const App = () => {
+            const [isLocked, setIsLocked] = useState(!!localStorage.getItem('financeAppPin'));
             const [currentScreen, setCurrentScreen] = useState('home');
+            const [isAddingMode, setIsAddingMode] = useState(false);
             const [isLoading, setIsLoading] = useState(true);
             const [transactions, setTransactions] = useState([]);
             
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
+            const [isPremium, setIsPremium] = useState(() => localStorage.getItem('financeAppPremium') === 'true');
             const [tgUser, setTgUser] = useState(null);
             
             const [addMethod, setAddMethod] = useState(null);
             const [isProcessing, setIsProcessing] = useState(false);
             const [selectedTransaction, setSelectedTransaction] = useState(null);
+            const [showPaywall, setShowPaywall] = useState(false);
 
             const [currencyMode, setCurrencyMode] = useState('UZS');
             const [rates, setRates] = useState({ USD: 12650, EUR: 13600 });
+
+            const [txWallet, setTxWallet] = useState('card');
 
             const [categories, setCategories] = useState([
                 { name: 'Продукты', icon: 'fa-basket-shopping', bg: 'bg-orange-100', color: 'text-orange-500', isCustom: false },
                 { name: 'Транспорт', icon: 'fa-bus', bg: 'bg-blue-100', color: 'text-blue-500', isCustom: false },
                 { name: 'Еда вне дома', icon: 'fa-utensils', bg: 'bg-amber-100', color: 'text-amber-600', isCustom: false },
-                { name: 'Развлечения', icon: 'fa-play', bg: 'bg-pink-100', color: 'text-pink-500', isCustom: false },
-                { name: 'Покупки', icon: 'fa-bag-shopping', bg: 'bg-purple-100', color: 'text-purple-500', isCustom: false },
-                { name: 'Здоровье', icon: 'fa-pills', bg: 'bg-green-100', color: 'text-green-500', isCustom: false }
+                { name: 'Развлечения', icon: 'fa-play', bg: 'bg-pink-100', color: 'text-pink-500', isCustom: false }
             ]);
 
             const [goals, setGoals] = useState([
-                { id: 1, title: 'Машина', current: 5000000, target: 150000000, months: 24, icon: 'fa-car', bg: 'bg-blue-100', color: 'text-blue-500' },
-                { id: 2, title: 'Отпуск', current: 1200000, target: 10000000, months: 6, icon: 'fa-plane', bg: 'bg-indigo-100', color: 'text-indigo-500' }
+                { id: 1, title: 'Машина', current: 5000000, target: 150000000, months: 24, icon: 'fa-car', bg: 'bg-blue-100', color: 'text-blue-500' }
             ]);
 
-            const [amountStr, setAmountStr] = useState('');
+            const [prefill, setPrefill] = useState({ amount: '', title: '', category: 'Продукты' });
+            const [displayAmount, setDisplayAmount] = useState('');
             const [txTitle, setTxTitle] = useState('');
             const [txCat, setTxCat] = useState('Продукты');
-            const [txIcon, setTxIcon] = useState(null);
 
             const [newCatName, setNewCatName] = useState('');
             const [newCatColor, setNewCatColor] = useState(CATEGORY_COLORS[10]);
             const [newCatIcon, setNewCatIcon] = useState(TOP_ICONS[0]);
+            const [newCatIconType, setNewCatIconType] = useState('icons'); 
 
             useEffect(() => {
                 let currentUserId = 'browser_test_user';
@@ -900,29 +1082,26 @@
 
                 const loadData = async () => {
                     try {
-                        const [txRes, ratesRes] = await Promise.all([
-                            fetch(`${API_URL}/transactions`, { headers: { 'x-tg-user-id': currentUserId } }),
-                            fetch(`${API_URL}/rates`).catch(()=>({json:()=>({USD:12650, EUR:13600})}))
-                        ]);
-                        
-                        const text = await txRes.text();
-                        let txData = [];
-                        if (!text.startsWith('<')) txData = JSON.parse(text);
-
-                        if (!Array.isArray(txData) || txData.length === 0) txData = generateDemoData();
-                        setTransactions(txData);
-
-                        const rData = await ratesRes.json();
-                        if(rData.USD) setRates(rData);
+                        const savedTxs = localStorage.getItem('financeAppTxs');
+                        if (savedTxs) {
+                            setTransactions(JSON.parse(savedTxs));
+                        } else {
+                            const demo = generateDemoData();
+                            setTransactions(demo);
+                            localStorage.setItem('financeAppTxs', JSON.stringify(demo));
+                        }
                     } catch (e) {
-                        console.error("Load error:", e);
-                        setTransactions(generateDemoData());
+                        console.error(e);
                     } finally {
                         setIsLoading(false);
                     }
                 };
                 loadData();
             }, []);
+
+            useEffect(() => {
+                if (!isLoading) localStorage.setItem('financeAppTxs', JSON.stringify(transactions));
+            }, [transactions, isLoading]);
 
             useEffect(() => {
                 if (isDarkMode) { document.documentElement.classList.add('dark'); localStorage.setItem('financeAppTheme', 'dark'); } 
@@ -935,24 +1114,24 @@
                 return { rate: 1, symbol: '', name: 'UZS' }; 
             };
 
-            const achievements = [
-                { name: 'Первый шаг', icon: '🌱', color: 'text-green-500', unlocked: transactions.length > 0 },
-                { name: 'Счетовод', icon: '📝', color: 'text-blue-500', unlocked: transactions.length >= 5 },
-                { name: 'Копилка', icon: '💰', color: 'text-yellow-500', unlocked: goals.some(g => g.current > 0) },
-                { name: 'Скряга', icon: '🔒', color: 'text-purple-500', unlocked: transactions.filter(t=>t.category==='Развлечения').length === 0 }
-            ];
+            const achievements = useMemo(() => generate100Achievements(transactions, goals), [transactions, goals]);
 
             const closeAddModal = () => {
+                setIsAddingMode(false);
                 setAddMethod(null);
-                setAmountStr(''); setTxTitle(''); setTxIcon(null);
+                setPrefill({ amount: '', title: '', category: 'Продукты' });
+                setDisplayAmount(''); setTxTitle(''); setTxWallet('card');
             };
 
-            const handleAmountChange = (e) => setAmountStr(e.target.value.replace(/\D/g, ''));
+            const handleAmountChange = (e) => {
+                const rawValue = e.target.value.replace(/\D/g, '');
+                setDisplayAmount(rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+            };
 
             const handleAddCategory = (e) => {
                 e.preventDefault();
                 if(newCatName.trim()) {
-                    setCategories([{ name: newCatName, icon: newCatIcon, bg: newCatColor.bg, color: newCatColor.color, isCustom: true }, ...categories]);
+                    setCategories([{ name: newCatName, icon: newCatIcon, bg: newCatColor.bg, color: newCatColor.color, hex: newCatColor.hex, isCustom: true }, ...categories]);
                     triggerHaptic('medium');
                     setTxCat(newCatName);
                     setAddMethod('expense');
@@ -960,67 +1139,101 @@
                 }
             };
 
-            const handleSaveTransaction = async (e) => {
+            const handleSaveTransaction = (e) => {
                 e.preventDefault();
-                const num = parseInt(amountStr);
+                const num = parseInt(displayAmount.replace(/\s/g, ''));
                 if (!num || !txTitle) return;
 
                 const catObj = categories.find(c => c.name === txCat) || categories[0];
-                const finalIcon = txIcon || catObj.icon;
                 
                 const d = new Date();
                 const dateString = d.getDate().toString().padStart(2, '0') + '.' + (d.getMonth() + 1).toString().padStart(2, '0') + ' ' + d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 
+                let finalAmount = addMethod === 'income' ? num : -num;
+                
+                if(currencyMode === 'USD') finalAmount = finalAmount * rates.USD;
+                if(currencyMode === 'EUR') finalAmount = finalAmount * rates.EUR;
+
                 const newTx = {
-                    title: txTitle, category: txCat,
-                    amount: addMethod === 'income' ? num : -num,
-                    date: dateString, rawDate: new Date().toISOString(),
-                    icon: finalIcon, color: catObj.color, bg: catObj.bg
+                    id: Date.now(), title: txTitle, category: txCat,
+                    amount: finalAmount, date: dateString, rawDate: new Date().toISOString(),
+                    icon: catObj.icon, color: catObj.color, bg: catObj.bg,
+                    wallet: txWallet
                 };
 
                 triggerHaptic('heavy');
                 setTransactions([newTx, ...transactions]);
                 closeAddModal();
-
-                const currentUserId = tgUser ? tgUser.id.toString() : 'browser_test_user';
-                try {
-                    await fetch(`${API_URL}/transactions`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-tg-user-id': currentUserId },
-                        body: JSON.stringify(newTx)
-                    });
-                } catch(e) { console.error(e); }
             };
 
-            const handleDeleteTx = async (id) => {
+            const handleDeleteTx = (id) => {
                 triggerHaptic('medium');
                 setTransactions(transactions.filter(t => t.id !== id));
                 setSelectedTransaction(null);
-                const currentUserId = tgUser ? tgUser.id.toString() : 'browser_test_user';
-                try {
-                    await fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE', headers: { 'x-tg-user-id': currentUserId } });
-                } catch(e) { console.error(e); }
             };
 
-            const simulateAI = () => {
+            const executeTelegramPayment = () => {
                 setIsProcessing(true);
+                triggerHaptic('medium');
                 setTimeout(() => {
                     setIsProcessing(false);
-                    setAmountStr('45000'); setTxTitle('Кофе и сэндвич'); setTxCat('Еда вне дома');
-                }, 2000);
+                    setIsPremium(true);
+                    localStorage.setItem('financeAppPremium', 'true');
+                    setShowPaywall(false);
+                    triggerHaptic('success');
+                }, 1500);
             };
 
+            const setupPin = () => {
+                const pin = prompt("Введите новый 4-значный ПИН-код (только цифры):");
+                if (pin && pin.length === 4 && /^\d+$/.test(pin)) {
+                    localStorage.setItem('financeAppPin', pin);
+                    triggerHaptic('success');
+                } else {
+                    triggerHaptic('error');
+                }
+            };
+
+            const simulateAIProcessing = (method) => {
+                triggerHaptic('medium');
+                setAddMethod(method);
+                setIsProcessing(true);
+
+                let data = { amount: 35000, title: 'Кофе с собой', category: 'Еда вне дома', wallet: 'card' };
+                if (method === 'sms_parsing') {
+                    data = { amount: 45000, title: 'Yandex GO', category: 'Транспорт', wallet: 'card' };
+                } else if (method === 'scan') {
+                    data = { amount: 152000, title: 'Супермаркет Korzinka', category: 'Продукты', wallet: 'card' };
+                }
+
+                setTimeout(() => {
+                    triggerHaptic('success');
+                    setIsProcessing(false);
+                    setPrefill(data);
+                    setDisplayAmount(data.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+                    setTxTitle(data.title);
+                    setTxCat(data.category);
+                    setTxWallet(data.wallet || 'card');
+                    setAddMethod('manual_prefilled');
+                }, 2500);
+            };
+
+            if (isLocked) {
+                return <ScreenPin onUnlock={() => setIsLocked(false)} />;
+            }
+
             const renderScreen = () => {
-                if (isLoading) return <div className="h-screen flex flex-col items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div><p className="mt-4 text-gray-500 font-medium">Загрузка данных...</p></div>;
+                if (isLoading) return <div className="h-screen flex flex-col items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-4xl text-primary mb-4"></i></div>;
                 const cr = getCurrencyRate();
                 switch(currentScreen) {
-                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={setAddMethod} />;
+                    case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={(m) => {setAddMethod(m); setIsAddingMode(true);}} />;
                     case 'reports': return <ScreenReports transactions={transactions} onTransactionClick={setSelectedTransaction} currencyRate={cr} />;
-                    case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} currencyRate={cr} goals={goals} setGoals={setGoals} />;
-                    case 'categories': return <ScreenCategories setScreen={setCurrentScreen} categories={categories} setCategories={setCategories} currencyRate={cr} />;
+                    case 'invest': return <ScreenInvest onBack={() => setCurrentScreen('home')} currencyRate={cr} goals={goals} setGoals={setGoals} isPremium={isPremium} setShowPaywall={setShowPaywall} />;
+                    case 'categories': return <ScreenCategories onBack={() => setCurrentScreen('home')} categories={categories} setCategories={setCategories} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
                     case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={tgUser ? tgUser.id.toString() : 'browser_test_user'} />;
-                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} achievements={achievements} currencyRate={cr} setCurrencyMode={setCurrencyMode} />;
-                    default: return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={setAddMethod} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} achievements={achievements} currencyRate={cr} setCurrencyMode={setCurrencyMode} isPremium={isPremium} setShowPaywall={setShowPaywall} onSetPin={setupPin} />;
+                    default: return <ScreenHome setScreen={setCurrentScreen} transactions={transactions} user={tgUser} onTransactionClick={setSelectedTransaction} currencyRate={cr} setAddMethod={(m) => {setAddMethod(m); setIsAddingMode(true);}} />;
                 }
             };
 
@@ -1028,63 +1241,77 @@
                 <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
                     {renderScreen()}
 
-                    {/* Modal: Transaction Details */}
                     {selectedTransaction && (
                         <div className="fixed inset-0 z-[60] flex items-end">
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in">
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in border-t border-gray-100 dark:border-gray-800">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
                                 <div className="text-center mb-6">
                                     <div className={`w-20 h-20 rounded-2xl mx-auto flex items-center justify-center mb-4 ${selectedTransaction.bg} dark:bg-opacity-20 ${selectedTransaction.color} text-4xl shadow-sm`}>
-                                        <i className={`fa-solid ${selectedTransaction.icon}`}></i>
+                                        <IconRenderer icon={selectedTransaction.icon} />
                                     </div>
                                     <h3 className="text-2xl font-bold text-textDark dark:text-white mb-1">{selectedTransaction.title}</h3>
-                                    <p className="text-sm font-medium text-gray-500">{selectedTransaction.category} • {selectedTransaction.date}</p>
+                                    <p className="text-sm font-medium text-gray-500">{selectedTransaction.category} • {selectedTransaction.wallet === 'cash' ? 'Наличные' : 'Карта'} • {selectedTransaction.date}</p>
                                     <h2 className={`text-4xl font-bold mt-5 tracking-tight ${selectedTransaction.amount > 0 ? 'text-green-500' : 'text-textDark dark:text-white'}`}>
                                         {selectedTransaction.amount > 0 ? '+' : ''}{getCurrencyRate().symbol + ' ' + Math.round(Math.abs(selectedTransaction.amount) * getCurrencyRate().rate).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
                                     </h2>
                                 </div>
-                                <button onClick={() => handleDeleteTx(selectedTransaction.id)} className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-3.5 rounded-2xl mb-3 transition-colors active:bg-red-100 dark:active:bg-red-900/40">Удалить операцию</button>
-                                <button onClick={() => setSelectedTransaction(null)} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3.5 rounded-2xl transition-colors active:bg-gray-200 dark:active:bg-gray-700">Закрыть</button>
+                                <button onClick={() => handleDeleteTx(selectedTransaction.id)} className="w-full bg-red-50 text-red-500 dark:bg-red-900/20 font-bold py-4 rounded-2xl mb-3 transition-colors active:bg-red-100">Удалить операцию</button>
+                                <button onClick={() => setSelectedTransaction(null)} className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-4 rounded-2xl transition-colors">Закрыть</button>
                             </div>
                         </div>
                     )}
 
-                    {/* Modal: Add Transaction/Category */}
-                    {addMethod && (
+                    {isAddingMode && (
                         <div className="fixed inset-0 z-[70] flex items-end">
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeAddModal}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full h-[90vh] rounded-t-3xl p-5 relative z-10 animate-fade-in flex flex-col">
+                            <div className="bg-white dark:bg-gray-900 w-full h-[92vh] rounded-t-3xl p-5 relative z-10 animate-fade-in flex flex-col border-t border-gray-100 dark:border-gray-800">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-4"></div>
                                 
                                 <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-5 shrink-0">
-                                    <button onClick={()=>{triggerHaptic(); setAddMethod('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${addMethod==='expense' ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm' : 'text-gray-400'}`}>Расход</button>
+                                    <button onClick={()=>{triggerHaptic(); setAddMethod('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${(addMethod==='expense' || addMethod==='manual_prefilled' || !addMethod) ? 'bg-white dark:bg-gray-700 text-red-500 shadow-sm' : 'text-gray-400'}`}>Расход</button>
                                     <button onClick={()=>{triggerHaptic(); setAddMethod('income');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${addMethod==='income' ? 'bg-white dark:bg-gray-700 text-green-500 shadow-sm' : 'text-gray-400'}`}>Доход</button>
                                     <button onClick={()=>{triggerHaptic(); setAddMethod('category');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${addMethod==='category' ? 'bg-white dark:bg-gray-700 text-primary shadow-sm' : 'text-gray-400'}`}>Категория</button>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+                                <div className="flex-1 overflow-y-auto no-scrollbar pb-10 px-1">
                                     {addMethod === 'category' ? (
-                                        <form id="addCatForm" onSubmit={handleAddCategory} className="space-y-5 animate-fade-in">
-                                            <input required type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-4 font-bold text-lg text-textDark dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Название категории" />
+                                        <form id="addCatForm" onSubmit={handleAddCategory} className="space-y-6 animate-fade-in">
+                                            <input required type="text" value={newCatName} onChange={e=>setNewCatName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-4 font-bold text-lg text-textDark dark:text-white focus:outline-none border border-gray-200 dark:border-gray-700" placeholder="Название категории" />
+                                            
                                             <div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Цвет</p>
-                                                <div className="flex flex-wrap gap-3">
+                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Базовые цвета</p>
+                                                <div className="flex flex-wrap gap-3 mb-4">
                                                     {CATEGORY_COLORS.map((c, i) => (
                                                         <div key={i} onClick={() => {triggerHaptic('light'); setNewCatColor(c);}} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newCatColor.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{backgroundColor: c.hex}}></div>
                                                     ))}
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Иконка</p>
-                                                <div className="grid grid-cols-6 gap-3">
-                                                    {TOP_ICONS.map(ic => (
-                                                        <div key={ic} onClick={() => {triggerHaptic('light'); setNewCatIcon(ic);}} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${newCatIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}`}><i className={`fa-solid ${ic}`}></i></div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 ml-1">Premium Градиенты <i className="fa-solid fa-crown text-yellow-500"></i></p>
+                                                <div className="flex flex-wrap gap-3 relative">
+                                                    {PREMIUM_COLORS.map((c, i) => (
+                                                        <div key={`p${i}`} onClick={() => { if(!isPremium){setShowPaywall(true); return;} triggerHaptic('light'); setNewCatColor(c);}} className={`w-10 h-10 rounded-full cursor-pointer flex items-center justify-center transition-transform ${newCatColor.hex === c.hex ? 'scale-110 shadow-md ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-900' : ''}`} style={{background: c.hex}}></div>
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${newCatColor.bg} dark:bg-opacity-20 ${newCatColor.color}`}><i className={`fa-solid ${newCatIcon}`}></i></div>
+
+                                            <div>
+                                                <div className="flex gap-4 mb-3">
+                                                    <p onClick={() => {triggerHaptic(); setNewCatIconType('icons'); setNewCatIcon(TOP_ICONS[0]);}} className={`text-xs font-bold uppercase cursor-pointer ${newCatIconType === 'icons' ? 'text-primary' : 'text-gray-400'}`}>Иконки</p>
+                                                    <p onClick={() => {triggerHaptic(); setNewCatIconType('emojis'); setNewCatIcon(PREMIUM_EMOJIS[0]);}} className={`text-xs font-bold uppercase cursor-pointer flex items-center gap-1 ${newCatIconType === 'emojis' ? 'text-primary' : 'text-gray-400'}`}>Эмодзи <i className="fa-solid fa-crown text-yellow-500 text-[10px]"></i></p>
+                                                </div>
+                                                <div className="grid grid-cols-6 gap-3 relative">
+                                                    {newCatIconType === 'icons' ? TOP_ICONS.map(ic => (
+                                                        <div key={ic} onClick={() => {triggerHaptic('light'); setNewCatIcon(ic);}} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${newCatIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}`}><i className={`fa-solid ${ic}`}></i></div>
+                                                    )) : PREMIUM_EMOJIS.map(em => (
+                                                        <div key={em} onClick={() => { if(!isPremium){setShowPaywall(true); return;} triggerHaptic('light'); setNewCatIcon(em);}} className={`aspect-square rounded-2xl flex items-center justify-center text-2xl cursor-pointer transition-all ${newCatIcon === em ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800'}`}>{em}</div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center gap-4 border border-gray-200 dark:border-gray-700">
+                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${newCatColor.bg} dark:bg-opacity-20 ${newCatColor.color}`} style={newCatColor.hex.includes('gradient') ? {background: newCatColor.hex} : {}}>
+                                                    <IconRenderer icon={newCatIcon} />
+                                                </div>
                                                 <div>
                                                     <p className="text-xs text-gray-400 font-medium">Предпросмотр</p>
                                                     <p className="font-bold text-textDark dark:text-white text-lg">{newCatName || 'Новая категория'}</p>
@@ -1092,44 +1319,100 @@
                                             </div>
                                         </form>
                                     ) : (
-                                        <form id="addTxForm" onSubmit={handleSaveTransaction} className="space-y-4 animate-fade-in">
-                                            <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-4 flex items-center justify-center mb-2">
-                                                <span className="text-2xl text-gray-400 font-bold mr-2">{getCurrencyRate().symbol || 'UZS'}</span>
-                                                <input required type="text" value={amountStr ? formatMoneyInput(amountStr) : ''} onChange={handleAmountChange} className="w-full bg-transparent text-center font-bold text-4xl text-textDark dark:text-white focus:outline-none placeholder-gray-300 dark:placeholder-gray-600" placeholder="0" />
-                                            </div>
-                                            
-                                            <div className="flex gap-2">
-                                                <input required type="text" value={txTitle} onChange={e=>setTxTitle(e.target.value)} className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-4 font-bold text-textDark dark:text-white focus:outline-none" placeholder="Название (напр. Кофе)" />
-                                                <button type="button" onClick={simulateAI} className="w-14 shrink-0 bg-blue-50 text-blue-500 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-xl transition-colors active:bg-blue-100">{isProcessing ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-microphone"></i>}</button>
-                                                <button type="button" onClick={simulateAI} className="w-14 shrink-0 bg-green-50 text-green-500 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-xl transition-colors active:bg-green-100">{isProcessing ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-camera"></i>}</button>
-                                            </div>
+                                        <div className="animate-fade-in">
+                                            {!addMethod && (
+                                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                                    <div onClick={() => simulateAIProcessing('voice')} className="bg-blue-50 dark:bg-blue-900/30 text-blue-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-microphone text-2xl"></i> Голосом</div>
+                                                    <div onClick={() => simulateAIProcessing('scan')} className="bg-green-50 dark:bg-green-900/30 text-green-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-receipt text-2xl"></i> Скан чека</div>
+                                                    <div onClick={() => setAddMethod('sms_input')} className="bg-orange-50 dark:bg-orange-900/30 text-orange-500 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-comment-sms text-2xl"></i> SMS от банка</div>
+                                                    <div onClick={() => { setPrefill({ amount: '', title: '', category: 'Продукты' }); setDisplayAmount(''); setTxTitle(''); setAddMethod('manual'); }} className="bg-purple-50 dark:bg-purple-900/30 text-primary py-4 rounded-2xl flex flex-col items-center justify-center gap-2 font-bold cursor-pointer active:scale-95 transition-transform"><i className="fa-solid fa-pen text-2xl"></i> Вручную</div>
+                                                </div>
+                                            )}
 
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Категория</p>
-                                                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                                                    {categories.map(c => (
-                                                        <div key={c.name} onClick={()=>{triggerHaptic('light'); setTxCat(c.name); setTxIcon(null);}} className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors border ${txCat === c.name ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900'}`}>
-                                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${c.bg} dark:bg-opacity-20 ${c.color}`}><i className={`fa-solid ${c.icon}`}></i></div>
-                                                            <span className={`text-sm font-bold ${txCat === c.name ? 'text-primary' : 'text-gray-600 dark:text-gray-300'}`}>{c.name}</span>
+                                            {addMethod === 'sms_input' && (
+                                                <div className="py-4 animate-fade-in">
+                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-3">Вставьте SMS от банка</h3>
+                                                    <textarea 
+                                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-primary transition-colors text-textDark dark:text-white h-32 resize-none" 
+                                                        placeholder="Например: Списание 45 000 UZS. Карта *4512. Получатель: Yandex GO"
+                                                    ></textarea>
+                                                    <button onClick={() => simulateAIProcessing('sms_parsing')} className="w-full mt-4 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-md active:scale-[0.98] transition-transform">Анализировать SMS</button>
+                                                </div>
+                                            )}
+
+                                            {addMethod === 'voice' && (
+                                                <div className="py-10 text-center flex flex-col items-center animate-fade-in mb-6">
+                                                    <div className="relative mb-6">
+                                                        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-blue-500 text-3xl relative z-10">
+                                                            <i className="fa-solid fa-microphone animate-pulse"></i>
                                                         </div>
-                                                    ))}
+                                                        <div className="absolute inset-0 rounded-full bg-blue-500 animate-pulse-ring z-0"></div>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-2">Внимательно слушаю...</h3>
+                                                    <p className="text-sm text-gray-500">Скажите: "Купил кофе за 35 тысяч"</p>
                                                 </div>
-                                            </div>
+                                            )}
+                                            {addMethod === 'scan' && (
+                                                <div className="py-6 text-center flex flex-col items-center animate-fade-in mb-6">
+                                                    <div className="w-48 h-64 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl relative overflow-hidden mb-6 flex items-center justify-center">
+                                                        <i className="fa-solid fa-receipt text-6xl text-gray-300 dark:text-gray-600"></i>
+                                                        <div className="animate-scanline"></div>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-textDark dark:text-white">AI анализирует позиции...</h3>
+                                                </div>
+                                            )}
+                                            {addMethod === 'sms_parsing' && (
+                                                <div className="py-10 text-center flex flex-col items-center animate-fade-in mb-6">
+                                                    <div className="relative mb-6">
+                                                        <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center text-primary text-3xl relative z-10">
+                                                            <i className="fa-solid fa-robot animate-pulse"></i>
+                                                        </div>
+                                                        <div className="absolute inset-0 rounded-full bg-primary animate-pulse-ring z-0"></div>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-textDark dark:text-white mb-2">ИИ читает сообщение...</h3>
+                                                </div>
+                                            )}
 
-                                            <div>
-                                                <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Своя иконка (опционально)</p>
-                                                <div className="grid grid-cols-6 gap-3">
-                                                    {TOP_ICONS.slice(0, 30).map(ic => (
-                                                        <div key={ic} onClick={() => {triggerHaptic('light'); setTxIcon(ic);}} className={`aspect-square rounded-2xl flex items-center justify-center text-xl cursor-pointer transition-all ${txIcon === ic ? 'bg-primary text-white shadow-md scale-110' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}`}><i className={`fa-solid ${ic}`}></i></div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </form>
+                                            {(addMethod === 'manual' || addMethod === 'manual_prefilled' || addMethod === 'expense' || addMethod === 'income') && (
+                                                <form id="addTxForm" onSubmit={handleSaveTransaction} className={`space-y-4 transition-opacity`}>
+                                                    <div className="bg-gray-50 dark:bg-gray-800 rounded-3xl p-4 flex items-center justify-center mb-2 border border-gray-200 dark:border-gray-700">
+                                                        <span className="text-2xl text-gray-400 font-bold mr-2">{getCurrencyRate().symbol || 'UZS'}</span>
+                                                        <input required type="text" value={displayAmount} onChange={handleAmountChange} className="w-full bg-transparent text-center font-bold text-4xl text-textDark dark:text-white focus:outline-none placeholder-gray-300 dark:placeholder-gray-600" placeholder="0" />
+                                                    </div>
+                                                    
+                                                    <div className="flex gap-2">
+                                                        <input required type="text" value={txTitle} onChange={e=>setTxTitle(e.target.value)} className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-4 font-bold text-textDark dark:text-white focus:outline-none" placeholder="Название (напр. Кофе)" />
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Счет оплаты</p>
+                                                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-4">
+                                                            <button type="button" onClick={()=>{triggerHaptic('light'); setTxWallet('card');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txWallet==='card' ? 'bg-white dark:bg-gray-700 text-textDark dark:text-white shadow-sm' : 'text-gray-400'}`}><i className="fa-regular fa-credit-card mr-1"></i> Карта</button>
+                                                            <button type="button" onClick={()=>{triggerHaptic('light'); setTxWallet('cash');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${txWallet==='cash' ? 'bg-white dark:bg-gray-700 text-emerald-500 shadow-sm' : 'text-gray-400'}`}><i className="fa-solid fa-money-bill-wave mr-1"></i> Наличные</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Категория</p>
+                                                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                                                            {categories.map(c => (
+                                                                <div key={c.name} onClick={()=>{triggerHaptic('light'); setTxCat(c.name);}} className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-colors border ${txCat === c.name ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${c.bg} dark:bg-opacity-20 ${c.color}`} style={c.hex && c.hex.includes('gradient') ? {background: c.hex} : {}}>
+                                                                        <IconRenderer icon={c.icon} />
+                                                                    </div>
+                                                                    <span className={`text-sm font-bold ${txCat === c.name ? 'text-primary' : 'text-gray-600 dark:text-gray-300'}`}>{c.name}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
-                                    <button type="submit" form={addMethod === 'category' ? "addCatForm" : "addTxForm"} className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-[0.98] ${addMethod === 'income' ? 'bg-green-500 shadow-green-500/30' : 'bg-primary shadow-purple-500/30'}`}>
+                                    <button type="submit" form={addMethod === 'category' ? "addCatForm" : "addTxForm"} disabled={isProcessing} className={`w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-[0.98] ${isProcessing || !addMethod || addMethod === 'sms_input' ? 'hidden' : ''} ${addMethod === 'income' ? 'bg-green-500 shadow-green-500/30' : 'bg-primary shadow-purple-500/30'}`}>
                                         {addMethod === 'category' ? 'Создать категорию' : (addMethod === 'income' ? 'Добавить доход' : 'Добавить расход')}
                                     </button>
                                 </div>
@@ -1137,18 +1420,55 @@
                         </div>
                     )}
 
-                    {/* Bottom Navigation */}
-                    {['home', 'reports', 'tips', 'profile', 'categories', 'calculator'].includes(currentScreen) && (
+                    {showPaywall && (
+                        <div className="fixed inset-0 z-[80] flex items-end">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaywall(false)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-[32px] p-6 relative z-10 animate-fade-in flex flex-col items-center">
+                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6 relative z-10"></div>
+                                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white text-3xl shadow-xl shadow-orange-500/30 mb-4 border-4 border-white dark:border-gray-900">
+                                    <i className="fa-solid fa-crown"></i>
+                                </div>
+                                <h2 className="text-3xl font-bold text-textDark dark:text-white mb-2">FinanceAI <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500">PRO</span></h2>
+                                <p className="text-center text-gray-500 text-sm mb-6 px-4">Разблокируйте все возможности умного кошелька. Разовая оплата навсегда.</p>
+                                
+                                <div className="w-full space-y-3 mb-6">
+                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
+                                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-primary"><i className="fa-solid fa-robot"></i></div>
+                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Безлимитный ИИ</h4></div>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
+                                        <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500"><i className="fa-solid fa-palette"></i></div>
+                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Эмодзи и Градиенты</h4></div>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 p-3.5 rounded-2xl">
+                                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500"><i className="fa-solid fa-file-csv"></i></div>
+                                        <div><h4 className="font-bold text-sm text-textDark dark:text-white">Экспорт отчетов в CSV</h4></div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 w-full text-center border border-blue-100 dark:border-blue-800/50">
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Оплата производится через официальные <strong className="font-bold">Telegram Stars ⭐️</strong>. Их можно купить с любой карты.</p>
+                                    <a href="https://t.me/PremiumBot" target="_blank" className="text-xs text-primary font-bold mt-2 block underline">Как купить Звезды?</a>
+                                </div>
+
+                                <button onClick={executeTelegramPayment} disabled={isProcessing} className="w-full bg-[#2AABEE] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg shadow-blue-500/30">
+                                    {isProcessing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <><i className="fa-solid fa-star text-yellow-300"></i> Оплатить 100 Звезд</>}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {['home', 'reports', 'invest', 'categories', 'tips', 'profile'].includes(currentScreen) && (
                         <div className="fixed bottom-0 w-full max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 px-6 py-2.5 flex justify-between items-center z-40 transition-colors duration-300">
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('home');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-bold">Главная</span></button>
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('reports');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'reports' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-bold">Отчеты</span></button>
+                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('home');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-house text-xl mb-1"></i><span className="text-[10px] font-bold">Главная</span></button>
+                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('reports');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'reports' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-solid fa-chart-pie text-xl mb-1"></i><span className="text-[10px] font-bold">Отчеты</span></button>
                             
                             <div className="relative -top-6">
-                                <button onClick={() => {triggerHaptic('medium'); setAddMethod('expense');}} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/40 transform active:scale-95 transition-all border-4 border-bgLight dark:border-bgDark"><i className="fa-solid fa-plus"></i></button>
+                                <button onClick={() => {triggerHaptic('medium'); setIsAddingMode(true); setAddMethod(null);}} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/40 transform active:scale-95 transition-all border-4 border-bgLight dark:border-bgDark"><i className="fa-solid fa-plus"></i></button>
                             </div>
 
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('tips');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-bold">Советы</span></button>
-                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('profile');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-bold">Профиль</span></button>
+                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('tips');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'tips' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-lightbulb text-xl mb-1"></i><span className="text-[10px] font-bold">Советы</span></button>
+                            <button onClick={() => {triggerHaptic('light'); setCurrentScreen('profile');}} className={`flex flex-col items-center p-2 transition-colors ${currentScreen === 'profile' ? 'text-primary' : 'text-gray-400'}`}><i className="fa-regular fa-user text-xl mb-1"></i><span className="text-[10px] font-bold">Профиль</span></button>
                         </div>
                     )}
                 </div>
