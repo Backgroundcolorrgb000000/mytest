@@ -455,7 +455,7 @@
                 e.preventDefault();
                 if(tab === 'category') {
                     if(!newCatName) return;
-                    addCategory({ name: newCatName, icon: newCatIcon, colorClass: newCatColor });
+                    addCategory({ name: newCatName, icon: newCatIcon, colorClass: newCatColor, limit: null });
                     setSelCat(newCatName);
                     setTab('expense');
                     triggerHaptic('success');
@@ -510,10 +510,10 @@
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4">
-                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'expense' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Расход</button>
-                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('income');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'income' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Доход</button>
-                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('category');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'category' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Категория +</button>
+                                <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-4 overflow-x-auto no-scrollbar">
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('expense');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap px-3 ${tab === 'expense' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Расход</button>
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('income');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap px-3 ${tab === 'income' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Доход</button>
+                                    <button type="button" onClick={() => {triggerHaptic('light'); setTab('category');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap px-3 ${tab === 'category' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Категория +</button>
                                 </div>
 
                                 {tab === 'category' ? (
@@ -615,11 +615,16 @@
             );
         };
 
-        const ScreenCalculator = ({ onBack }) => {
+        const ScreenCalculator = ({ onBack, debts, setDebts }) => {
             const [tab, setTab] = useState('deposit');
             const [amount, setAmount] = useState('10000000');
             const [percent, setPercent] = useState('18');
             const [months, setMonths] = useState('12');
+
+            // Debts State
+            const [debtName, setDebtName] = useState('');
+            const [debtAmount, setDebtAmount] = useState('');
+            const [debtType, setDebtType] = useState('they_owe'); // they_owe, i_owe
 
             const numAmt = parseInt(amount.replace(/\s/g, '')) || 0;
             const numPerc = parseFloat(percent) || 0;
@@ -635,17 +640,79 @@
             const creditTotal = creditMonthly * numMonths;
             const creditOverpay = creditTotal - numAmt;
 
+            const handleAddDebt = () => {
+                if(!debtName || !debtAmount) return;
+                const newDebt = {
+                    id: Date.now(),
+                    name: debtName,
+                    amount: parseInt(debtAmount.replace(/\s/g, '')),
+                    type: debtType,
+                    date: new Date().toLocaleDateString('ru-RU')
+                };
+                setDebts([newDebt, ...debts]);
+                setDebtName('');
+                setDebtAmount('');
+                triggerHaptic('success');
+            };
+
+            const shareDebt = (debt) => {
+                triggerHaptic('light');
+                const text = debt.type === 'they_owe' 
+                    ? `Привет! Напоминаю про долг в размере ${formatMoneyInput(debt.amount.toString())} сум (${debt.name}). Заранее спасибо! 🤝`
+                    : `Привет! Помню про свой долг в размере ${formatMoneyInput(debt.amount.toString())} сум (${debt.name}). Скоро верну! 🙏`;
+                window.location.href = `https://t.me/share/url?url=&text=${encodeURIComponent(text)}`;
+            };
+
             return (
                 <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
                     <TopHeader title="Финансовые инструменты" showBack={true} onBack={onBack} />
                     <div className="px-4 py-4 space-y-4">
-                        <div className="flex bg-gray-200 dark:bg-gray-800 rounded-xl p-1">
-                            <button onClick={() => {triggerHaptic(); setTab('deposit');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'deposit' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Вклад</button>
-                            <button onClick={() => {triggerHaptic(); setTab('credit');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'credit' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Кредит</button>
-                            <button onClick={() => {triggerHaptic(); setTab('goals');}} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'goals' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Копилки</button>
+                        <div className="flex bg-gray-200 dark:bg-gray-800 rounded-xl p-1 overflow-x-auto no-scrollbar">
+                            <button onClick={() => {triggerHaptic(); setTab('deposit');}} className={`min-w-fit px-3 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'deposit' ? 'bg-white dark:bg-gray-700 shadow text-primary' : 'text-gray-500'}`}>Вклад</button>
+                            <button onClick={() => {triggerHaptic(); setTab('credit');}} className={`min-w-fit px-3 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'credit' ? 'bg-white dark:bg-gray-700 shadow text-red-500' : 'text-gray-500'}`}>Кредит</button>
+                            <button onClick={() => {triggerHaptic(); setTab('goals');}} className={`min-w-fit px-3 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'goals' ? 'bg-white dark:bg-gray-700 shadow text-green-500' : 'text-gray-500'}`}>Копилки</button>
+                            <button onClick={() => {triggerHaptic(); setTab('debts');}} className={`min-w-fit px-3 py-2 text-sm font-bold rounded-lg transition-colors ${tab === 'debts' ? 'bg-white dark:bg-gray-700 shadow text-orange-500' : 'text-gray-500'}`}>Долги</button>
                         </div>
 
-                        {tab === 'goals' ? (
+                        {tab === 'debts' ? (
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-50 dark:border-gray-800 space-y-3">
+                                    <div className="flex bg-gray-50 dark:bg-gray-800 rounded-xl p-1">
+                                        <button onClick={() => setDebtType('they_owe')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${debtType === 'they_owe' ? 'bg-green-100 text-green-600 dark:bg-green-900/30' : 'text-gray-500'}`}>Мне должны</button>
+                                        <button onClick={() => setDebtType('i_owe')} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${debtType === 'i_owe' ? 'bg-red-100 text-red-600 dark:bg-red-900/30' : 'text-gray-500'}`}>Я должен</button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <input type="text" placeholder="Имя / За что" value={debtName} onChange={e=>setDebtName(e.target.value)} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-textDark dark:text-white focus:outline-none focus:border-primary" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input type="text" placeholder="Сумма" value={debtAmount} onChange={e=>setDebtAmount(formatMoneyInput(e.target.value))} className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-textDark dark:text-white focus:outline-none focus:border-primary font-bold" />
+                                        </div>
+                                    </div>
+                                    <button onClick={handleAddDebt} className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold py-3 rounded-xl hover:scale-[1.02] transition-transform">Добавить запись</button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {debts.length === 0 && <p className="text-center text-sm text-gray-400 py-4">У вас нет активных долгов.</p>}
+                                    {debts.map(d => (
+                                        <div key={d.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 flex justify-between items-center transition-colors">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className={`w-2 h-2 rounded-full ${d.type === 'they_owe' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                    <h4 className="font-bold text-sm text-textDark dark:text-white">{d.name}</h4>
+                                                </div>
+                                                <p className={`font-bold text-lg ${d.type === 'they_owe' ? 'text-green-500' : 'text-red-500'}`}>{formatMoneyInput(d.amount.toString())} сум</p>
+                                                <p className="text-[10px] text-gray-400">{d.date}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => shareDebt(d)} className="w-10 h-10 bg-blue-50 text-blue-500 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-lg transition-colors hover:bg-blue-100"><i className="fa-brands fa-telegram"></i></button>
+                                                <button onClick={() => {triggerHaptic('medium'); setDebts(debts.filter(item => item.id !== d.id));}} className="w-10 h-10 bg-gray-100 text-gray-400 dark:bg-gray-800 rounded-xl flex items-center justify-center transition-colors hover:bg-green-100 hover:text-green-500"><i className="fa-solid fa-check"></i></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : tab === 'goals' ? (
                             <div className="space-y-4 animate-fade-in">
                                 <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 transition-colors duration-300">
                                     <div className="flex justify-between items-start mb-2">
@@ -714,27 +781,86 @@
             );
         };
 
-        const ScreenCategories = ({ onBack, categories, setCategories }) => (
-            <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
-                <TopHeader title="Категории и Лимиты" showBack={true} onBack={onBack} />
-                <div className="px-4 py-4 space-y-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Управление вашими категориями</p>
-                    {categories.map((c, i) => (
-                        <div key={i} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-50 dark:border-gray-800">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${c.colorClass}`}>
-                                    {c.icon.startsWith('fa-') ? <i className={`fa-solid ${c.icon}`}></i> : <span>{c.icon}</span>}
+        const ScreenCategories = ({ onBack, categories, setCategories, isPremium, openPaywall, transactions }) => {
+            const [editingLimitCat, setEditingLimitCat] = useState(null);
+            const [limitVal, setLimitVal] = useState('');
+
+            const handleEditLimitClick = (c) => {
+                if (!isPremium) return openPaywall();
+                if (editingLimitCat === c.name) {
+                    setEditingLimitCat(null);
+                } else {
+                    setLimitVal(c.limit ? formatMoneyInput(c.limit.toString()) : '');
+                    setEditingLimitCat(c.name);
+                }
+            };
+
+            const saveLimit = (cName) => {
+                const num = parseInt(limitVal.replace(/\D/g, '')) || null;
+                setCategories(categories.map(c => c.name === cName ? { ...c, limit: num } : c));
+                setEditingLimitCat(null);
+                triggerHaptic('success');
+            };
+
+            return (
+                <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
+                    <TopHeader title="Категории и Лимиты" showBack={true} onBack={onBack} />
+                    <div className="px-4 py-4 space-y-3">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Управление вашими категориями и бюджетом</p>
+                        {categories.map((c, i) => {
+                            const totalSpent = transactions.filter(t => t.category === c.name && t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0);
+                            const limit = c.limit || 0;
+                            const progress = limit > 0 ? Math.min((totalSpent / limit) * 100, 100) : 0;
+                            const isWarning = progress >= 90;
+
+                            return (
+                                <div key={i} className="bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${c.colorClass}`}>
+                                                {c.icon.startsWith('fa-') ? <i className={`fa-solid ${c.icon}`}></i> : <span>{c.icon}</span>}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-textDark dark:text-white">{c.name}</h4>
+                                                <p className="text-xs text-gray-500">{totalSpent > 0 ? formatMoneyInput(totalSpent.toString()) + ' сум' : 'Нет трат'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleEditLimitClick(c)} className={`w-10 h-10 rounded-xl transition-colors flex items-center justify-center ${c.limit ? 'bg-orange-50 text-orange-500 dark:bg-orange-900/30' : 'bg-gray-50 text-gray-400 dark:bg-gray-800'}`}>
+                                                {c.limit ? <i className="fa-solid fa-pen"></i> : <i className="fa-solid fa-bullseye"></i>}
+                                                {!isPremium && <i className="fa-solid fa-lock ml-1 text-[8px]"></i>}
+                                            </button>
+                                            <button onClick={() => {triggerHaptic('medium'); setCategories(categories.filter(cat => cat.name !== c.name));}} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl transition-colors hover:bg-red-100 flex items-center justify-center"><i className="fa-solid fa-trash-can"></i></button>
+                                        </div>
+                                    </div>
+                                    
+                                    {editingLimitCat === c.name && (
+                                        <div className="mt-4 flex gap-2 animate-fade-in border-t border-gray-50 dark:border-gray-800 pt-3">
+                                            <input type="text" value={limitVal} onChange={e => setLimitVal(formatMoneyInput(e.target.value))} placeholder="Сумма лимита (0 для удаления)" className="flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary border border-gray-200 dark:border-gray-700 text-textDark dark:text-white"/>
+                                            <button onClick={() => saveLimit(c.name)} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm">ОК</button>
+                                        </div>
+                                    )}
+
+                                    {limit > 0 && (
+                                        <div className="mt-4">
+                                            <div className="flex justify-between text-[10px] mb-1.5">
+                                                <span className={isWarning ? 'text-red-500 font-bold' : 'text-gray-500 font-bold'}>
+                                                    {isWarning ? '⚠️ Лимит почти исчерпан!' : `${Math.round(progress)}%`}
+                                                </span>
+                                                <span className="text-gray-400 font-medium">из {formatMoneyInput(limit.toString())} сум</span>
+                                            </div>
+                                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+                                                <div className={`h-2 rounded-full transition-all duration-500 ${isWarning ? 'bg-red-500' : 'bg-primary'}`} style={{width: `${progress}%`}}></div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-textDark dark:text-white">{c.name}</h4>
-                                </div>
-                            </div>
-                            <button onClick={() => setCategories(categories.filter(cat => cat.name !== c.name))} className="w-10 h-10 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl transition-colors hover:bg-red-100"><i className="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    ))}
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        };
 
         const ScreenTips = ({ openAIChat }) => {
             const tipsData = [
@@ -856,19 +982,10 @@
             );
         };
 
-        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, isPremium, setPremium }) => {
+        const ScreenProfile = ({ user, isDarkMode, toggleDarkMode, transactions, isPremium, openPaywall }) => {
             const userName = (user && user.first_name) ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Ильхом';
             const username = (user && user.username) ? `@${user.username}` : '@ilkhom_finance';
             const userPhoto = (user && user.photo_url) ? user.photo_url : `https://placehold.co/150x150/7C3AED/ffffff?text=${userName.charAt(0)}`;
-            const [showPaywall, setShowPaywall] = useState(false);
-
-            const handleBuyPremium = () => {
-                triggerHaptic('success');
-                setTimeout(() => {
-                    setPremium(true);
-                    setShowPaywall(false);
-                }, 1500);
-            };
 
             return (
                 <div className="bg-[#F3F4F6] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 transition-colors duration-300">
@@ -885,7 +1002,7 @@
                     </div>
 
                     {!isPremium && (
-                        <div className="px-4 py-2 mb-2" onClick={() => setShowPaywall(true)}>
+                        <div className="px-4 py-2 mb-2" onClick={openPaywall}>
                             <div className="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-4 flex items-center justify-between shadow-md relative overflow-hidden cursor-pointer transform transition-transform hover:scale-[1.02]">
                                 <i className="fa-solid fa-gem absolute -right-4 -bottom-4 text-white opacity-10 text-6xl transform -rotate-12"></i>
                                 <div className="flex items-center gap-3 relative z-10">
@@ -924,25 +1041,6 @@
                             </div>
                         ))}
                     </div>
-
-                    {showPaywall && (
-                        <div className="fixed inset-0 z-[100] flex items-end">
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPaywall(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 pb-12 relative z-10 animate-fade-in transition-colors max-h-[90vh] overflow-y-auto no-scrollbar">
-                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
-                                <div className="text-center mb-6">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 transform rotate-3">
-                                        <i className="fa-solid fa-crown text-white text-4xl transform -rotate-3"></i>
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-textDark dark:text-white mb-2">FinanceAI PRO</h2>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Откройте все возможности для умного контроля финансов.</p>
-                                </div>
-                                <button onClick={handleBuyPremium} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-500/30 mb-3 hover:scale-[1.02] transition-transform">
-                                    Купить за 100 ⭐️
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
             );
         };
@@ -958,13 +1056,23 @@
             const [tgUser, setTgUser] = useState(null);
             const [selectedTransaction, setSelectedTransaction] = useState(null);
             const [activeMonth, setActiveMonth] = useState('05.2026');
+            const [showPaywall, setShowPaywall] = useState(false);
+            const [selectedPlan, setSelectedPlan] = useState('year');
 
-            const [categories, setCategories] = useState([
-                { name: 'Продукты', icon: 'fa-basket-shopping', colorClass: CATEGORY_COLORS[1] },
-                { name: 'Транспорт', icon: 'fa-bus', colorClass: CATEGORY_COLORS[4] },
-                { name: 'Еда вне дома', icon: 'fa-utensils', colorClass: CATEGORY_COLORS[2] },
-                { name: 'Развлечения', icon: 'fa-play', colorClass: CATEGORY_COLORS[15] }
-            ]);
+            const [categories, setCategories] = useState(() => {
+                const saved = localStorage.getItem('finance_categories');
+                return saved ? JSON.parse(saved) : [
+                    { name: 'Продукты', icon: 'fa-basket-shopping', colorClass: CATEGORY_COLORS[1], limit: null },
+                    { name: 'Транспорт', icon: 'fa-bus', colorClass: CATEGORY_COLORS[4], limit: null },
+                    { name: 'Еда вне дома', icon: 'fa-utensils', colorClass: CATEGORY_COLORS[2], limit: null },
+                    { name: 'Развлечения', icon: 'fa-play', colorClass: CATEGORY_COLORS[15], limit: null }
+                ];
+            });
+
+            const [debts, setDebts] = useState(() => {
+                const saved = localStorage.getItem('finance_debts');
+                return saved ? JSON.parse(saved) : [];
+            });
 
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
 
@@ -976,6 +1084,9 @@
                 if (isDarkMode) { document.documentElement.classList.add('dark'); localStorage.setItem('financeAppTheme', 'dark'); } 
                 else { document.documentElement.classList.remove('dark'); localStorage.setItem('financeAppTheme', 'light'); }
             }, [isDarkMode]);
+
+            useEffect(() => { localStorage.setItem('finance_categories', JSON.stringify(categories)); }, [categories]);
+            useEffect(() => { localStorage.setItem('finance_debts', JSON.stringify(debts)); }, [debts]);
 
             useEffect(() => {
                 const saved = localStorage.getItem('finance_txs');
@@ -1037,11 +1148,11 @@
                 switch(currentScreen) {
                     case 'home': return <ScreenHome setScreen={setCurrentScreen} transactions={currentMonthTransactions} activeMonth={activeMonth} prevMonth={prevMonth} nextMonth={nextMonth} currency="UZS" rates={{USD:12650, EUR:13600}} onTransactionClick={setSelectedTransaction} openAddModal={openAddModal} />;
                     case 'analytics': return <ScreenAnalytics transactions={currentMonthTransactions} activeMonth={activeMonth} prevMonth={prevMonth} nextMonth={nextMonth} currency="UZS" rates={{USD:12650, EUR:13600}} onTransactionClick={setSelectedTransaction} />;
-                    case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} />;
-                    case 'categories': return <ScreenCategories onBack={() => setCurrentScreen('home')} categories={categories} setCategories={setCategories} />;
+                    case 'calculator': return <ScreenCalculator onBack={() => setCurrentScreen('home')} debts={debts} setDebts={setDebts} />;
+                    case 'categories': return <ScreenCategories onBack={() => setCurrentScreen('home')} categories={categories} setCategories={setCategories} isPremium={isPremium} openPaywall={() => setShowPaywall(true)} transactions={currentMonthTransactions} />;
                     case 'tips': return <ScreenTips openAIChat={() => setCurrentScreen('aichat')} />;
                     case 'aichat': return <ScreenAIChat onBack={() => setCurrentScreen('tips')} userId={tgUser ? tgUser.id : 'browser'} />;
-                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} isPremium={isPremium} setPremium={setIsPremium} />;
+                    case 'profile': return <ScreenProfile user={tgUser} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} transactions={transactions} isPremium={isPremium} openPaywall={() => setShowPaywall(true)} />;
                     case 'product': return (
                         <div className="bg-[#F9FAFB] dark:bg-gray-950 min-h-screen animate-fade-in pb-20 z-50 relative transition-colors duration-300">
                             <TopHeader title="Динамика цен" showBack={true} onBack={() => setCurrentScreen('home')} rightIcon="fa-star" />
@@ -1067,6 +1178,67 @@
             return (
                 <div className="max-w-md mx-auto bg-bgLight dark:bg-bgDark min-h-screen relative shadow-2xl overflow-hidden transition-colors duration-300">
                     {renderScreen()}
+
+                    {/* Модальное окно покупки PRO */}
+                    {showPaywall && (
+                        <div className="fixed inset-0 z-[100] flex items-end">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPaywall(false)}></div>
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 pb-12 relative z-10 animate-fade-in transition-colors max-h-[90vh] overflow-y-auto no-scrollbar">
+                                <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
+                                <div className="text-center mb-6">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 transform rotate-3">
+                                        <i className="fa-solid fa-crown text-white text-4xl transform -rotate-3"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-textDark dark:text-white mb-2">FinanceAI PRO</h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Откройте все возможности для умного контроля финансов.</p>
+                                    
+                                    <div className="space-y-3 mb-6 text-left">
+                                        <div onClick={() => {triggerHaptic('light'); setSelectedPlan('month');}} className={`p-4 rounded-2xl border-2 flex justify-between items-center cursor-pointer transition-colors ${selectedPlan === 'month' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30' : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50'}`}>
+                                            <div>
+                                                <h4 className={`font-bold ${selectedPlan === 'month' ? 'text-orange-600 dark:text-orange-400' : 'text-textDark dark:text-white'}`}>1 Месяц</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Базовый доступ</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="font-bold text-lg text-textDark dark:text-white">50 ⭐️</span>
+                                            </div>
+                                        </div>
+
+                                        <div onClick={() => {triggerHaptic('light'); setSelectedPlan('year');}} className={`p-4 rounded-2xl border-2 flex justify-between items-center cursor-pointer transition-colors relative ${selectedPlan === 'year' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30' : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50'}`}>
+                                            <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">ВЫГОДНО</div>
+                                            <div>
+                                                <h4 className={`font-bold mt-1 ${selectedPlan === 'year' ? 'text-orange-600 dark:text-orange-400' : 'text-textDark dark:text-white'}`}>1 Год</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">~16 ⭐️ в месяц</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="font-bold text-lg text-textDark dark:text-white">200 ⭐️</span>
+                                                <p className="text-[10px] text-gray-400 line-through">600 ⭐️</p>
+                                            </div>
+                                        </div>
+
+                                        <div onClick={() => {triggerHaptic('light'); setSelectedPlan('forever');}} className={`p-4 rounded-2xl border-2 flex justify-between items-center cursor-pointer transition-colors relative ${selectedPlan === 'forever' ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30' : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50'}`}>
+                                             <div className="absolute -top-3 left-4 bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">НАВСЕГДА</div>
+                                            <div>
+                                                <h4 className={`font-bold mt-1 ${selectedPlan === 'forever' ? 'text-orange-600 dark:text-orange-400' : 'text-textDark dark:text-white'}`}>Безлимит</h4>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Плати один раз</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="font-bold text-lg text-textDark dark:text-white">500 ⭐️</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => {
+                                    triggerHaptic('success');
+                                    setTimeout(() => {
+                                        setIsPremium(true);
+                                        setShowPaywall(false);
+                                    }, 1500);
+                                }} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-500/30 mb-3 hover:scale-[1.02] transition-transform">
+                                    Оплатить {selectedPlan === 'month' ? 50 : selectedPlan === 'year' ? 200 : 500} ⭐️
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {selectedTransaction && (
                         <div className="fixed inset-0 z-[60] flex items-end">
