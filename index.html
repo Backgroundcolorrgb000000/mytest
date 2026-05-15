@@ -928,7 +928,7 @@
                     {showPaywall && (
                         <div className="fixed inset-0 z-[100] flex items-end">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPaywall(false)}></div>
-                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 relative z-10 animate-fade-in transition-colors">
+                            <div className="bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 pb-12 relative z-10 animate-fade-in transition-colors max-h-[90vh] overflow-y-auto no-scrollbar">
                                 <div className="w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full mx-auto mb-6"></div>
                                 <div className="text-center mb-6">
                                     <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30 transform rotate-3">
@@ -969,6 +969,10 @@
             const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('financeAppTheme') === 'dark');
 
             useEffect(() => {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.expand();
+                }
+                
                 if (isDarkMode) { document.documentElement.classList.add('dark'); localStorage.setItem('financeAppTheme', 'dark'); } 
                 else { document.documentElement.classList.remove('dark'); localStorage.setItem('financeAppTheme', 'light'); }
             }, [isDarkMode]);
