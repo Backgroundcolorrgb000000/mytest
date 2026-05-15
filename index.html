@@ -127,7 +127,7 @@
             const totalIncome = transactions.filter(t => t.amount > 0).reduce((acc, curr) => acc + curr.amount, 0);
             const totalExpense = transactions.filter(t => t.amount < 0).reduce((acc, curr) => acc + Math.abs(curr.amount), 0);
             
-            const baseBalance = 12150000;
+            const baseBalance = 0;
             const currentBalance = baseBalance + totalIncome - totalExpense;
 
             const formatCurrency = (amount) => {
@@ -180,7 +180,7 @@
                             <div className="flex justify-between items-center mb-1 relative z-10">
                                 <span className="text-sm text-gray-400">Зарплатная карта</span>
                             </div>
-                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(8400000 + transactions.filter(t => t.wallet === 'card' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'card' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(transactions.filter(t => t.wallet === 'card' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'card' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
                             <div className="flex justify-between items-end relative z-10">
                                 <p className="font-mono tracking-widest text-sm text-gray-300">**** 4512</p>
                             </div>
@@ -191,7 +191,7 @@
                             <div className="flex justify-between items-center mb-1 relative z-10">
                                 <span className="text-sm text-green-100">Наличные</span>
                             </div>
-                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(1200000 + transactions.filter(t => t.wallet === 'cash' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'cash' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
+                            <h2 className="text-3xl font-bold mb-6 relative z-10">{formatCurrency(transactions.filter(t => t.wallet === 'cash' && t.amount > 0).reduce((a,c)=>a+c.amount,0) - transactions.filter(t => t.wallet === 'cash' && t.amount < 0).reduce((a,c)=>a+Math.abs(c.amount),0))}</h2>
                             <div className="flex justify-between items-end relative z-10">
                                 <p className="text-sm text-green-100">В кошельке</p>
                             </div>
@@ -1092,22 +1092,6 @@
                 const saved = localStorage.getItem('finance_txs');
                 if (saved) {
                     setTransactions(JSON.parse(saved));
-                } else {
-                    const t = [];
-                    let id = 1;
-                    const generateDemoDataForMonth = (m, y) => {
-                        t.push({ id: id++, title: 'Зарплата', category: 'Доход', wallet: 'card', amount: 6500000, date: `10.${m}.${y} 10:00`, icon: 'fa-briefcase', color: 'text-green-500', bg: 'bg-green-100' });
-                        t.push({ id: id++, title: 'Яндекс Такси', category: 'Транспорт', wallet: 'card', amount: -25000, date: `15.${m}.${y} 18:30`, icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100' });
-                        t.push({ id: id++, title: 'Яндекс Такси', category: 'Транспорт', wallet: 'card', amount: -32000, date: `16.${m}.${y} 19:00`, icon: 'fa-bus', color: 'text-blue-500', bg: 'bg-blue-100' });
-                        t.push({ id: id++, title: 'Кофейня', category: 'Еда вне дома', wallet: 'cash', amount: -45000, date: `12.${m}.${y} 09:00`, icon: 'fa-utensils', color: 'text-amber-500', bg: 'bg-amber-100' });
-                        t.push({ id: id++, title: 'Кофейня', category: 'Еда вне дома', wallet: 'card', amount: -55000, date: `18.${m}.${y} 13:00`, icon: 'fa-utensils', color: 'text-amber-500', bg: 'bg-amber-100' });
-                        t.push({ id: id++, title: 'Супермаркет Korzinka', category: 'Продукты', wallet: 'card', amount: -150000, date: `20.${m}.${y} 20:00`, icon: 'fa-basket-shopping', color: 'text-orange-500', bg: 'bg-orange-100' });
-                    };
-                    generateDemoDataForMonth('04', '2026');
-                    generateDemoDataForMonth('05', '2026');
-                    const sortedTxs = t.sort((a,b) => b.id - a.id);
-                    setTransactions(sortedTxs);
-                    localStorage.setItem('finance_txs', JSON.stringify(sortedTxs));
                 }
                 setTimeout(() => setIsSplashVisible(false), 2000);
             }, []);
